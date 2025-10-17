@@ -7,6 +7,7 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { authCommand } from './commands/auth/index.js';
 import { cleanupCommand } from './commands/cleanup.js';
+import { initCommand } from './commands/init.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -23,6 +24,7 @@ program
 // 注册命令
 program.addCommand(authCommand);
 program.addCommand(cleanupCommand);
+program.addCommand(initCommand);
 
 program
   .command('version')
