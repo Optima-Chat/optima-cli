@@ -47,18 +47,29 @@ export function saveTokens(
 }
 
 /**
- * 获取访问令牌
+ * 获取访问令牌（不刷新）
  */
 export function getAccessToken(): string | null {
   const tokens = config.get('tokens');
   if (!tokens) return null;
-
-  // 检查是否过期
-  if (Date.now() >= tokens.expires_at) {
-    return null;
-  }
-
   return tokens.access_token;
+}
+
+/**
+ * 获取 token 过期时间
+ */
+export function getTokenExpiresAt(): number | null {
+  const tokens = config.get('tokens');
+  return tokens?.expires_at ?? null;
+}
+
+/**
+ * 检查 token 是否过期
+ */
+export function isTokenExpired(): boolean {
+  const expiresAt = getTokenExpiresAt();
+  if (!expiresAt) return true;
+  return Date.now() >= expiresAt;
 }
 
 /**
@@ -70,11 +81,46 @@ export function getRefreshToken(): string | null {
 }
 
 /**
- * 检查是否已认证
+ * 检查是否已认证（不检查过期）
  */
 export function isAuthenticated(): boolean {
   const token = getAccessToken();
   return token !== null;
+}
+
+/**
+ * 确保有效的访问令牌（自动刷新）
+ * @returns 有效的访问令牌，如果无法获取则返回 null
+ */
+export async function ensureValidToken(): Promise<string | null> {
+  const tokens = config.get('tokens');
+  if (!tokens) return null;
+
+  // 如果未过期，直接返回
+  if (!isTokenExpired()) {
+    return tokens.access_token;
+  }
+
+  // Token 已过期，尝试刷新
+  try {
+    // 动态导入避免循环依赖
+    const { authApi } = await import('../api/rest/auth.js');
+    const result = await authApi.refreshToken(tokens.refresh_token);
+
+    if (result.access_token && result.refresh_token && result.expires_in) {
+      // 保存新的 token
+      saveTokens(result.access_token, result.refresh_token, result.expires_in);
+      return result.access_token;
+    }
+
+    // 刷新失败，清除配置
+    clearConfig();
+    return null;
+  } catch (error) {
+    // 刷新失败（可能 refresh token 也过期了），清除配置
+    clearConfig();
+    return null;
+  }
 }
 
 /**

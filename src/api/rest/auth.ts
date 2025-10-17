@@ -1,4 +1,5 @@
-import axios, { AxiosInstance } from 'axios';
+import { createAuthenticatedClient } from './base.js';
+import { AxiosInstance } from 'axios';
 
 const AUTH_API_BASE_URL = 'https://auth.optima.chat';
 const OAUTH_CLIENT_ID = 'optima-cli-cwkbnadr';
@@ -33,13 +34,8 @@ class AuthApiClient {
   private client: AxiosInstance;
 
   constructor() {
-    this.client = axios.create({
-      baseURL: AUTH_API_BASE_URL,
-      timeout: 30000,
-      headers: {
-        'User-Agent': 'Optima-CLI/0.1.0',
-      },
-    });
+    // 使用带自动 token 刷新的客户端
+    this.client = createAuthenticatedClient(AUTH_API_BASE_URL);
   }
 
   /**
