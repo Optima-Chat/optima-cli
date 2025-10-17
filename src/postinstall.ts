@@ -3,16 +3,25 @@
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const CLAUDE_MD_PATH = path.join(os.homedir(), '.claude', 'CLAUDE.md');
+
+// 动态读取版本号
+const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, '../package.json'), 'utf-8'));
+const VERSION = packageJson.version;
 
 const OPTIMA_CLI_SECTION = `
 ## Optima CLI
 Optima CLI 是用自然语言管理电商店铺的命令行工具，专为 Claude Code 设计。
 
-**当前版本**: v0.1.0（占位版本，核心功能开发中）
+**当前版本**: v${VERSION}
 
-安装：\`npm install -g @optima-chat/optima-cli@latest\`
+**安装**：\`npm install -g @optima-chat/optima-cli@latest\`
 
 ### 使用方式
 
@@ -47,8 +56,25 @@ Optima CLI 是用自然语言管理电商店铺的命令行工具，专为 Claud
 **店铺**: \`optima shop info/update/setup\`
 **认证**: \`optima auth login/logout/whoami\`
 
-**注意**: 当前版本为占位版本，以上功能正在开发中。
+### 已实现功能
+
+**认证**：
+- \`optima auth login\` - OAuth 2.0 Device Flow 登录（自动打开浏览器授权）
+- \`optima auth logout\` - 登出并清除本地凭证
+- \`optima auth whoami\` - 显示当前用户信息
+- 自动 Token 刷新（15 分钟有效期，自动使用 refresh_token 续期）
+
+### 开发中功能（预计 2-3 周）
+
+**商品**: \`optima product create/list/get/update/delete/add-images\`
+**订单**: \`optima order list/get/ship/complete/cancel\`
+**库存**: \`optima inventory low-stock/update/history\`
+**物流**: \`optima shipping calculate/create/track\`
+**店铺**: \`optima shop info/update/setup\`
 `;
+
+const OPTIMA_START_MARKER = '## Optima CLI';
+const OPTIMA_END_MARKER = '<!-- END_OPTIMA_CLI -->';
 
 async function setupClaude() {
   try {
@@ -63,22 +89,33 @@ async function setupClaude() {
     if (fs.existsSync(CLAUDE_MD_PATH)) {
       existingContent = fs.readFileSync(CLAUDE_MD_PATH, 'utf-8');
 
-      // 如果已包含 Optima CLI 配置，先移除
-      if (existingContent.includes('## Optima CLI')) {
-        existingContent = existingContent.replace(
-          /## Optima CLI[\s\S]*?(?=\n##|$)/,
-          ''
-        );
+      // 如果已包含 Optima CLI 配置，先移除（更精确的正则）
+      if (existingContent.includes(OPTIMA_START_MARKER)) {
+        // 方法1：使用标记（如果有）
+        if (existingContent.includes(OPTIMA_END_MARKER)) {
+          const regex = new RegExp(
+            `${OPTIMA_START_MARKER}[\\s\\S]*?${OPTIMA_END_MARKER}\\n?`,
+            'g'
+          );
+          existingContent = existingContent.replace(regex, '');
+        } else {
+          // 方法2：匹配到下一个 ## 标题或文件末尾
+          // 使用更准确的正则：匹配从 ## Optima CLI 开始，到下一个 ## 或文件末尾
+          const regex = /## Optima CLI[\s\S]*?(?=\n## [^\n]|\n*$)/g;
+          existingContent = existingContent.replace(regex, '');
+        }
+        // 清理多余的空行
+        existingContent = existingContent.replace(/\n{3,}/g, '\n\n').trim();
       }
     }
 
-    // 写入新配置
-    const newContent = existingContent.trim() + '\n\n' + OPTIMA_CLI_SECTION.trim() + '\n';
+    // 写入新配置（带结束标记）
+    const newContent = existingContent.trim() + '\n\n' + OPTIMA_CLI_SECTION.trim() + '\n' + OPTIMA_END_MARKER + '\n';
     fs.writeFileSync(CLAUDE_MD_PATH, newContent, 'utf-8');
 
     console.log('✓ Optima CLI 已配置到 Claude Code');
-    console.log('  现在可以在 Claude Code 中用自然语言管理店铺了！');
-    console.log('  (当前为 v0.1.0 占位版本，核心功能开发中)');
+    console.log(`  版本: v${VERSION}`);
+    console.log('  现在可以使用 optima auth login 登录了！');
   } catch (error) {
     // 静默失败，不影响安装
     // console.log('⚠️  Claude Code 配置失败，可以稍后手动运行: optima setup-claude');
