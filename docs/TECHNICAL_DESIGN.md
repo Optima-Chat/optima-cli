@@ -1499,7 +1499,103 @@ export function configList() {
 
 ## Claude Code 集成
 
-### CLAUDE.md 配置
+### 自动配置机制
+
+Optima CLI 在安装时会通过 `postinstall` hook 自动配置 Claude Code 集成，用户无需手动操作。
+
+```typescript
+// src/postinstall.ts
+import fs from 'fs';
+import path from 'path';
+import os from 'os';
+
+const CLAUDE_MD_PATH = path.join(os.homedir(), '.claude', 'CLAUDE.md');
+
+const OPTIMA_CLI_SECTION = `
+## Optima CLI
+Optima CLI 是用自然语言管理电商店铺的命令行工具，专为 Claude Code 设计。
+
+安装：\`npm install -g @optima/cli@latest\`
+
+### 使用方式
+
+直接用自然语言描述你的需求，我会自动调用相应的 optima 命令。
+
+**商品管理示例**:
+- "创建一个珍珠耳环商品，售价 299 美元，库存 10 件"
+- "查看所有商品"
+- "更新商品 prod_123 的价格为 399 美元"
+- "删除商品 prod_456"
+
+**订单管理示例**:
+- "查看今天的订单"
+- "查看待发货的订单"
+- "把订单 order_123 标记为已发货，快递单号 DHL123456"
+- "取消订单 order_789"
+
+**库存管理示例**:
+- "查看库存低于 5 的商品"
+- "把商品 prod_123 的库存更新为 50"
+
+**物流查询示例**:
+- "计算从香港到纽约的运费，重量 0.5 公斤"
+- "跟踪快递单号 DHL123456"
+
+### 可用命令（供参考，建议用自然语言）
+
+**商品**: \`optima product create/list/get/update/delete/add-images\`
+**订单**: \`optima order list/get/ship/complete/cancel\`
+**库存**: \`optima inventory low-stock/update/history\`
+**物流**: \`optima shipping calculate/create/track\`
+**店铺**: \`optima shop info/update/setup\`
+**认证**: \`optima auth login/logout/whoami\`
+`;
+
+async function setupClaude() {
+  try {
+    // 确保 .claude 目录存在
+    const claudeDir = path.dirname(CLAUDE_MD_PATH);
+    if (!fs.existsSync(claudeDir)) {
+      fs.mkdirSync(claudeDir, { recursive: true });
+    }
+
+    // 读取现有内容
+    let existingContent = '';
+    if (fs.existsSync(CLAUDE_MD_PATH)) {
+      existingContent = fs.readFileSync(CLAUDE_MD_PATH, 'utf-8');
+
+      // 如果已包含 Optima CLI 配置，先移除
+      if (existingContent.includes('## Optima CLI')) {
+        existingContent = existingContent.replace(
+          /## Optima CLI[\s\S]*?(?=\n##|$)/,
+          ''
+        );
+      }
+    }
+
+    // 写入新配置
+    const newContent = existingContent.trim() + '\n\n' + OPTIMA_CLI_SECTION.trim() + '\n';
+    fs.writeFileSync(CLAUDE_MD_PATH, newContent, 'utf-8');
+
+    console.log('✓ Optima CLI 已配置到 Claude Code');
+    console.log('  现在可以在 Claude Code 中用自然语言管理店铺了！');
+  } catch (error) {
+    // 静默失败，不影响安装
+    console.log('⚠️  Claude Code 配置失败，可以稍后手动运行: optima setup-claude');
+  }
+}
+
+// 只在全局安装时执行
+if (process.env.npm_config_global === 'true') {
+  setupClaude();
+}
+
+export { setupClaude };
+```
+
+### 手动配置命令（备用）
+
+如果自动配置失败，用户可以手动运行：
 
 ```typescript
 // src/commands/setup-claude.ts
@@ -1644,8 +1740,9 @@ export async function setupClaude(options: { force?: boolean }) {
   - [ ] `optima order get`
   - [ ] `optima order ship`
 - [ ] Claude Code 集成
-  - [ ] `optima setup-claude`
-  - [ ] CLAUDE.md 配置写入
+  - [ ] postinstall.ts 自动配置脚本
+  - [ ] `optima setup-claude` 手动配置命令（备用）
+  - [ ] CLAUDE.md 配置内容优化
 
 ### Phase 2: 完整电商功能 (Week 3-4)
 
@@ -1762,7 +1859,8 @@ export async function setupClaude(options: { force?: boolean }) {
     "test": "vitest",
     "lint": "eslint src --ext .ts",
     "format": "prettier --write \"src/**/*.ts\"",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "postinstall": "node dist/postinstall.js"
   },
   "keywords": [
     "optima",

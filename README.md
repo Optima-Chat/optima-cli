@@ -27,16 +27,15 @@ npm install -g @optima/cli@latest
 
 ## 🚀 快速开始
 
-> **核心使用方式**：通过 Claude Code 用自然语言管理店铺，而不是手动输入命令
+> **核心使用方式**：通过 Claude Code 用自然语言管理店铺，安装即用
 
-### 1. 配置 Claude Code
+### 1. 安装（自动配置）
 
 ```bash
-# 安装后首先配置 Claude Code 集成
-optima setup-claude
+npm install -g @optima/cli@latest
 ```
 
-这会在 `~/.claude/CLAUDE.md` 中添加 Optima CLI 的配置，让 Claude Code 能理解你的自然语言指令。
+安装完成后会自动配置 Claude Code 集成，无需任何额外步骤！
 
 ### 2. 登录你的账号
 
@@ -63,6 +62,8 @@ Claude 会自动调用 `optima auth login` 命令引导你登录。
 Claude 会自动调用对应的 `optima` 命令来完成操作。
 
 **就是这么简单！** 🎉
+
+> **注意**：如果自动配置失败，可以手动运行 `optima setup-claude` 来配置。
 
 ## 📖 命令参考
 
