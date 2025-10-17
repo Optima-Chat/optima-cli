@@ -377,6 +377,7 @@ Optima Commerce 是一个 AI 驱动的对话式电商平台，目前提供以下
 - `addShippingNote` - POST /api/orders/merchant/{order_id}/add-shipping-note - 添加物流备注
 
 **固定运费配置 (shipping-fixed)**：
+- `calculate` - POST /api/shipping/fixed/calculate - 计算订单运费
 - `listZones` - GET /api/shipping/fixed/zones - 获取运费区域列表
 - `createZone` - POST /api/shipping/fixed/zones - 创建运费区域
 - `getZone` - GET /api/shipping/fixed/zones/{zone_id} - 获取运费区域详情
@@ -503,6 +504,7 @@ optima
 │   ├── update             # 更新商户资料
 │   └── setup              # 初始化商户资料（OAuth 用户）
 ├── shipping               # 物流管理 (Phase 1)
+│   ├── calculate          # 计算运费
 │   ├── status <order-id>  # 查看物流状态
 │   ├── update-status <order-id>  # 更新物流状态
 │   ├── history <order-id> # 物流历史
@@ -600,24 +602,30 @@ optima shipping history order_123
 # 14. 更新物流状态
 optima shipping update-status order_123 --status in_transit
 
-# 15. 运费区域列表
+# 15. 计算运费
+optima shipping calculate \
+  --country US \
+  --postal-code 10001 \
+  --weight 1.5
+
+# 16. 运费区域列表
 optima shipping zones list
 
-# 16. 创建运费区域
+# 17. 创建运费区域
 optima shipping zones create \
   --name "North America" \
   --countries "US,CA,MX"
 
-# 17. 创建运费费率
+# 18. 创建运费费率
 optima shipping rates create zone_123 \
   --min-weight 0 \
   --max-weight 1 \
   --price 10
 
-# 18. 商户信息
+# 19. 商户信息
 optima merchant info
 
-# 19. 配置 Claude Code
+# 20. 配置 Claude Code
 optima setup-claude
 ```
 
@@ -928,6 +936,7 @@ Optima CLI 在全局安装时通过 `postinstall` hook 自动配置 Claude Code 
   - [ ] `optima inventory update`
   - [ ] `optima inventory history`
 - [ ] 物流管理
+  - [ ] `optima shipping calculate` - 计算运费
   - [ ] `optima shipping history` - 物流历史
   - [ ] `optima shipping update-status` - 更新物流状态
   - [ ] `optima shipping add-note` - 添加物流备注
@@ -1151,6 +1160,7 @@ jobs:
 | `inventory low-stock` | `/api/inventory/low-stock` | GET |
 | `inventory update` | `/api/inventory/products/{product_id}/stock` | PUT |
 | `inventory history` | `/api/inventory/products/{product_id}/history` | GET |
+| `shipping calculate` | `/api/shipping/fixed/calculate` | POST |
 | `shipping history` | `/api/orders/merchant/{order_id}/shipping-history` | GET |
 | `shipping update-status` | `/api/orders/merchant/{order_id}/update-shipping-status` | POST |
 | `shipping add-note` | `/api/orders/merchant/{order_id}/add-shipping-note` | POST |
