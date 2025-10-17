@@ -3,6 +3,11 @@
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const CLAUDE_MD_PATH = path.join(os.homedir(), '.claude', 'CLAUDE.md');
 const OPTIMA_START_MARKER = '## Optima CLI';
@@ -50,7 +55,11 @@ async function cleanupClaude() {
   }
 }
 
-// 只在全局卸载时执行
-if (process.env.npm_config_global === 'true') {
+// 检查是否为全局安装位置
+// 全局卸载时，脚本位置通常在 global node_modules 中
+const isGlobalLocation = __dirname.includes('/node_modules/@optima-chat/optima-cli/dist') ||
+                         __dirname.includes('\\node_modules\\@optima-chat\\optima-cli\\dist');
+
+if (isGlobalLocation || process.env.npm_config_global === 'true') {
   cleanupClaude();
 }
