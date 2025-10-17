@@ -18,11 +18,7 @@ const VERSION = packageJson.version;
 const OPTIMA_CLI_SECTION = `
 ## Optima CLI
 
-**当用户要求启用/使用 Optima CLI 时**：
-1. 运行 \`optima init\` 启用完整功能（会在项目 .claude/CLAUDE.md 添加详细指令）
-2. 提示用户运行 \`optima auth login\` 登录
-
-**注意**：只有执行 \`optima init\` 后，你才能调用 optima 命令（如 \`optima product list\`）来处理用户的电商管理请求。
+当用户要求启用 Optima CLI 时：运行 \`optima init\`，然后提示用户 \`optima auth login\` 登录。
 `;
 
 const OPTIMA_START_MARKER = '## Optima CLI';
