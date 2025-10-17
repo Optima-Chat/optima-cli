@@ -371,6 +371,11 @@ Optima Commerce 是一个 AI 驱动的对话式电商平台，目前提供以下
 - `updateProfile` - PUT /api/merchants/me - 更新商户资料
 - `setupProfile` - POST /api/merchants/me - 初始化 OAuth 用户的商户资料
 
+**物流管理 (shipping)**：
+- `updateShippingStatus` - POST /api/orders/merchant/{order_id}/update-shipping-status - 更新物流状态
+- `getShippingHistory` - GET /api/orders/merchant/{order_id}/shipping-history - 获取物流历史
+- `addShippingNote` - POST /api/orders/merchant/{order_id}/add-shipping-note - 添加物流备注
+
 ### Auth API 封装
 
 **实现位置**：`src/api/rest/auth.ts`
@@ -486,6 +491,11 @@ optima
 │   ├── info               # 获取商户信息
 │   ├── update             # 更新商户资料
 │   └── setup              # 初始化商户资料（OAuth 用户）
+├── shipping               # 物流管理 (Phase 1)
+│   ├── status <order-id>  # 查看物流状态
+│   ├── update-status <order-id>  # 更新物流状态
+│   ├── history <order-id> # 物流历史
+│   └── add-note <order-id> # 添加物流备注
 ├── ads                    # Google Ads 管理 (Phase 2+)
 │   ├── create-campaign    # 创建广告活动
 │   ├── list-campaigns     # 广告活动列表
@@ -562,10 +572,16 @@ optima inventory low-stock --threshold 5
 # 12. 更新库存
 optima inventory update prod_123 --quantity 20
 
-# 13. 商户信息
+# 13. 物流历史
+optima shipping history order_123
+
+# 14. 更新物流状态
+optima shipping update-status order_123 --status in_transit
+
+# 15. 商户信息
 optima merchant info
 
-# 14. 配置 Claude Code
+# 16. 配置 Claude Code
 optima setup-claude
 ```
 
@@ -875,10 +891,10 @@ Optima CLI 在全局安装时通过 `postinstall` hook 自动配置 Claude Code 
   - [ ] `optima inventory low-stock`
   - [ ] `optima inventory update`
   - [ ] `optima inventory history`
-- [ ] 物流管理（待后端实现）
-  - [ ] `optima shipping calculate` - 计算运费
-  - [ ] `optima shipping create` - 创建运单
-  - [ ] `optima shipping track` - 物流跟踪
+- [ ] 物流管理
+  - [ ] `optima shipping history` - 物流历史
+  - [ ] `optima shipping update-status` - 更新物流状态
+  - [ ] `optima shipping add-note` - 添加物流备注
 - [ ] 商户管理
   - [ ] `optima merchant info`
   - [ ] `optima merchant update`
@@ -1090,6 +1106,9 @@ jobs:
 | `inventory low-stock` | `/api/inventory/low-stock` | GET |
 | `inventory update` | `/api/inventory/products/{product_id}/stock` | PUT |
 | `inventory history` | `/api/inventory/products/{product_id}/history` | GET |
+| `shipping history` | `/api/orders/merchant/{order_id}/shipping-history` | GET |
+| `shipping update-status` | `/api/orders/merchant/{order_id}/update-shipping-status` | POST |
+| `shipping add-note` | `/api/orders/merchant/{order_id}/add-shipping-note` | POST |
 | `merchant info` | `/api/merchants/me` | GET |
 | `merchant update` | `/api/merchants/me` | PUT |
 | `auth login` | `/api/v1/oauth/token` (grant_type=password) | POST |
