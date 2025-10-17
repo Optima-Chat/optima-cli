@@ -6,6 +6,7 @@ import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { authCommand } from './commands/auth/index.js';
+import { cleanupCommand } from './commands/cleanup.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -19,8 +20,9 @@ program
   .description('用自然语言管理电商店铺 - 专为 Claude Code 设计')
   .version(VERSION);
 
-// 注册认证命令
+// 注册命令
 program.addCommand(authCommand);
+program.addCommand(cleanupCommand);
 
 program
   .command('version')
