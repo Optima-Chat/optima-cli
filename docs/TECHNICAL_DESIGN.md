@@ -519,39 +519,25 @@ Optima Commerce 是一个 AI 驱动的对话式电商平台，目前提供以下
 
 **实现位置**：`src/api/rest/auth.ts`
 
-基于 `authClient` 封装认证相关 API，使用标准 OAuth 2.0 协议：
+基于 `authClient` 封装认证相关 API，简化登录流程：
 
-**OAuth Token 管理**：
-- `getToken` - POST /api/v1/oauth/token - 获取访问令牌
-  - 支持多种授权类型：password（密码模式）、client_credentials、authorization_code、refresh_token
-- `revokeToken` - POST /api/v1/oauth/revoke - 撤销访问令牌或刷新令牌
+**邮箱登录/注册**：
+- `login` - POST /api/v1/oauth/token - 邮箱密码登录（grant_type=password）
+- `register` - POST /api/v1/auth/register/merchant - 商户注册
+- `logout` - POST /api/v1/oauth/revoke - 登出（撤销 token）
 
-**用户注册**：
-- `registerCustomer` - POST /api/v1/auth/register - 客户注册（角色：customer）
-- `registerMerchant` - POST /api/v1/auth/register/merchant - 商户注册（角色：merchant）
-- `verifyEmail` - POST /api/v1/auth/verify - 验证邮箱（注册后验证）
+**第三方登录**（Google、GitHub）：
+- `loginWithGoogle` - GET /api/v1/oauth/authorize/google - Google 登录
+- `loginWithGitHub` - GET /api/v1/oauth/authorize/github - GitHub 登录
+- `handleCallback` - GET /api/v1/oauth/callback/{provider} - 处理第三方回调
 
-**用户资料**：
+**用户信息**：
 - `getCurrentUser` - GET /api/v1/users/me - 获取当前用户信息
-- `updateProfile` - PUT /api/v1/users/me - 更新用户资料
-- `upgradeMerchant` - POST /api/v1/users/upgrade-merchant - 升级为商户账号
 
-**OAuth 客户端管理**（需要 admin 权限）：
-- `createClient` - POST /api/v1/oauth/clients - 创建 OAuth 客户端
-- `listClients` - GET /api/v1/oauth/clients - 列出 OAuth 客户端
-- `getClient` - GET /api/v1/oauth/clients/{client_id} - 获取客户端详情
-- `updateClient` - PUT /api/v1/oauth/clients/{client_id} - 更新客户端
-- `deleteClient` - DELETE /api/v1/oauth/clients/{client_id} - 删除客户端
-
-**第三方登录**（Google、GitHub、Apple）：
-- `authorize` - GET /api/v1/oauth/authorize/{provider} - 发起第三方授权
-- `callback` - GET /api/v1/oauth/callback/{provider} - 处理第三方回调
-
-**社交账号管理**：
-- `listSocialAccounts` - GET /api/v1/oauth/users/me/social-accounts - 获取已绑定的社交账号列表
-- `unlinkSocialAccount` - DELETE /api/v1/oauth/users/me/social-accounts/{provider} - 解绑社交账号
-
-**注意**：CLI 登录使用 OAuth 2.0 密码模式（grant_type=password），需要提供 client_id 和 client_secret
+**说明**：
+- CLI 主要使用邮箱密码登录（OAuth 2.0 password grant）
+- Google/GitHub 登录会打开浏览器完成授权
+- Token 自动存储到本地配置文件
 
 ### MCP 客户端封装 (Phase 3)
 
@@ -611,8 +597,10 @@ MCP (Model Context Protocol) 使用 SSE (Server-Sent Events) 协议进行通信�
 ```
 optima
 ├── auth                    # 认证管理 (Phase 1)
-│   ├── login              # 登录
-│   ├── register           # 注册
+│   ├── login              # 邮箱密码登录
+│   ├── login:google       # Google 登录
+│   ├── login:github       # GitHub 登录
+│   ├── register           # 商户注册
 │   ├── logout             # 登出
 │   └── whoami             # 当前用户
 ├── product                # 商品管理 (Phase 1)
@@ -734,15 +722,21 @@ optima
 #### 示例命令
 
 ```bash
-# 1. 登录
+# 1. 邮箱密码登录
 optima auth login
 # 或带参数
 optima auth login --email user@example.com --password secret
 
-# 2. 创建商品（交互式）
+# 2. Google 登录（打开浏览器）
+optima auth login:google
+
+# 3. GitHub 登录（打开浏览器）
+optima auth login:github
+
+# 4. 创建商品（交互式）
 optima product create
 
-# 3. 创建商品（带参数）
+# 5. 创建商品（带参数）
 optima product create \
   --title "珍珠耳环" \
   --price 299 \
@@ -750,77 +744,77 @@ optima product create \
   --stock 10 \
   --images ./img1.jpg,./img2.jpg
 
-# 4. 商品列表
+# 6. 商品列表
 optima product list
 optima product list --limit 20 --offset 0
 
-# 5. 商品详情
+# 7. 商品详情
 optima product get prod_123
 
-# 6. 更新商品
+# 8. 更新商品
 optima product update prod_123 --price 399 --stock 5
 
-# 7. 删除商品
+# 9. 删除商品
 optima product delete prod_123 --yes  # 跳过确认
 
-# 8. 添加图片
+# 10. 添加图片
 optima product add-images prod_123 ./img3.jpg ./img4.jpg
 
-# 9. 订单列表
+# 11. 订单列表
 optima order list
 optima order list --status pending --limit 10
 
-# 10. 发货
+# 12. 发货
 optima order ship order_123 --tracking DHL123456 --carrier DHL
 
-# 11. 低库存商品
+# 13. 低库存商品
 optima inventory low-stock --threshold 5
 
-# 12. 更新库存
+# 14. 更新库存
 optima inventory update prod_123 --quantity 20
 
-# 13. 物流历史
+# 15. 物流历史
 optima shipping history order_123
 
-# 14. 更新物流状态
+# 16. 更新物流状态
 optima shipping update-status order_123 --status in_transit
 
-# 15. 计算运费
+# 17. 计算运费
 optima shipping calculate \
   --country US \
   --postal-code 10001 \
   --weight 1.5
 
-# 16. 运费区域列表
+# 18. 运费区域列表
 optima shipping zones list
 
-# 17. 创建运费区域
+# 19. 创建运费区域
 optima shipping zones create \
   --name "North America" \
   --countries "US,CA,MX"
 
-# 18. 创建运费费率
+# 20. 创建运费费率
 optima shipping rates create zone_123 \
   --min-weight 0 \
   --max-weight 1 \
   --price 10
 
-# 19. 商户信息
+# 21. 商户信息
 optima merchant info
 
-# 20. 收件箱对话列表
+# 22. 收件箱对话列表
 optima inbox list
 
-# 21. 查看对话消息
+# 23. 查看对话消息
 optima inbox messages conv_123
 
-# 22. 标记对话已读
+# 24. 标记对话已读
 optima inbox mark-read conv_123
 
-# 23. 创建分类
+# 25. 创建分类
 optima category create --name "珠宝首饰" --description "精美珠宝"
 
-# 24. 创建商品变体
+# 26. 创建商品变体
 optima variant create prod_123 \
   --sku "PEARL-S-WHITE" \
   --size S \
@@ -828,38 +822,38 @@ optima variant create prod_123 \
   --price 299 \
   --stock 10
 
-# 25. 创建退款
+# 27. 创建退款
 optima refund create order_123 --amount 100 --reason "商品损坏"
 
-# 26. 连接 Stripe 支付账号
+# 28. 连接 Stripe 支付账号
 optima payment connect
 
-# 27. 查看支付账号状态
+# 29. 查看支付账号状态
 optima payment status
 
-# 28. 批量导入商品
+# 30. 批量导入商品
 optima import products ./products.csv
 
-# 29. 批量导出商品
+# 31. 批量导出商品
 optima export products --format csv
 
-# 30. 查看支持的语言
+# 32. 查看支持的语言
 optima i18n languages
 
-# 31. 设置商户中文翻译
+# 33. 设置商户中文翻译
 optima i18n merchant set zh-CN \
   --name "精美珠宝店" \
   --description "专注高品质珠宝"
 
-# 32. 设置商品日语翻译
+# 34. 设置商品日语翻译
 optima i18n product set prod_123 ja \
   --title "真珠のイヤリング" \
   --description "天然淡水真珠"
 
-# 33. 获取分类翻译
+# 35. 获取分类翻译
 optima i18n category get cat_123 en
 
-# 34. 配置 Claude Code
+# 36. 配置 Claude Code
 optima setup-claude
 ```
 
@@ -923,14 +917,22 @@ optima setup-claude
 
 ### 登录实现
 
-**实现位置**：`src/commands/auth/login.ts`
-
-**核心流程**：
+**邮箱密码登录** (`src/commands/auth/login.ts`):
 1. 检查是否提供 email 和 password 参数
 2. 如果缺少，使用 inquirer 交互式输入（支持邮箱格式验证）
-3. 显示加载动画，调用 `authApi.login()`
+3. 显示加载动画，调用 `authApi.login()` - OAuth 2.0 password grant
 4. 将返回的 Token 和用户信息存储到配置
 5. 显示欢迎信息
+
+**第三方登录** (`src/commands/auth/login-google.ts`, `login-github.ts`):
+1. 启动本地临时 HTTP 服务器监听回调（如 http://localhost:3000/callback）
+2. 打开浏览器访问 `/api/v1/oauth/authorize/{provider}?redirect_uri=http://localhost:3000/callback`
+3. 用户在浏览器中完成 Google/GitHub 授权
+4. 授权完成后重定向回本地服务器，携带 authorization code
+5. 本地服务器收到回调，提取 code 并关闭浏览器
+6. 使用 code 换取 access token
+7. 保存 token 到配置文件
+8. 显示登录成功信息
 
 ---
 
@@ -1133,10 +1135,13 @@ Optima CLI 在全局安装时通过 `postinstall` hook 自动配置 Claude Code 
   - [ ] 错误处理
   - [ ] 日志系统
   - [ ] 格式化输出工具
-- [ ] 认证功能
-  - [ ] `optima auth login`
-  - [ ] `optima auth logout`
-  - [ ] `optima auth whoami`
+- [ ] 认证功能（简化版）
+  - [ ] `optima auth login` - 邮箱密码登录
+  - [ ] `optima auth login:google` - Google 登录（打开浏览器）
+  - [ ] `optima auth login:github` - GitHub 登录（打开浏览器）
+  - [ ] `optima auth register` - 商户注册
+  - [ ] `optima auth logout` - 登出
+  - [ ] `optima auth whoami` - 查看当前用户
   - [ ] Token 自动刷新
 - [ ] 商品管理
   - [ ] `optima product create`
@@ -1520,8 +1525,11 @@ jobs:
 | `i18n category get` | `/api/categories/{category_id}/translations/{language_code}` | GET |
 | `i18n category set` | `/api/categories/{category_id}/translations` | POST |
 | `i18n category delete` | `/api/categories/{category_id}/translations/{language_code}` | DELETE |
-| `auth login` | `/api/v1/oauth/token` (grant_type=password) | POST |
+| `auth login` | `/api/v1/oauth/token` (邮箱密码) | POST |
+| `auth login:google` | `/api/v1/oauth/authorize/google` | GET |
+| `auth login:github` | `/api/v1/oauth/authorize/github` | GET |
 | `auth register` | `/api/v1/auth/register/merchant` | POST |
+| `auth logout` | `/api/v1/oauth/revoke` | POST |
 | `auth whoami` | `/api/v1/users/me` | GET |
 
 ### C. 错误码映射
