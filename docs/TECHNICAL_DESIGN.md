@@ -49,6 +49,8 @@ Optima Commerce 是一个 AI 驱动的对话式电商平台，目前提供以下
 - 物流追踪
 - 店铺配置
 - 用户认证
+- Google Ads 广告管理（通过 Google Ads MCP）
+- AI 图像生成（通过 Comfy MCP）
 
 ### 参考项目
 
