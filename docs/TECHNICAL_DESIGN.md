@@ -111,6 +111,8 @@ Optima Commerce 是一个 AI 驱动的对话式电商平台，目前提供以下
 
 ### 核心依赖
 
+#### Phase 1-2: 基础电商功能
+
 | 依赖 | 版本 | 用途 |
 |-----|------|------|
 | **commander** | ^12.0.0 | CLI 框架，命令解析 |
@@ -122,6 +124,12 @@ Optima Commerce 是一个 AI 驱动的对话式电商平台，目前提供以下
 | **cli-table3** | ^0.6.3 | 表格展示 |
 | **form-data** | ^4.0.0 | 文件上传 |
 | **dayjs** | ^1.11.10 | 日期格式化 |
+
+#### Phase 3: MCP 集成
+
+| 依赖 | 版本 | 用途 |
+|-----|------|------|
+| **eventsource** | ^2.0.2 | SSE 客户端，MCP 通信 |
 
 ### 开发依赖
 
@@ -146,19 +154,22 @@ Optima Commerce 是一个 AI 驱动的对话式电商平台，目前提供以下
 
 ### 整体架构
 
+采用**混合架构**：基础电商功能直接调用 REST API，高级功能通过 MCP Servers。
+
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                    Optima CLI                           │
 │                  (@optima/cli)                          │
 └─────────────────────────────────────────────────────────┘
                          │
-        ┌────────────────┼────────────────┐
-        │                │                │
-        ▼                ▼                ▼
-┌──────────────┐  ┌──────────────┐  ┌──────────────┐
-│ Commerce API │  │  Auth API    │  │  MCP Host    │
-│ api.optima   │  │ auth.optima  │  │   :8300      │
-└──────────────┘  └──────────────┘  └──────────────┘
+        ┌────────────────┼────────────────┬────────────────┐
+        │                │                │                │
+        │ REST API       │ REST API       │ MCP Protocol   │ MCP Protocol
+        ▼                ▼                ▼                ▼
+┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
+│ Commerce API │  │  Auth API    │  │ Google Ads   │  │  Comfy MCP   │
+│ api.optima   │  │ auth.optima  │  │     MCP      │  │ Image Gen    │
+└──────────────┘  └──────────────┘  └──────────────┘  └──────────────┘
         │                │
         └────────┬───────┘
                  ▼
@@ -169,47 +180,66 @@ Optima Commerce 是一个 AI 驱动的对话式电商平台，目前提供以下
         └──────────────┘
 ```
 
+**架构说明**：
+- **Phase 1 (MVP)**: 商品、订单、库存、物流、店铺管理 → 直接调用 REST API
+- **Phase 2+**: Google Ads 广告管理 → Google Ads MCP (SSE)
+- **Phase 2+**: 图像生成 → Comfy MCP (SSE)
+- **暂不实现**: Shopify 集成
+
 ### 目录结构
 
 ```
 @optima/cli/
 ├── src/
 │   ├── api/                      # API 客户端层
-│   │   ├── client.ts             # 基础 HTTP 客户端
-│   │   ├── commerce.ts           # Commerce Backend API
-│   │   ├── auth.ts               # User Auth API
+│   │   ├── rest/                 # REST API 客户端
+│   │   │   ├── client.ts         # 基础 HTTP 客户端
+│   │   │   ├── commerce.ts       # Commerce Backend API
+│   │   │   └── auth.ts           # User Auth API
+│   │   ├── mcp/                  # MCP 客户端 (Phase 2+)
+│   │   │   ├── client.ts         # MCP SSE 客户端
+│   │   │   ├── google-ads.ts     # Google Ads MCP
+│   │   │   └── comfy.ts          # Comfy MCP
 │   │   └── types.ts              # API 类型定义
 │   ├── commands/                 # 命令实现
-│   │   ├── auth/                 # 认证命令
+│   │   ├── auth/                 # 认证命令 (Phase 1)
 │   │   │   ├── login.ts          # 登录
 │   │   │   ├── register.ts       # 注册
 │   │   │   ├── logout.ts         # 登出
 │   │   │   └── whoami.ts         # 当前用户
-│   │   ├── product/              # 商品管理
+│   │   ├── product/              # 商品管理 (Phase 1)
 │   │   │   ├── create.ts         # 创建商品
 │   │   │   ├── list.ts           # 商品列表
 │   │   │   ├── get.ts            # 商品详情
 │   │   │   ├── update.ts         # 更新商品
 │   │   │   ├── delete.ts         # 删除商品
 │   │   │   └── images.ts         # 图片管理
-│   │   ├── order/                # 订单管理
+│   │   ├── order/                # 订单管理 (Phase 1)
 │   │   │   ├── list.ts           # 订单列表
 │   │   │   ├── get.ts            # 订单详情
 │   │   │   ├── ship.ts           # 发货
 │   │   │   ├── complete.ts       # 完成订单
 │   │   │   └── cancel.ts         # 取消订单
-│   │   ├── inventory/            # 库存管理
+│   │   ├── inventory/            # 库存管理 (Phase 1)
 │   │   │   ├── low-stock.ts      # 低库存
 │   │   │   ├── update.ts         # 更新库存
 │   │   │   └── history.ts        # 库存历史
-│   │   ├── shipping/             # 物流管理
+│   │   ├── shipping/             # 物流管理 (Phase 1)
 │   │   │   ├── calculate.ts      # 计算运费
 │   │   │   ├── create.ts         # 创建运单
 │   │   │   └── track.ts          # 物流跟踪
-│   │   ├── shop/                 # 店铺管理
+│   │   ├── shop/                 # 店铺管理 (Phase 1)
 │   │   │   ├── info.ts           # 店铺信息
 │   │   │   ├── update.ts         # 更新店铺
 │   │   │   └── setup.ts          # 设置店铺
+│   │   ├── ads/                  # Google Ads 管理 (Phase 2+)
+│   │   │   ├── create-campaign.ts
+│   │   │   ├── list-campaigns.ts
+│   │   │   ├── research-keywords.ts
+│   │   │   └── performance.ts
+│   │   ├── image/                # 图像生成 (Phase 2+)
+│   │   │   ├── generate.ts       # 文本生成图片
+│   │   │   └── transform.ts      # 图片转换
 │   │   └── setup-claude.ts       # Claude Code 配置
 │   ├── utils/                    # 工具函数
 │   │   ├── config.ts             # 配置管理
@@ -269,11 +299,21 @@ Optima Commerce 是一个 AI 驱动的对话式电商平台，目前提供以下
 
 ### API 服务列表
 
-| 服务 | 地址 | 用途 |
-|-----|------|------|
-| **Commerce Backend** | https://api.optima.chat | 电商核心 API |
-| **User Auth** | https://auth.optima.chat | 认证授权 |
-| **MCP Host** | http://dev.optima.chat:8300 | AI 对话（暂不集成） |
+#### Phase 1 - REST API
+
+| 服务 | 地址 | 协议 | 用途 |
+|-----|------|------|------|
+| **Commerce Backend** | https://api.optima.chat | REST | 电商核心 API |
+| **User Auth** | https://auth.optima.chat | REST | 认证授权 |
+
+#### Phase 2+ - MCP Servers
+
+| 服务 | 地址 | 协议 | 用途 |
+|-----|------|------|------|
+| **Google Ads MCP** | http://dev.optima.chat:8240/sse | SSE | Google 广告管理 |
+| **Comfy MCP** | http://dev.optima.chat:8220/sse | SSE | AI 图像生成 |
+
+**注意**：MCP 服务使用 SSE (Server-Sent Events) 协议，需要实现专门的 MCP 客户端。
 
 ### 基础 HTTP 客户端
 
@@ -522,6 +562,142 @@ export const authApi = {
 };
 ```
 
+### MCP 客户端封装 (Phase 2+)
+
+MCP (Model Context Protocol) 使用 SSE (Server-Sent Events) 协议进行通信。
+
+```typescript
+// src/api/mcp/client.ts
+import EventSource from 'eventsource';
+import axios from 'axios';
+
+interface MCPToolCall {
+  name: string;
+  arguments: Record<string, any>;
+}
+
+interface MCPResponse {
+  content: Array<{
+    type: 'text';
+    text: string;
+  }>;
+}
+
+class MCPClient {
+  private baseURL: string;
+  private eventSource?: EventSource;
+
+  constructor(baseURL: string) {
+    this.baseURL = baseURL;
+  }
+
+  async callTool(toolName: string, args: Record<string, any>): Promise<any> {
+    const response = await axios.post<MCPResponse>(
+      this.baseURL.replace('/sse', '/call_tool'),
+      {
+        name: toolName,
+        arguments: args,
+      }
+    );
+
+    // 解析响应
+    const textContent = response.data.content.find((c) => c.type === 'text');
+    if (textContent) {
+      try {
+        return JSON.parse(textContent.text);
+      } catch {
+        return textContent.text;
+      }
+    }
+
+    return response.data;
+  }
+
+  async listTools(): Promise<string[]> {
+    const response = await axios.get(`${this.baseURL.replace('/sse', '/tools')}`);
+    return response.data.tools.map((t: any) => t.name);
+  }
+
+  disconnect(): void {
+    if (this.eventSource) {
+      this.eventSource.close();
+      this.eventSource = undefined;
+    }
+  }
+}
+
+// 导出各个 MCP 客户端实例
+export const googleAdsMcp = new MCPClient('http://dev.optima.chat:8240/sse');
+export const comfyMcp = new MCPClient('http://dev.optima.chat:8220/sse');
+```
+
+### Google Ads MCP 封装
+
+```typescript
+// src/api/mcp/google-ads.ts
+import { googleAdsMcp } from './client.js';
+
+export const googleAdsApi = {
+  // 广告活动管理
+  campaigns: {
+    create: (data: {
+      name: string;
+      budget: number;
+      targetLocation: string;
+    }) => googleAdsMcp.callTool('create_campaign', data),
+
+    list: () => googleAdsMcp.callTool('get_campaigns', {}),
+
+    getPerformance: (campaignId: string) =>
+      googleAdsMcp.callTool('get_campaign_performance', { campaign_id: campaignId }),
+  },
+
+  // 关键词管理
+  keywords: {
+    research: (keyword: string) =>
+      googleAdsMcp.callTool('research_keywords', { keyword }),
+
+    add: (campaignId: string, keywords: string[]) =>
+      googleAdsMcp.callTool('add_keywords', {
+        campaign_id: campaignId,
+        keywords,
+      }),
+  },
+};
+```
+
+### Comfy MCP 封装
+
+```typescript
+// src/api/mcp/comfy.ts
+import { comfyMcp } from './client.js';
+
+export const comfyApi = {
+  // 图像生成
+  generateImage: (prompt: string, options?: {
+    width?: number;
+    height?: number;
+    steps?: number;
+  }) =>
+    comfyMcp.callTool('create_image_from_prompt', {
+      prompt,
+      ...options,
+    }),
+
+  // 图像转换
+  transformImage: (imageUrl: string, prompt: string) =>
+    comfyMcp.callTool('create_image_to_image', {
+      image_url: imageUrl,
+      prompt,
+    }),
+};
+```
+
+**依赖安装**：
+```bash
+npm install eventsource
+```
+
 ---
 
 ## 命令设计
@@ -530,36 +706,45 @@ export const authApi = {
 
 ```
 optima
-├── auth                    # 认证管理
+├── auth                    # 认证管理 (Phase 1)
 │   ├── login              # 登录
 │   ├── register           # 注册
 │   ├── logout             # 登出
 │   └── whoami             # 当前用户
-├── product                # 商品管理
+├── product                # 商品管理 (Phase 1)
 │   ├── create             # 创建商品
 │   ├── list               # 商品列表
 │   ├── get <id>           # 商品详情
 │   ├── update <id>        # 更新商品
 │   ├── delete <id>        # 删除商品
 │   └── add-images <id>    # 添加图片
-├── order                  # 订单管理
+├── order                  # 订单管理 (Phase 1)
 │   ├── list               # 订单列表
 │   ├── get <id>           # 订单详情
 │   ├── ship <id>          # 发货
 │   ├── complete <id>      # 完成订单
 │   └── cancel <id>        # 取消订单
-├── inventory              # 库存管理
+├── inventory              # 库存管理 (Phase 1)
 │   ├── low-stock          # 低库存商品
 │   ├── update <id>        # 更新库存
 │   └── history <id>       # 库存历史
-├── shipping               # 物流管理
+├── shipping               # 物流管理 (Phase 1)
 │   ├── calculate          # 计算运费
 │   ├── create <order-id>  # 创建运单
 │   └── track <number>     # 物流跟踪
-├── shop                   # 店铺管理
+├── shop                   # 店铺管理 (Phase 1)
 │   ├── info               # 店铺信息
 │   ├── update             # 更新店铺
 │   └── setup              # 设置店铺
+├── ads                    # Google Ads 管理 (Phase 2+)
+│   ├── create-campaign    # 创建广告活动
+│   ├── list-campaigns     # 广告活动列表
+│   ├── performance <id>   # 活动效果
+│   ├── research <keyword> # 关键词研究
+│   └── add-keywords <id>  # 添加关键词
+├── image                  # 图像生成 (Phase 2+)
+│   ├── generate <prompt>  # 文本生成图片
+│   └── transform <url>    # 图片转换
 ├── config                 # 配置管理
 │   ├── set <key> <value>  # 设置配置
 │   ├── get <key>          # 获取配置
@@ -1425,21 +1610,24 @@ export async function setupClaude(options: { force?: boolean }) {
 
 ## 开发计划
 
-### Phase 1: MVP (Week 1-2)
+### Phase 1: MVP - 基础电商功能 (Week 1-2)
 
-**目标**: 实现核心功能，能够完成基本的商品和订单管理
+**目标**: 实现核心电商功能，直接调用 REST API
+
+**技术栈**: REST API (Commerce Backend + User Auth)
 
 **任务清单**:
 - [x] 项目初始化
   - [x] 创建项目结构
-  - [x] 配置 TypeScript
-  - [x] 配置 ESLint/Prettier
-  - [x] 配置 package.json
+  - [x] 技术方案文档
+  - [x] README 文档
+  - [x] Git 仓库配置
 - [ ] 基础设施
-  - [ ] HTTP 客户端封装
-  - [ ] 配置管理
+  - [ ] REST HTTP 客户端封装
+  - [ ] 配置管理 (Conf)
   - [ ] 错误处理
   - [ ] 日志系统
+  - [ ] 格式化输出工具
 - [ ] 认证功能
   - [ ] `optima auth login`
   - [ ] `optima auth logout`
@@ -1457,16 +1645,19 @@ export async function setupClaude(options: { force?: boolean }) {
   - [ ] `optima order ship`
 - [ ] Claude Code 集成
   - [ ] `optima setup-claude`
-  - [ ] 编写使用文档
+  - [ ] CLAUDE.md 配置写入
 
-### Phase 2: 增强功能 (Week 3-4)
+### Phase 2: 完整电商功能 (Week 3-4)
 
-**目标**: 补充完整的电商功能
+**目标**: 补充完整的电商业务功能
+
+**技术栈**: REST API
 
 **任务清单**:
 - [ ] 图片上传
   - [ ] `optima product add-images`
   - [ ] 文件验证
+  - [ ] FormData 上传
   - [ ] 进度显示
 - [ ] 库存管理
   - [ ] `optima inventory low-stock`
@@ -1484,28 +1675,63 @@ export async function setupClaude(options: { force?: boolean }) {
   - [ ] `optima order complete`
   - [ ] `optima order cancel`
 
-### Phase 3: 优化与发布 (Week 5-6)
+### Phase 3: MCP 集成 - 高级功能 (Week 5-6)
 
-**目标**: 优化体验，准备发布
+**目标**: 集成 MCP Servers，实现广告和图像生成功能
+
+**技术栈**: MCP SSE Protocol
+
+**任务清单**:
+- [ ] MCP 客户端实现
+  - [ ] SSE 协议客户端
+  - [ ] MCP 工具调用封装
+  - [ ] 错误处理
+  - [ ] 依赖安装 (eventsource)
+- [ ] Google Ads 管理
+  - [ ] `optima ads create-campaign`
+  - [ ] `optima ads list-campaigns`
+  - [ ] `optima ads performance`
+  - [ ] `optima ads research`
+  - [ ] `optima ads add-keywords`
+- [ ] 图像生成
+  - [ ] `optima image generate`
+  - [ ] `optima image transform`
+  - [ ] 图片下载和保存
+- [ ] 文档更新
+  - [ ] MCP 命令使用说明
+  - [ ] 更新 CLAUDE.md 配置
+
+### Phase 4: 测试、优化与发布 (Week 7-8)
+
+**目标**: 完善测试、优化体验、发布到 NPM
 
 **任务清单**:
 - [ ] 测试
   - [ ] 单元测试覆盖率 > 80%
   - [ ] 集成测试
+  - [ ] MCP 客户端测试
   - [ ] 手动测试
-- [ ] 文档
-  - [ ] README.md
+- [ ] 文档完善
   - [ ] API.md
   - [ ] COMMANDS.md
-  - [ ] 使用示例
-- [ ] 优化
-  - [ ] 性能优化
+  - [ ] 使用示例和最佳实践
+  - [ ] 故障排查指南
+- [ ] 性能优化
+  - [ ] 请求并发优化
+  - [ ] 缓存策略
   - [ ] 错误信息优化
   - [ ] 交互体验优化
-- [ ] 发布
+- [ ] 发布准备
   - [ ] 配置 CI/CD
-  - [ ] 发布到 NPM
+  - [ ] NPM 包配置
   - [ ] 版本管理
+  - [ ] 发布到 NPM
+  - [ ] 创建 Release Notes
+
+**架构总结**：
+- **Phase 1-2**: REST API 直连（高性能、简单直接）
+- **Phase 3**: MCP 集成（复用现有工具，避免重复开发）
+- **暂不实现**: Shopify MCP（后续需求再考虑）
 
 ---
 
