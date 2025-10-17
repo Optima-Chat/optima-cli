@@ -132,6 +132,7 @@ Optima Commerce 是一个 AI 驱动的对话式电商平台，目前提供以下
 | **inquirer** | ^9.2.14 | 交互式输入 |
 | **conf** | ^12.0.0 | 配置存储 |
 | **ora** | ^8.0.0 | 加载动画 |
+| **open** | ^10.0.0 | 自动打开浏览器 |
 | **cli-table3** | ^0.6.3 | 表格展示 |
 | **form-data** | ^4.0.0 | 文件上传 |
 | **dayjs** | ^1.11.10 | 日期格式化 |
@@ -214,8 +215,7 @@ Optima Commerce 是一个 AI 驱动的对话式电商平台，目前提供以下
 │   │   └── types.ts              # API 类型定义
 │   ├── commands/                 # 命令实现
 │   │   ├── auth/                 # 认证命令 (Phase 1)
-│   │   │   ├── login.ts          # 登录
-│   │   │   ├── register.ts       # 注册
+│   │   │   ├── login.ts          # Device Flow 登录
 │   │   │   ├── logout.ts         # 登出
 │   │   │   └── whoami.ts         # 当前用户
 │   │   ├── product/              # 商品管理 (Phase 1)
@@ -519,26 +519,24 @@ Optima Commerce 是一个 AI 驱动的对话式电商平台，目前提供以下
 
 **实现位置**：`src/api/rest/auth.ts`
 
-基于 `authClient` 封装认证相关 API，使用无密码登录：
+基于 `authClient` 封装认证相关 API，使用 **OAuth 2.0 Device Flow** 进行认证：
 
-**邮箱验证码登录**：
-- `sendCode` - POST /api/v1/auth/send-code - 发送验证码到邮箱
-- `verifyCode` - POST /api/v1/auth/verify-code - 验证邮箱验证码并登录/注册
+**Device Flow 认证**：
+- `requestDeviceCode` - POST /api/v1/oauth/device/authorize - 请求 device code 和 user code
+- `pollDeviceToken` - POST /api/v1/oauth/device/token - 轮询获取 access token
 - `logout` - POST /api/v1/oauth/revoke - 登出（撤销 token）
-
-**第三方登录**（Google、GitHub）：
-- `loginWithGoogle` - GET /api/v1/oauth/authorize/google - Google 登录
-- `loginWithGitHub` - GET /api/v1/oauth/authorize/github - GitHub 登录
-- `handleCallback` - GET /api/v1/oauth/callback/{provider} - 处理第三方回调
 
 **用户信息**：
 - `getCurrentUser` - GET /api/v1/users/me - 获取当前用户信息
 
 **说明**：
-- **无密码登录**：邮箱验证码登录，首次登录自动创建商户账号
-- **统一流程**：首次登录 = 后续登录，无需单独注册
-- **第三方登录**：Google/GitHub 首次登录也会自动创建账号
+- **Device Flow**：CLI 获取 device code，用户在浏览器完成授权，CLI 轮询获取 token
+- **统一体验**：所有登录方式（邮箱/Google/GitHub）都在浏览器完成，体验一致
+- **自动注册**：首次登录自动创建商户账号，无需单独注册流程
+- **安全可靠**：符合 OAuth 2.0 标准，适合 CLI 工具使用
 - Token 自动存储到本地配置文件
+
+**详细技术方案**：参见 [docs/DEVICE_FLOW_DESIGN.md](./DEVICE_FLOW_DESIGN.md)
 
 ### MCP 客户端封装 (Phase 3)
 
@@ -598,9 +596,7 @@ MCP (Model Context Protocol) 使用 SSE (Server-Sent Events) 协议进行通信�
 ```
 optima
 ├── auth                    # 认证管理 (Phase 1)
-│   ├── login              # 邮箱验证码登录（首次自动注册）
-│   ├── login:google       # Google 登录（首次自动注册）
-│   ├── login:github       # GitHub 登录（首次自动注册）
+│   ├── login              # Device Flow 登录（在浏览器完成授权）
 │   ├── logout             # 登出
 │   └── whoami             # 当前用户
 ├── product                # 商品管理 (Phase 1)
@@ -722,28 +718,20 @@ optima
 #### 示例命令
 
 ```bash
-# 1. 邮箱验证码登录（交互式，首次自动注册）
+# 1. Device Flow 登录
 optima auth login
-# 交互流程：
-# - 输入邮箱
-# - 系统发送验证码到邮箱
-# - 输入收到的验证码
-# - 登录成功（首次登录自动创建商户账号）
+# 流程：
+# - CLI 显示：请访问 https://ai.optima.chat/device
+# - CLI 显示：输入代码 ABCD-1234
+# - 自动打开浏览器（或手动访问）
+# - 在浏览器中输入代码并登录（支持邮箱/Google/GitHub）
+# - CLI 自动获取 token 并完成登录
+# - 首次登录自动创建商户账号
 
-# 2. 邮箱验证码登录（带参数）
-optima auth login --email user@example.com
-# 仍需交互输入验证码
-
-# 3. Google 登录（打开浏览器，首次自动注册）
-optima auth login:google
-
-# 4. GitHub 登录（打开浏览器，首次自动注册）
-optima auth login:github
-
-# 5. 创建商品（交互式）
+# 2. 创建商品（交互式）
 optima product create
 
-# 6. 创建商品（带参数）
+# 3. 创建商品（带参数）
 optima product create \
   --title "珍珠耳环" \
   --price 299 \
@@ -751,77 +739,77 @@ optima product create \
   --stock 10 \
   --images ./img1.jpg,./img2.jpg
 
-# 7. 商品列表
+# 4. 商品列表
 optima product list
 optima product list --limit 20 --offset 0
 
-# 8. 商品详情
+# 5. 商品详情
 optima product get prod_123
 
-# 9. 更新商品
+# 6. 更新商品
 optima product update prod_123 --price 399 --stock 5
 
-# 10. 删除商品
+# 7. 删除商品
 optima product delete prod_123 --yes  # 跳过确认
 
-# 11. 添加图片
+# 8. 添加图片
 optima product add-images prod_123 ./img3.jpg ./img4.jpg
 
-# 12. 订单列表
+# 9. 订单列表
 optima order list
 optima order list --status pending --limit 10
 
-# 13. 发货
+# 10. 发货
 optima order ship order_123 --tracking DHL123456 --carrier DHL
 
-# 14. 低库存商品
+# 11. 低库存商品
 optima inventory low-stock --threshold 5
 
-# 15. 更新库存
+# 12. 更新库存
 optima inventory update prod_123 --quantity 20
 
-# 16. 物流历史
+# 13. 物流历史
 optima shipping history order_123
 
-# 17. 更新物流状态
+# 14. 更新物流状态
 optima shipping update-status order_123 --status in_transit
 
-# 18. 计算运费
+# 15. 计算运费
 optima shipping calculate \
   --country US \
   --postal-code 10001 \
   --weight 1.5
 
-# 19. 运费区域列表
+# 16. 运费区域列表
 optima shipping zones list
 
-# 20. 创建运费区域
+# 17. 创建运费区域
 optima shipping zones create \
   --name "North America" \
   --countries "US,CA,MX"
 
-# 21. 创建运费费率
+# 18. 创建运费费率
 optima shipping rates create zone_123 \
   --min-weight 0 \
   --max-weight 1 \
   --price 10
 
-# 22. 商户信息
+# 19. 商户信息
 optima merchant info
 
-# 23. 收件箱对话列表
+# 20. 收件箱对话列表
 optima inbox list
 
-# 24. 查看对话消息
+# 21. 查看对话消息
 optima inbox messages conv_123
 
-# 25. 标记对话已读
+# 22. 标记对话已读
 optima inbox mark-read conv_123
 
-# 26. 创建分类
+# 23. 创建分类
 optima category create --name "珠宝首饰" --description "精美珠宝"
 
-# 27. 创建商品变体
+# 24. 创建商品变体
 optima variant create prod_123 \
   --sku "PEARL-S-WHITE" \
   --size S \
@@ -829,38 +817,38 @@ optima variant create prod_123 \
   --price 299 \
   --stock 10
 
-# 28. 创建退款
+# 25. 创建退款
 optima refund create order_123 --amount 100 --reason "商品损坏"
 
-# 29. 连接 Stripe 支付账号
+# 26. 连接 Stripe 支付账号
 optima payment connect
 
-# 30. 查看支付账号状态
+# 27. 查看支付账号状态
 optima payment status
 
-# 31. 批量导入商品
+# 28. 批量导入商品
 optima import products ./products.csv
 
-# 32. 批量导出商品
+# 29. 批量导出商品
 optima export products --format csv
 
-# 33. 查看支持的语言
+# 30. 查看支持的语言
 optima i18n languages
 
-# 34. 设置商户中文翻译
+# 31. 设置商户中文翻译
 optima i18n merchant set zh-CN \
   --name "精美珠宝店" \
   --description "专注高品质珠宝"
 
-# 35. 设置商品日语翻译
+# 32. 设置商品日语翻译
 optima i18n product set prod_123 ja \
   --title "真珠のイヤリング" \
   --description "天然淡水真珠"
 
-# 36. 获取分类翻译
+# 33. 获取分类翻译
 optima i18n category get cat_123 en
 
-# 37. 配置 Claude Code
+# 34. 配置 Claude Code
 optima setup-claude
 ```
 
@@ -892,16 +880,22 @@ optima setup-claude
 
 ## 认证授权方案
 
-### 认证流程
+### 认证流程（OAuth 2.0 Device Flow）
 
 ```
 1. 用户执行 optima auth login
-2. 输入邮箱和密码
-3. 调用 Auth API 获取 Token
-4. Token 存储到本地配置文件
-5. 后续请求自动带上 Token
-6. Token 过期时自动刷新
+2. CLI 调用 /api/v1/oauth/device/authorize 获取 device code 和 user code
+3. CLI 显示授权地址和 user code (如 ABCD-1234)
+4. 自动打开浏览器访问 https://ai.optima.chat/device
+5. 用户在浏览器输入 user code 并登录（邮箱/Google/GitHub）
+6. 登录成功后，浏览器显示"授权成功"
+7. CLI 轮询 /api/v1/oauth/device/token 获取 access token
+8. Token 存储到本地配置文件
+9. 后续请求自动带上 Token
+10. Token 过期时自动刷新
 ```
+
+**技术细节**：参见 [docs/DEVICE_FLOW_DESIGN.md](./DEVICE_FLOW_DESIGN.md)
 
 ### Token 存储
 
@@ -922,34 +916,56 @@ optima setup-claude
 - `updateConfig(key, value)` - 更新配置
 - `deleteConfig(key)` - 删除配置
 
-### 登录实现
+### Device Flow 登录实现
 
-**邮箱验证码登录** (`src/commands/auth/login.ts`):
-1. 检查是否提供 `--email` 参数，如果没有则使用 inquirer 交互式输入邮箱（支持邮箱格式验证）
-2. 显示加载动画，调用 `authApi.sendCode(email)` 发送验证码到邮箱
-3. 提示用户查收邮件，使用 inquirer 输入收到的验证码
-4. 调用 `authApi.verifyCode(email, code)` 验证验证码
-5. **首次登录**：后端检测到新用户，自动创建商户账号，返回 token
-6. **后续登录**：后端验证通过，返回 token
-7. 将 token 和用户信息存储到本地配置
-8. 显示登录成功信息
+**实现位置**: `src/commands/auth/login.ts`
 
-**第三方登录** (`src/commands/auth/login-google.ts`, `login-github.ts`):
-1. 启动本地临时 HTTP 服务器监听回调（如 http://localhost:3000/callback）
-2. 打开浏览器访问 `/api/v1/oauth/authorize/{provider}?redirect_uri=http://localhost:3000/callback`
-3. 用户在浏览器中完成 Google/GitHub 授权
-4. 授权完成后重定向回本地服务器，携带 authorization code
-5. 本地服务器收到回调，提取 code 并关闭浏览器标签页
-6. 使用 code 换取 access token
-7. **首次登录**：后端检测到新用户，自动创建商户账号，返回 token
-8. **后续登录**：后端验证通过，返回 token
-9. 保存 token 到配置文件
-10. 在终端显示登录成功信息
+**核心流程**:
 
-**统一特性**：
+1. **请求 Device Code**:
+   - 调用 `authApi.requestDeviceCode()`
+   - 获取 `device_code`, `user_code`, `verification_uri`, `verification_uri_complete`, `interval`, `expires_in`
+
+2. **显示给用户**:
+   - 打印授权地址: `https://ai.optima.chat/device`
+   - 打印 User Code: `ABCD-1234` (大号、醒目显示)
+   - 提示代码有效期（如 10 分钟）
+
+3. **自动打开浏览器** (使用 `open` npm 包):
+   - 尝试打开 `verification_uri_complete` (预填 user code)
+   - 失败则静默（用户可手动访问）
+
+4. **轮询获取 Token**:
+   - 显示"等待授权中..."加载动画 (ora)
+   - 调用 `authApi.pollDeviceToken(device_code, interval, expires_in)`
+   - 每 5 秒轮询一次 `/api/v1/oauth/device/token`
+   - 处理轮询响应:
+     - `authorization_pending` - 继续等待
+     - `slow_down` - 增加轮询间隔
+     - `success` - 获取到 token，结束轮询
+     - `expired_token` - 超时，提示重新登录
+     - `access_denied` - 用户拒绝，退出
+
+5. **保存 Token**:
+   - 调用 `saveTokens(access_token, refresh_token, expires_in)`
+   - 调用 `authApi.getCurrentUser()` 获取用户信息
+   - 调用 `saveUser(user)` 保存用户信息
+
+6. **显示成功**:
+   - 停止加载动画
+   - 显示"✓ 登录成功！"
+   - 显示用户信息（邮箱、姓名、角色）
+
+**依赖**:
+- `open` - 自动打开浏览器
+- `ora` - 加载动画
+- `chalk` - 彩色输出
+
+**统一特性**:
+- 所有登录方式（邮箱/Google/GitHub）都在浏览器完成
 - 首次登录 = 自动注册 + 登录
 - 无需单独的注册流程
-- 用户体验一致
+- 用户体验一致、简洁
 
 ---
 
@@ -1152,13 +1168,14 @@ Optima CLI 在全局安装时通过 `postinstall` hook 自动配置 Claude Code 
   - [ ] 错误处理
   - [ ] 日志系统
   - [ ] 格式化输出工具
-- [ ] 认证功能（无密码登录）
-  - [ ] `optima auth login` - 邮箱验证码登录（首次自动注册）
-  - [ ] `optima auth login:google` - Google 登录（首次自动注册）
-  - [ ] `optima auth login:github` - GitHub 登录（首次自动注册）
+- [ ] 认证功能（OAuth 2.0 Device Flow）
+  - [ ] `optima auth login` - Device Flow 登录（在浏览器完成授权）
   - [ ] `optima auth logout` - 登出
   - [ ] `optima auth whoami` - 查看当前用户
+  - [ ] Device Code 请求和轮询逻辑
+  - [ ] 自动打开浏览器
   - [ ] Token 自动存储和管理
+  - [ ] 依赖 user-auth 和 agentic-chat 实现 Device Flow 支持
 - [ ] 商品管理
   - [ ] `optima product create`
   - [ ] `optima product list`
@@ -1541,9 +1558,7 @@ jobs:
 | `i18n category get` | `/api/categories/{category_id}/translations/{language_code}` | GET |
 | `i18n category set` | `/api/categories/{category_id}/translations` | POST |
 | `i18n category delete` | `/api/categories/{category_id}/translations/{language_code}` | DELETE |
-| `auth login` | `/api/v1/auth/send-code` + `/api/v1/auth/verify-code` | POST |
-| `auth login:google` | `/api/v1/oauth/authorize/google` | GET |
-| `auth login:github` | `/api/v1/oauth/authorize/github` | GET |
+| `auth login` | `/api/v1/oauth/device/authorize` + `/api/v1/oauth/device/token` | POST |
 | `auth logout` | `/api/v1/oauth/revoke` | POST |
 | `auth whoami` | `/api/v1/users/me` | GET |
 

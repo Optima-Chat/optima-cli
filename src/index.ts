@@ -2,6 +2,7 @@
 
 import { Command } from 'commander';
 import chalk from 'chalk';
+import { authCommand } from './commands/auth/index.js';
 
 const program = new Command();
 
@@ -9,6 +10,9 @@ program
   .name('optima')
   .description('用自然语言管理电商店铺 - 专为 Claude Code 设计')
   .version('0.1.0');
+
+// 注册认证命令
+program.addCommand(authCommand);
 
 program
   .command('version')
