@@ -21,7 +21,7 @@ Optima CLI 是 [Optima Commerce](https://optima.chat) 生态的命令行入口�
 ## 📦 安装
 
 ```bash
-npm install -g @optima/cli
+npm install -g @optima/cli@latest
 ```
 
 **要求**：Node.js >= 18
