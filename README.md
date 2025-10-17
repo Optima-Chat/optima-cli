@@ -1,22 +1,21 @@
 # Optima CLI
 
-> Optima Commerce 的命令行工具 - 让电商管理更简单
+> 用自然语言管理你的电商店铺 - 无需记住命令
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node Version](https://img.shields.io/badge/node-%3E%3D18-brightgreen)](https://nodejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue)](https://www.typescriptlang.org/)
 
-Optima CLI 是 [Optima Commerce](https://optima.chat) 生态的命令行入口，为商家和开发者提供快速、高效的电商管理能力。
+Optima CLI 是 [Optima Commerce](https://optima.chat) 生态的命令行工具，**专为 Claude Code 设计**，让你通过自然语言对话管理整个电商业务。
 
-## ✨ 特性
+## ✨ 核心特性
 
-- 🚀 **快速上手** - 简洁的命令设计，5 分钟上手
-- 💬 **对话式** - 支持交互式命令引导，友好的用户体验
-- 🤖 **Claude Code 原生集成** - 通过自然语言管理店铺
-- 📦 **功能完整** - 覆盖商品、订单、库存、物流全流程
+- 🤖 **对话式操作** - 在 Claude Code 中用自然语言管理店铺，无需记住命令
+- ⚡️ **即开即用** - 一行命令配置，立即开始使用
+- 📦 **功能完整** - 覆盖商品、订单、库存、物流、广告、图像生成等全流程
 - 🎨 **美观输出** - 彩色终端输出，表格化数据展示
 - 🔐 **安全可靠** - Token 加密存储，自动刷新
-- 🛠 **开发者友好** - TypeScript 类型安全，支持脚本化
+- 🛠 **开发者友好** - TypeScript 类型安全，也支持直接命令行调用
 
 ## 📦 安装
 
@@ -28,42 +27,46 @@ npm install -g @optima/cli@latest
 
 ## 🚀 快速开始
 
-### 1. 登录
+> **核心使用方式**：通过 Claude Code 用自然语言管理店铺，而不是手动输入命令
+
+### 1. 配置 Claude Code
 
 ```bash
-optima auth login
-```
-
-### 2. 创建商品
-
-```bash
-# 交互式创建
-optima product create
-
-# 或使用参数
-optima product create \
-  --title "珍珠耳环" \
-  --price 299 \
-  --description "天然淡水珍珠" \
-  --stock 10 \
-  --images ./product.jpg
-```
-
-### 3. 查看订单
-
-```bash
-optima order list
-```
-
-### 4. 配置 Claude Code
-
-```bash
+# 安装后首先配置 Claude Code 集成
 optima setup-claude
 ```
 
-现在可以在 Claude Code 中说："帮我创建一个新商品" 🎉
+这会在 `~/.claude/CLAUDE.md` 中添加 Optima CLI 的配置，让 Claude Code 能理解你的自然语言指令。
+
+### 2. 登录你的账号
+
+在 Claude Code 中说：
+
+```
+请帮我登录 Optima 账号
+```
+
+Claude 会自动调用 `optima auth login` 命令引导你登录。
+
+### 3. 开始用自然语言管理店铺 ✨
+
+在 Claude Code 中，你可以这样说：
+
+```
+- "帮我创建一个珍珠耳环商品，售价 299 美元，库存 10 件"
+- "查看今天的订单"
+- "把订单 #123 标记为已发货，快递单号 DHL123456"
+- "查看库存低于 5 的商品"
+- "更新商品 prod_123 的价格为 399 美元"
+```
+
+Claude 会自动调用对应的 `optima` 命令来完成操作。
+
+**就是这么简单！** 🎉
 
 ## 📖 命令参考
+
+> **提示**：以下命令也可以直接在终端使用，但我们**强烈推荐**通过 Claude Code 用自然语言调用。
 
 ### 认证管理
 
@@ -178,44 +181,38 @@ optima config get <key>          # 获取配置
 optima config list               # 列出所有配置
 ```
 
-## 🤖 Claude Code 集成
+## 💬 更多自然语言示例
 
-Optima CLI 原生支持 [Claude Code](https://claude.com/claude-code)，让你通过自然语言管理店铺。
+在 Claude Code 中，你可以用非常自然的语言描述你的需求：
 
-### 配置步骤
-
-1. 运行配置命令：
-
-```bash
-optima setup-claude
-```
-
-2. 在 Claude Code 中使用自然语言：
-
-```
-你：帮我创建一个珍珠耳环商品，售价 299 美元，库存 10 件
-Claude：好的，我来帮你创建商品...
-        [自动执行 optima product create 命令]
-
-你：查看今天的订单
-Claude：[自动执行 optima order list 命令]
-
-你：把订单 #123 标记为已发货，快递单号 DHL123456
-Claude：[自动执行 optima order ship order_123 --tracking DHL123456]
-```
-
-### 自然语言示例
-
-- "创建一个新商品：手工陶瓷杯，89 美元"
+**商品管理**：
+- "创建一个新商品：手工陶瓷杯，89 美元，库存 20 件"
 - "查看所有商品"
 - "更新商品 prod_123 的价格为 99 美元"
+- "删除商品 prod_456"
+- "给商品 prod_789 添加 3 张图片"
+
+**订单处理**：
 - "查看今天的订单"
-- "查看待发货的订单"
-- "把订单 order_456 标记为已发货"
+- "查看所有待发货的订单"
+- "显示订单 order_123 的详细信息"
+- "把订单 order_456 标记为已发货，快递单号 DHL123456"
+- "取消订单 order_789"
+
+**库存管理**：
 - "查看库存低于 5 的商品"
-- "更新商品 prod_789 的库存为 50"
-- "计算从香港到纽约的运费"
+- "把商品 prod_123 的库存更新为 50"
+- "显示商品 prod_456 的库存历史"
+
+**物流查询**：
+- "计算从香港到纽约的运费，重量 0.5 公斤"
+- "跟踪快递单号 DHL123456"
+
+**店铺管理**：
 - "查看我的店铺信息"
+- "更新店铺资料"
+
+> **提示**：你不需要记住具体的命令格式，只需要用自然语言描述你想做什么，Claude 会自动理解并调用正确的命令。
 
 ## 🏗 项目状态
 
