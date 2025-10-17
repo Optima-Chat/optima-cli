@@ -57,6 +57,7 @@ Optima Commerce 是一个 AI 驱动的对话式电商平台，目前提供以下
 - Google Ads 广告管理（通过 Google Ads MCP）
 - AI 图像生成（通过 Comfy MCP）
 - 批量导入导出（CSV/JSON）
+- 多语言翻译（商户/商品/分类）
 - 转账记录查询
 - 用户认证（OAuth 2.0）
 
@@ -481,6 +482,34 @@ Optima Commerce 是一个 AI 驱动的对话式电商平台，目前提供以下
 - `listTransfers` - GET /api/transfers/merchant - 获取转账记录列表
 - `getSummary` - GET /api/transfers/merchant/summary - 获取转账汇总
 
+**多语言翻译 (i18n)**：
+- `listLanguages` - GET /api/languages - 获取系统支持的语言列表
+
+**商户多语言 (merchant-i18n)**：
+- `getMerchantI18n` - GET /api/merchants/me/i18n - 获取商户多语言配置
+- `listMerchantTranslations` - GET /api/merchants/me/translations - 获取商户所有翻译
+- `getMerchantTranslation` - GET /api/merchants/me/translations/{language_code} - 获取特定语言翻译
+- `createMerchantTranslation` - POST /api/merchants/me/translations - 创建/更新商户翻译
+- `updateMerchantTranslation` - PUT /api/merchants/me/translations/{language_code} - 更新特定语言翻译
+- `deleteMerchantTranslation` - DELETE /api/merchants/me/translations/{language_code} - 删除特定语言翻译
+
+**商品多语言 (product-i18n)**：
+- `getProductsI18n` - GET /api/products/i18n - 获取商品多语言列表信息
+- `getProductI18n` - GET /api/products/{product_id}/i18n - 获取商品多语言配置
+- `listProductTranslations` - GET /api/products/{product_id}/translations - 获取商品所有翻译
+- `getProductTranslation` - GET /api/products/{product_id}/translations/{language_code} - 获取特定语言翻译
+- `createProductTranslation` - POST /api/products/{product_id}/translations - 创建/更新商品翻译
+- `updateProductTranslation` - PUT /api/products/{product_id}/translations/{language_code} - 更新特定语言翻译
+- `deleteProductTranslation` - DELETE /api/products/{product_id}/translations/{language_code} - 删除特定语言翻译
+
+**分类多语言 (category-i18n)**：
+- `getCategoriesI18n` - GET /api/categories/i18n - 获取分类多语言列表信息
+- `listCategoryTranslations` - GET /api/categories/{category_id}/translations - 获取分类所有翻译
+- `getCategoryTranslation` - GET /api/categories/{category_id}/translations/{language_code} - 获取特定语言翻译
+- `createCategoryTranslation` - POST /api/categories/{category_id}/translations - 创建/更新分类翻译
+- `updateCategoryTranslation` - PUT /api/categories/{category_id}/translations/{language_code} - 更新特定语言翻译
+- `deleteCategoryTranslation` - DELETE /api/categories/{category_id}/translations/{language_code} - 删除特定语言翻译
+
 ### Auth API 封装
 
 **实现位置**：`src/api/rest/auth.ts`
@@ -661,6 +690,23 @@ optima
 │   ├── products           # 导出商品
 │   ├── status <task-id>   # 查看导出状态
 │   └── download <task-id> # 下载导出文件
+├── i18n                   # 多语言翻译 (Phase 3)
+│   ├── languages          # 列出支持的语言
+│   ├── merchant           # 商户多语言管理
+│   │   ├── list           # 列出商户所有翻译
+│   │   ├── get <lang>     # 获取特定语言翻译
+│   │   ├── set <lang>     # 设置特定语言翻译
+│   │   └── delete <lang>  # 删除特定语言翻译
+│   ├── product            # 商品多语言管理
+│   │   ├── list <product-id> # 列出商品所有翻译
+│   │   ├── get <product-id> <lang> # 获取特定语言翻译
+│   │   ├── set <product-id> <lang> # 设置特定语言翻译
+│   │   └── delete <product-id> <lang> # 删除特定语言翻译
+│   └── category           # 分类多语言管理
+│       ├── list <category-id> # 列出分类所有翻译
+│       ├── get <category-id> <lang> # 获取特定语言翻译
+│       ├── set <category-id> <lang> # 设置特定语言翻译
+│       └── delete <category-id> <lang> # 删除特定语言翻译
 ├── config                 # 配置管理
 │   ├── set <key> <value>  # 设置配置
 │   ├── get <key>          # 获取配置
@@ -792,7 +838,23 @@ optima import products ./products.csv
 # 29. 批量导出商品
 optima export products --format csv
 
-# 30. 配置 Claude Code
+# 30. 查看支持的语言
+optima i18n languages
+
+# 31. 设置商户中文翻译
+optima i18n merchant set zh-CN \
+  --name "精美珠宝店" \
+  --description "专注高品质珠宝"
+
+# 32. 设置商品日语翻译
+optima i18n product set prod_123 ja \
+  --title "真珠のイヤリング" \
+  --description "天然淡水真珠"
+
+# 33. 获取分类翻译
+optima i18n category get cat_123 en
+
+# 34. 配置 Claude Code
 optima setup-claude
 ```
 
@@ -1196,9 +1258,24 @@ Optima CLI 在全局安装时通过 `postinstall` hook 自动配置 Claude Code 
 - [ ] 转账记录
   - [ ] `optima transfer list` - 转账列表
   - [ ] `optima transfer summary` - 转账汇总
+- [ ] 多语言翻译（i18n）
+  - [ ] `optima i18n languages` - 支持的语言列表
+  - [ ] `optima i18n merchant list` - 商户翻译列表
+  - [ ] `optima i18n merchant set` - 设置商户翻译
+  - [ ] `optima i18n merchant get` - 获取商户翻译
+  - [ ] `optima i18n merchant delete` - 删除商户翻译
+  - [ ] `optima i18n product list` - 商品翻译列表
+  - [ ] `optima i18n product set` - 设置商品翻译
+  - [ ] `optima i18n product get` - 获取商品翻译
+  - [ ] `optima i18n product delete` - 删除商品翻译
+  - [ ] `optima i18n category list` - 分类翻译列表
+  - [ ] `optima i18n category set` - 设置分类翻译
+  - [ ] `optima i18n category get` - 获取分类翻译
+  - [ ] `optima i18n category delete` - 删除分类翻译
 - [ ] 文档更新
   - [ ] MCP 命令使用说明
   - [ ] 批量操作指南
+  - [ ] 多语言管理指南
   - [ ] 高级功能使用指南
   - [ ] 更新 CLAUDE.md 配置
 
@@ -1232,9 +1309,9 @@ Optima CLI 在全局安装时通过 `postinstall` hook 自动配置 Claude Code 
 **架构总结**：
 - **Phase 1 (Week 1-2)**: MVP - 认证、商品、订单基础功能 → REST API
 - **Phase 2 (Week 3-5)**: 完整电商 - 分类、变体、退款、支付、对话等 → REST API
-- **Phase 3 (Week 6-8)**: 高级功能 - MCP 集成（Ads、图像）+ 批量导入导出 + Easyship
+- **Phase 3 (Week 6-8)**: 高级功能 - MCP 集成（Ads、图像）+ 批量导入导出 + Easyship + 多语言翻译
 - **Phase 4 (Week 9-10)**: 测试、优化、发布
-- **暂不实现**: Shopify MCP、多语言翻译（后续需求再考虑）
+- **暂不实现**: Shopify MCP（后续需求再考虑）
 
 ---
 
@@ -1425,6 +1502,19 @@ jobs:
 | `export products` | `/api/products/exports` | POST |
 | `export status` | `/api/products/exports/{task_id}/status` | GET |
 | `export download` | `/api/products/exports/{task_id}/download` | GET |
+| `i18n languages` | `/api/languages` | GET |
+| `i18n merchant list` | `/api/merchants/me/translations` | GET |
+| `i18n merchant get` | `/api/merchants/me/translations/{language_code}` | GET |
+| `i18n merchant set` | `/api/merchants/me/translations` | POST |
+| `i18n merchant delete` | `/api/merchants/me/translations/{language_code}` | DELETE |
+| `i18n product list` | `/api/products/{product_id}/translations` | GET |
+| `i18n product get` | `/api/products/{product_id}/translations/{language_code}` | GET |
+| `i18n product set` | `/api/products/{product_id}/translations` | POST |
+| `i18n product delete` | `/api/products/{product_id}/translations/{language_code}` | DELETE |
+| `i18n category list` | `/api/categories/{category_id}/translations` | GET |
+| `i18n category get` | `/api/categories/{category_id}/translations/{language_code}` | GET |
+| `i18n category set` | `/api/categories/{category_id}/translations` | POST |
+| `i18n category delete` | `/api/categories/{category_id}/translations/{language_code}` | DELETE |
 | `auth login` | `/api/v1/oauth/token` (grant_type=password) | POST |
 | `auth register` | `/api/v1/auth/register/merchant` | POST |
 | `auth whoami` | `/api/v1/users/me` | GET |
