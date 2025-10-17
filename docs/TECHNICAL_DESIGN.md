@@ -43,14 +43,22 @@ Optima Commerce 是一个 AI 驱动的对话式电商平台，目前提供以下
 ### 定位
 
 **Optima CLI** 是 Optima Commerce 生态的命令行入口，涵盖电商全流程功能：
-- 商品管理
-- 订单处理
+
+**核心电商功能**：
+- 商品管理（分类、变体、图片、视频）
+- 订单处理（创建、发货、退款）
 - 库存控制
-- 物流追踪
-- 店铺配置
-- 用户认证
+- 物流追踪（固定运费、Easyship 集成）
+- 店铺配置（商户资料、Banner）
+- 对话管理（商家-客户聊天）
+- 支付账号（Stripe Connect）
+
+**高级功能**：
 - Google Ads 广告管理（通过 Google Ads MCP）
 - AI 图像生成（通过 Comfy MCP）
+- 批量导入导出（CSV/JSON）
+- 转账记录查询
+- 用户认证（OAuth 2.0）
 
 ### 参考项目
 
@@ -365,6 +373,7 @@ Optima Commerce 是一个 AI 驱动的对话式电商平台，目前提供以下
 - `getLowStock` - GET /api/inventory/low-stock - 获取低库存商品
 - `updateStock` - PUT /api/inventory/products/{product_id}/stock - 调整商品库存
 - `getHistory` - GET /api/inventory/products/{product_id}/history - 查看库存变更历史
+- `reserveStock` - POST /api/inventory/products/{product_id}/reserve - 预留库存（购物车功能）
 
 **商户管理 (merchant)**：
 - `getProfile` - GET /api/merchants/me - 获取当前商户信息
@@ -375,8 +384,13 @@ Optima Commerce 是一个 AI 驱动的对话式电商平台，目前提供以下
 - `updateShippingStatus` - POST /api/orders/merchant/{order_id}/update-shipping-status - 更新物流状态
 - `getShippingHistory` - GET /api/orders/merchant/{order_id}/shipping-history - 获取物流历史
 - `addShippingNote` - POST /api/orders/merchant/{order_id}/add-shipping-note - 添加物流备注
+- `listCountries` - GET /api/shipping/countries - 获取支持的国家列表
+- `getMode` - GET /api/shipping/mode - 获取当前物流模式（fixed/easyship）
+- `setMode` - POST /api/shipping/mode - 切换物流模式
 
 **固定运费配置 (shipping-fixed)**：
+- `getConfig` - GET /api/shipping/fixed/config - 获取固定运费全局配置
+- `updateConfig` - POST /api/shipping/fixed/config - 更新全局配置
 - `calculate` - POST /api/shipping/fixed/calculate - 计算订单运费
 - `listZones` - GET /api/shipping/fixed/zones - 获取运费区域列表
 - `createZone` - POST /api/shipping/fixed/zones - 创建运费区域
@@ -387,6 +401,85 @@ Optima Commerce 是一个 AI 驱动的对话式电商平台，目前提供以下
 - `createRate` - POST /api/shipping/fixed/zones/{zone_id}/rates - 创建运费费率
 - `updateRate` - PUT /api/shipping/fixed/zones/{zone_id}/rates/{rate_id} - 更新运费费率
 - `deleteRate` - DELETE /api/shipping/fixed/zones/{zone_id}/rates/{rate_id} - 删除运费费率
+
+**对话管理 (conversations)**：
+- `list` - GET /api/conversations - 获取对话列表（商户收件箱）
+- `get` - GET /api/conversations/{conversation_id} - 获取对话详情
+- `getContext` - GET /api/conversations/{conversation_id}/context - 获取对话上下文
+- `listMessages` - GET /api/conversations/{conversation_id}/messages - 获取对话消息列表
+- `markRead` - POST /api/conversations/{conversation_id}/messages/mark-read - 标记消息已读
+
+**分类管理 (categories)**：
+- `list` - GET /api/categories - 获取分类列表
+- `create` - POST /api/categories - 创建分类
+- `get` - GET /api/categories/{category_id} - 获取分类详情
+- `update` - PUT /api/categories/{category_id} - 更新分类
+- `delete` - DELETE /api/categories/{category_id} - 删除分类
+
+**商品变体 (variants)**：
+- `list` - GET /api/products/{product_id}/variants - 获取商品变体列表
+- `search` - POST /api/products/{product_id}/variants/search - 搜索商品变体
+- `create` - POST /api/products/{product_id}/variants - 创建商品变体
+- `get` - GET /api/products/{product_id}/variants/{variant_id} - 获取变体详情
+- `update` - PUT /api/products/{product_id}/variants/{variant_id} - 更新变体
+- `delete` - DELETE /api/products/{product_id}/variants/{variant_id} - 删除变体
+- `addImages` - POST /api/products/{master_id}/variants/{variant_id}/images - 添加变体图片
+
+**商品增强功能 (product-enhancements)**：
+- `addVideo` - POST /api/products/{product_id}/videos - 添加商品视频
+- `listVideos` - GET /api/products/{product_id}/videos - 获取视频列表
+- `deleteVideo` - DELETE /api/products/{product_id}/videos/{video_id} - 删除视频
+- `listAttributes` - GET /api/products/{product_id}/attributes - 获取商品属性
+- `updateAttributes` - POST /api/products/{product_id}/attributes - 更新商品属性
+- `getGlobalAttributes` - GET /api/products/attributes - 获取全局属性模板
+- `reorderImages` - POST /api/products/{product_id}/images/reorder - 调整图片顺序
+- `getSummary` - GET /api/products/{product_id}/summary - 获取商品摘要信息
+
+**退款管理 (refunds)**：
+- `create` - POST /api/refunds/create - 创建退款
+- `get` - GET /api/refunds/{refund_id} - 获取退款详情
+
+**Stripe Connect (支付账号)**：
+- `createExpressAccount` - POST /api/merchants/connect/create-express - 创建 Stripe Express 账号
+- `getStatus` - GET /api/merchants/connect/status - 获取连接状态
+- `getDashboardLink` - GET /api/merchants/connect/dashboard-link - 获取 Stripe 仪表板链接
+- `getAccountLink` - GET /api/merchants/connect/account-link - 获取账号设置链接
+- `disconnect` - POST /api/merchants/connect/disconnect - 断开 Stripe 连接
+
+**文件上传 (upload)**：
+- `uploadImage` - POST /api/upload/image - 上传图片
+- `uploadVideo` - POST /api/upload/video - 上传视频
+- `uploadFile` - POST /api/upload/file - 上传文件
+
+**批量导入导出 (import-export)**：
+- `importProducts` - POST /api/products/imports - 批量导入商品（支持 CSV/JSON）
+- `getImportStatus` - GET /api/products/imports/{task_id}/status - 查看导入任务状态
+- `exportProducts` - POST /api/products/exports - 批量导出商品
+- `getExportStatus` - GET /api/products/exports/{task_id}/status - 查看导出任务状态
+- `downloadExport` - GET /api/products/exports/{task_id}/download - 下载导出文件
+
+**商户 Banner 管理 (banners)**：
+- `listBanners` - GET /api/merchants/me/banners - 获取 Banner 列表
+- `createBanner` - POST /api/merchants/me/banners - 创建 Banner
+- `getBanner` - GET /api/merchants/me/banners/{banner_id} - 获取 Banner 详情
+- `updateBanner` - PUT /api/merchants/me/banners/{banner_id} - 更新 Banner
+- `deleteBanner` - DELETE /api/merchants/me/banners/{banner_id} - 删除 Banner
+- `reorderBanners` - POST /api/merchants/me/banners/reorder - 调整 Banner 顺序
+
+**Easyship 物流集成 (easyship)**：
+- `getConfig` - GET /api/shipping/easyship/config - 获取 Easyship 配置
+- `updateConfig` - POST /api/shipping/easyship/config - 更新 Easyship 配置
+- `validateConfig` - POST /api/shipping/easyship/config/validate - 验证配置
+- `getOrigin` - GET /api/shipping/easyship/origin - 获取发货地址
+- `updateOrigin` - POST /api/shipping/easyship/origin - 更新发货地址
+- `getRates` - POST /api/shipping/easyship/rates - 计算运费
+- `createShipment` - POST /api/shipping/easyship/shipments - 创建运单
+- `listCountries` - GET /api/shipping/easyship/countries - 获取支持国家列表
+- `listCouriers` - GET /api/shipping/easyship/couriers - 获取快递公司列表
+
+**转账记录 (transfers)**：
+- `listTransfers` - GET /api/transfers/merchant - 获取转账记录列表
+- `getSummary` - GET /api/transfers/merchant/summary - 获取转账汇总
 
 ### Auth API 封装
 
@@ -402,10 +495,12 @@ Optima Commerce 是一个 AI 驱动的对话式电商平台，目前提供以下
 **用户注册**：
 - `registerCustomer` - POST /api/v1/auth/register - 客户注册（角色：customer）
 - `registerMerchant` - POST /api/v1/auth/register/merchant - 商户注册（角色：merchant）
+- `verifyEmail` - POST /api/v1/auth/verify - 验证邮箱（注册后验证）
 
 **用户资料**：
 - `getCurrentUser` - GET /api/v1/users/me - 获取当前用户信息
 - `updateProfile` - PUT /api/v1/users/me - 更新用户资料
+- `upgradeMerchant` - POST /api/v1/users/upgrade-merchant - 升级为商户账号
 
 **OAuth 客户端管理**（需要 admin 权限）：
 - `createClient` - POST /api/v1/oauth/clients - 创建 OAuth 客户端
@@ -417,6 +512,10 @@ Optima Commerce 是一个 AI 驱动的对话式电商平台，目前提供以下
 **第三方登录**（Google、GitHub、Apple）：
 - `authorize` - GET /api/v1/oauth/authorize/{provider} - 发起第三方授权
 - `callback` - GET /api/v1/oauth/callback/{provider} - 处理第三方回调
+
+**社交账号管理**：
+- `listSocialAccounts` - GET /api/v1/oauth/users/me/social-accounts - 获取已绑定的社交账号列表
+- `unlinkSocialAccount` - DELETE /api/v1/oauth/users/me/social-accounts/{provider} - 解绑社交账号
 
 **注意**：CLI 登录使用 OAuth 2.0 密码模式（grant_type=password），需要提供 client_id 和 client_secret
 
@@ -520,15 +619,48 @@ optima
 │       ├── create <zone-id> # 创建费率
 │       ├── update <zone-id> <rate-id> # 更新费率
 │       └── delete <zone-id> <rate-id> # 删除费率
-├── ads                    # Google Ads 管理 (Phase 2+)
+├── inbox                  # 收件箱管理 (Phase 2)
+│   ├── list               # 对话列表
+│   ├── get <id>           # 对话详情
+│   ├── messages <id>      # 查看消息
+│   └── mark-read <id>     # 标记已读
+├── category               # 分类管理 (Phase 2)
+│   ├── list               # 分类列表
+│   ├── create             # 创建分类
+│   ├── get <id>           # 分类详情
+│   ├── update <id>        # 更新分类
+│   └── delete <id>        # 删除分类
+├── variant                # 商品变体管理 (Phase 2)
+│   ├── list <product-id>  # 变体列表
+│   ├── create <product-id> # 创建变体
+│   ├── get <product-id> <variant-id> # 变体详情
+│   ├── update <product-id> <variant-id> # 更新变体
+│   ├── delete <product-id> <variant-id> # 删除变体
+│   └── add-images <product-id> <variant-id> # 添加变体图片
+├── refund                 # 退款管理 (Phase 2)
+│   ├── create <order-id>  # 创建退款
+│   └── get <refund-id>    # 退款详情
+├── payment                # 支付账号管理 (Phase 2)
+│   ├── connect            # 连接 Stripe
+│   ├── status             # 查看连接状态
+│   ├── dashboard          # 打开 Stripe 仪表板
+│   └── disconnect         # 断开连接
+├── ads                    # Google Ads 管理 (Phase 3)
 │   ├── create-campaign    # 创建广告活动
 │   ├── list-campaigns     # 广告活动列表
 │   ├── performance <id>   # 活动效果
 │   ├── research <keyword> # 关键词研究
 │   └── add-keywords <id>  # 添加关键词
-├── image                  # 图像生成 (Phase 2+)
+├── image                  # 图像生成 (Phase 3)
 │   ├── generate <prompt>  # 文本生成图片
 │   └── transform <url>    # 图片转换
+├── import                 # 批量导入 (Phase 3)
+│   ├── products <file>    # 导入商品
+│   └── status <task-id>   # 查看导入状态
+├── export                 # 批量导出 (Phase 3)
+│   ├── products           # 导出商品
+│   ├── status <task-id>   # 查看导出状态
+│   └── download <task-id> # 下载导出文件
 ├── config                 # 配置管理
 │   ├── set <key> <value>  # 设置配置
 │   ├── get <key>          # 获取配置
@@ -625,7 +757,42 @@ optima shipping rates create zone_123 \
 # 19. 商户信息
 optima merchant info
 
-# 20. 配置 Claude Code
+# 20. 收件箱对话列表
+optima inbox list
+
+# 21. 查看对话消息
+optima inbox messages conv_123
+
+# 22. 标记对话已读
+optima inbox mark-read conv_123
+
+# 23. 创建分类
+optima category create --name "珠宝首饰" --description "精美珠宝"
+
+# 24. 创建商品变体
+optima variant create prod_123 \
+  --sku "PEARL-S-WHITE" \
+  --size S \
+  --color White \
+  --price 299 \
+  --stock 10
+
+# 25. 创建退款
+optima refund create order_123 --amount 100 --reason "商品损坏"
+
+# 26. 连接 Stripe 支付账号
+optima payment connect
+
+# 27. 查看支付账号状态
+optima payment status
+
+# 28. 批量导入商品
+optima import products ./products.csv
+
+# 29. 批量导出商品
+optima export products --format csv
+
+# 30. 配置 Claude Code
 optima setup-claude
 ```
 
@@ -919,7 +1086,7 @@ Optima CLI 在全局安装时通过 `postinstall` hook 自动配置 Claude Code 
   - [ ] `optima setup-claude` 手动配置命令（备用）
   - [ ] CLAUDE.md 配置内容优化
 
-### Phase 2: 完整电商功能 (Week 3-4)
+### Phase 2: 完整电商功能 (Week 3-5)
 
 **目标**: 补充完整的电商业务功能
 
@@ -956,12 +1123,38 @@ Optima CLI 在全局安装时通过 `postinstall` hook 自动配置 Claude Code 
 - [ ] 更多订单操作
   - [ ] `optima order complete`
   - [ ] `optima order cancel`
+- [ ] 收件箱管理（商家与客户对话）
+  - [ ] `optima inbox list` - 对话列表
+  - [ ] `optima inbox get` - 对话详情
+  - [ ] `optima inbox messages` - 查看消息
+  - [ ] `optima inbox mark-read` - 标记已读
+- [ ] 分类管理
+  - [ ] `optima category list` - 分类列表
+  - [ ] `optima category create` - 创建分类
+  - [ ] `optima category get` - 分类详情
+  - [ ] `optima category update` - 更新分类
+  - [ ] `optima category delete` - 删除分类
+- [ ] 商品变体管理
+  - [ ] `optima variant list` - 变体列表
+  - [ ] `optima variant create` - 创建变体
+  - [ ] `optima variant get` - 变体详情
+  - [ ] `optima variant update` - 更新变体
+  - [ ] `optima variant delete` - 删除变体
+  - [ ] `optima variant add-images` - 添加变体图片
+- [ ] 退款管理
+  - [ ] `optima refund create` - 创建退款
+  - [ ] `optima refund get` - 退款详情
+- [ ] Stripe Connect 集成（支付账号）
+  - [ ] `optima payment connect` - 连接 Stripe
+  - [ ] `optima payment status` - 查看连接状态
+  - [ ] `optima payment dashboard` - 打开 Stripe 仪表板
+  - [ ] `optima payment disconnect` - 断开连接
 
-### Phase 3: MCP 集成 - 高级功能 (Week 5-6)
+### Phase 3: 高级功能 - MCP 集成与数据迁移 (Week 6-8)
 
-**目标**: 集成 MCP Servers，实现广告和图像生成功能
+**目标**: 集成 MCP Servers，实现广告、图像生成和批量数据操作
 
-**技术栈**: MCP SSE Protocol
+**技术栈**: MCP SSE Protocol + REST API
 
 **任务清单**:
 - [ ] MCP 客户端实现
@@ -969,21 +1162,47 @@ Optima CLI 在全局安装时通过 `postinstall` hook 自动配置 Claude Code 
   - [ ] MCP 工具调用封装
   - [ ] 错误处理
   - [ ] 依赖安装 (eventsource)
-- [ ] Google Ads 管理
+- [ ] Google Ads 管理 (MCP)
   - [ ] `optima ads create-campaign`
   - [ ] `optima ads list-campaigns`
   - [ ] `optima ads performance`
   - [ ] `optima ads research`
   - [ ] `optima ads add-keywords`
-- [ ] 图像生成
+- [ ] 图像生成 (MCP)
   - [ ] `optima image generate`
   - [ ] `optima image transform`
   - [ ] 图片下载和保存
+- [ ] 批量导入导出
+  - [ ] `optima import products` - 导入商品 (CSV/JSON)
+  - [ ] `optima import status` - 查看导入状态
+  - [ ] `optima export products` - 导出商品 (CSV/JSON)
+  - [ ] `optima export status` - 查看导出状态
+  - [ ] `optima export download` - 下载导出文件
+- [ ] 商品增强功能
+  - [ ] `optima product add-video` - 添加商品视频
+  - [ ] `optima product list-videos` - 查看视频列表
+  - [ ] `optima product reorder-images` - 调整图片顺序
+- [ ] 商户 Banner 管理
+  - [ ] `optima banner list` - Banner 列表
+  - [ ] `optima banner create` - 创建 Banner
+  - [ ] `optima banner update` - 更新 Banner
+  - [ ] `optima banner delete` - 删除 Banner
+  - [ ] `optima banner reorder` - 调整顺序
+- [ ] Easyship 物流集成
+  - [ ] `optima easyship config` - 配置 Easyship
+  - [ ] `optima easyship rates` - 计算运费
+  - [ ] `optima easyship ship` - 创建运单
+  - [ ] `optima easyship countries` - 支持国家
+- [ ] 转账记录
+  - [ ] `optima transfer list` - 转账列表
+  - [ ] `optima transfer summary` - 转账汇总
 - [ ] 文档更新
   - [ ] MCP 命令使用说明
+  - [ ] 批量操作指南
+  - [ ] 高级功能使用指南
   - [ ] 更新 CLAUDE.md 配置
 
-### Phase 4: 测试、优化与发布 (Week 7-8)
+### Phase 4: 测试、优化与发布 (Week 9-10)
 
 **目标**: 完善测试、优化体验、发布到 NPM
 
@@ -1011,9 +1230,11 @@ Optima CLI 在全局安装时通过 `postinstall` hook 自动配置 Claude Code 
   - [ ] 创建 Release Notes
 
 **架构总结**：
-- **Phase 1-2**: REST API 直连（高性能、简单直接）
-- **Phase 3**: MCP 集成（复用现有工具，避免重复开发）
-- **暂不实现**: Shopify MCP（后续需求再考虑）
+- **Phase 1 (Week 1-2)**: MVP - 认证、商品、订单基础功能 → REST API
+- **Phase 2 (Week 3-5)**: 完整电商 - 分类、变体、退款、支付、对话等 → REST API
+- **Phase 3 (Week 6-8)**: 高级功能 - MCP 集成（Ads、图像）+ 批量导入导出 + Easyship
+- **Phase 4 (Week 9-10)**: 测试、优化、发布
+- **暂不实现**: Shopify MCP、多语言翻译（后续需求再考虑）
 
 ---
 
@@ -1175,6 +1396,35 @@ jobs:
 | `shipping rates delete` | `/api/shipping/fixed/zones/{zone_id}/rates/{rate_id}` | DELETE |
 | `merchant info` | `/api/merchants/me` | GET |
 | `merchant update` | `/api/merchants/me` | PUT |
+| `inbox list` | `/api/conversations` | GET |
+| `inbox get` | `/api/conversations/{conversation_id}` | GET |
+| `inbox messages` | `/api/conversations/{conversation_id}/messages` | GET |
+| `inbox mark-read` | `/api/conversations/{conversation_id}/messages/mark-read` | POST |
+| `category list` | `/api/categories` | GET |
+| `category create` | `/api/categories` | POST |
+| `category get` | `/api/categories/{category_id}` | GET |
+| `category update` | `/api/categories/{category_id}` | PUT |
+| `category delete` | `/api/categories/{category_id}` | DELETE |
+| `variant list` | `/api/products/{product_id}/variants` | GET |
+| `variant create` | `/api/products/{product_id}/variants` | POST |
+| `variant get` | `/api/products/{product_id}/variants/{variant_id}` | GET |
+| `variant update` | `/api/products/{product_id}/variants/{variant_id}` | PUT |
+| `variant delete` | `/api/products/{product_id}/variants/{variant_id}` | DELETE |
+| `variant add-images` | `/api/products/{master_id}/variants/{variant_id}/images` | POST |
+| `refund create` | `/api/refunds/create` | POST |
+| `refund get` | `/api/refunds/{refund_id}` | GET |
+| `payment connect` | `/api/merchants/connect/create-express` | POST |
+| `payment status` | `/api/merchants/connect/status` | GET |
+| `payment dashboard` | `/api/merchants/connect/dashboard-link` | GET |
+| `payment disconnect` | `/api/merchants/connect/disconnect` | POST |
+| `product add-video` | `/api/products/{product_id}/videos` | POST |
+| `product list-videos` | `/api/products/{product_id}/videos` | GET |
+| `product reorder-images` | `/api/products/{product_id}/images/reorder` | POST |
+| `import products` | `/api/products/imports` | POST |
+| `import status` | `/api/products/imports/{task_id}/status` | GET |
+| `export products` | `/api/products/exports` | POST |
+| `export status` | `/api/products/exports/{task_id}/status` | GET |
+| `export download` | `/api/products/exports/{task_id}/download` | GET |
 | `auth login` | `/api/v1/oauth/token` (grant_type=password) | POST |
 | `auth register` | `/api/v1/auth/register/merchant` | POST |
 | `auth whoami` | `/api/v1/users/me` | GET |
