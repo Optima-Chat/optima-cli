@@ -159,7 +159,7 @@ Optima Commerce 是一个 AI 驱动的对话式电商平台，目前提供以下
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                    Optima CLI                           │
-│                  (@optima/cli)                          │
+│            (@optima-chat/optima-cli)                    │
 └─────────────────────────────────────────────────────────┘
                          │
         ┌────────────────┼────────────────┬────────────────┐
@@ -189,7 +189,7 @@ Optima Commerce 是一个 AI 驱动的对话式电商平台，目前提供以下
 ### 目录结构
 
 ```
-@optima/cli/
+@optima-chat/optima-cli/
 ├── src/
 │   ├── api/                      # API 客户端层
 │   │   ├── rest/                 # REST API 客户端
@@ -1515,7 +1515,7 @@ const OPTIMA_CLI_SECTION = `
 ## Optima CLI
 Optima CLI 是用自然语言管理电商店铺的命令行工具，专为 Claude Code 设计。
 
-安装：\`npm install -g @optima/cli@latest\`
+安装：\`npm install -g @optima-chat/optima-cli@latest\`
 
 ### 使用方式
 
@@ -1611,7 +1611,7 @@ const OPTIMA_CLI_SECTION = `
 ## Optima CLI
 Optima CLI 是 Optima Commerce 的命令行工具，用于管理电商业务。
 
-安装：\`npm install -g @optima/cli\`
+安装：\`npm install -g @optima-chat/optima-cli\`
 
 ### 常用命令
 
@@ -1839,7 +1839,7 @@ export async function setupClaude(options: { force?: boolean }) {
 ```json
 // package.json
 {
-  "name": "@optima/cli",
+  "name": "@optima-chat/optima-cli",
   "version": "0.1.0",
   "description": "用自然语言管理电商店铺 - 专为 Claude Code 设计的对话式 CLI 工具",
   "main": "dist/index.js",
