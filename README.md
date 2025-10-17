@@ -17,15 +17,9 @@ Optima CLI 是 [Optima Commerce](https://optima.chat) 生态的命令行工具�
 - 🔐 **安全可靠** - Token 加密存储，自动刷新
 - 🛠 **开发者友好** - TypeScript 类型安全，也支持直接命令行调用
 
-## 📦 安装
-
-```bash
-npm install -g @optima-chat/optima-cli@latest
-```
+## 🚀 快速开始
 
 **要求**：Node.js >= 18
-
-## 🚀 快速开始
 
 > **核心使用方式**：通过 Claude Code 用自然语言管理店铺，安装即用
 
