@@ -376,6 +376,17 @@ Optima Commerce 是一个 AI 驱动的对话式电商平台，目前提供以下
 - `getShippingHistory` - GET /api/orders/merchant/{order_id}/shipping-history - 获取物流历史
 - `addShippingNote` - POST /api/orders/merchant/{order_id}/add-shipping-note - 添加物流备注
 
+**固定运费配置 (shipping-fixed)**：
+- `listZones` - GET /api/shipping/fixed/zones - 获取运费区域列表
+- `createZone` - POST /api/shipping/fixed/zones - 创建运费区域
+- `getZone` - GET /api/shipping/fixed/zones/{zone_id} - 获取运费区域详情
+- `updateZone` - PUT /api/shipping/fixed/zones/{zone_id} - 更新运费区域
+- `deleteZone` - DELETE /api/shipping/fixed/zones/{zone_id} - 删除运费区域
+- `listRates` - GET /api/shipping/fixed/zones/{zone_id}/rates - 获取区域运费费率
+- `createRate` - POST /api/shipping/fixed/zones/{zone_id}/rates - 创建运费费率
+- `updateRate` - PUT /api/shipping/fixed/zones/{zone_id}/rates/{rate_id} - 更新运费费率
+- `deleteRate` - DELETE /api/shipping/fixed/zones/{zone_id}/rates/{rate_id} - 删除运费费率
+
 ### Auth API 封装
 
 **实现位置**：`src/api/rest/auth.ts`
@@ -495,7 +506,18 @@ optima
 │   ├── status <order-id>  # 查看物流状态
 │   ├── update-status <order-id>  # 更新物流状态
 │   ├── history <order-id> # 物流历史
-│   └── add-note <order-id> # 添加物流备注
+│   ├── add-note <order-id> # 添加物流备注
+│   ├── zones              # 运费区域管理
+│   │   ├── list           # 列出所有运费区域
+│   │   ├── create         # 创建运费区域
+│   │   ├── get <zone-id>  # 获取区域详情
+│   │   ├── update <zone-id> # 更新运费区域
+│   │   └── delete <zone-id> # 删除运费区域
+│   └── rates              # 运费费率管理
+│       ├── list <zone-id> # 列出区域费率
+│       ├── create <zone-id> # 创建费率
+│       ├── update <zone-id> <rate-id> # 更新费率
+│       └── delete <zone-id> <rate-id> # 删除费率
 ├── ads                    # Google Ads 管理 (Phase 2+)
 │   ├── create-campaign    # 创建广告活动
 │   ├── list-campaigns     # 广告活动列表
@@ -578,10 +600,24 @@ optima shipping history order_123
 # 14. 更新物流状态
 optima shipping update-status order_123 --status in_transit
 
-# 15. 商户信息
+# 15. 运费区域列表
+optima shipping zones list
+
+# 16. 创建运费区域
+optima shipping zones create \
+  --name "North America" \
+  --countries "US,CA,MX"
+
+# 17. 创建运费费率
+optima shipping rates create zone_123 \
+  --min-weight 0 \
+  --max-weight 1 \
+  --price 10
+
+# 18. 商户信息
 optima merchant info
 
-# 16. 配置 Claude Code
+# 19. 配置 Claude Code
 optima setup-claude
 ```
 
@@ -895,6 +931,15 @@ Optima CLI 在全局安装时通过 `postinstall` hook 自动配置 Claude Code 
   - [ ] `optima shipping history` - 物流历史
   - [ ] `optima shipping update-status` - 更新物流状态
   - [ ] `optima shipping add-note` - 添加物流备注
+- [ ] 运费配置管理
+  - [ ] `optima shipping zones list` - 列出运费区域
+  - [ ] `optima shipping zones create` - 创建运费区域
+  - [ ] `optima shipping zones update` - 更新运费区域
+  - [ ] `optima shipping zones delete` - 删除运费区域
+  - [ ] `optima shipping rates list` - 列出费率
+  - [ ] `optima shipping rates create` - 创建费率
+  - [ ] `optima shipping rates update` - 更新费率
+  - [ ] `optima shipping rates delete` - 删除费率
 - [ ] 商户管理
   - [ ] `optima merchant info`
   - [ ] `optima merchant update`
@@ -1109,6 +1154,15 @@ jobs:
 | `shipping history` | `/api/orders/merchant/{order_id}/shipping-history` | GET |
 | `shipping update-status` | `/api/orders/merchant/{order_id}/update-shipping-status` | POST |
 | `shipping add-note` | `/api/orders/merchant/{order_id}/add-shipping-note` | POST |
+| `shipping zones list` | `/api/shipping/fixed/zones` | GET |
+| `shipping zones create` | `/api/shipping/fixed/zones` | POST |
+| `shipping zones get` | `/api/shipping/fixed/zones/{zone_id}` | GET |
+| `shipping zones update` | `/api/shipping/fixed/zones/{zone_id}` | PUT |
+| `shipping zones delete` | `/api/shipping/fixed/zones/{zone_id}` | DELETE |
+| `shipping rates list` | `/api/shipping/fixed/zones/{zone_id}/rates` | GET |
+| `shipping rates create` | `/api/shipping/fixed/zones/{zone_id}/rates` | POST |
+| `shipping rates update` | `/api/shipping/fixed/zones/{zone_id}/rates/{rate_id}` | PUT |
+| `shipping rates delete` | `/api/shipping/fixed/zones/{zone_id}/rates/{rate_id}` | DELETE |
 | `merchant info` | `/api/merchants/me` | GET |
 | `merchant update` | `/api/merchants/me` | PUT |
 | `auth login` | `/api/v1/oauth/token` (grant_type=password) | POST |
