@@ -442,9 +442,12 @@ Optima Commerce 是一个 AI 驱动的对话式电商平台，目前提供以下
 
 **Stripe Connect (支付账号)**：
 - `createExpressAccount` - POST /api/merchants/connect/create-express - 创建 Stripe Express 账号
+- `refreshExpressAccount` - POST /api/merchants/connect/express-refresh - 刷新 Stripe Express 账号信息
 - `getStatus` - GET /api/merchants/connect/status - 获取连接状态
 - `getDashboardLink` - GET /api/merchants/connect/dashboard-link - 获取 Stripe 仪表板链接
 - `getAccountLink` - GET /api/merchants/connect/account-link - 获取账号设置链接
+- `getOAuthLink` - GET /api/merchants/connect/oauth-link - 获取 Stripe OAuth 授权链接
+- `handleCallback` - GET /api/merchants/connect/callback - 处理 Stripe 回调（内部使用）
 - `disconnect` - POST /api/merchants/connect/disconnect - 断开 Stripe 连接
 
 **文件上传 (upload)**：
@@ -473,8 +476,10 @@ Optima Commerce 是一个 AI 驱动的对话式电商平台，目前提供以下
 - `validateConfig` - POST /api/shipping/easyship/config/validate - 验证配置
 - `getOrigin` - GET /api/shipping/easyship/origin - 获取发货地址
 - `updateOrigin` - POST /api/shipping/easyship/origin - 更新发货地址
+- `validateOrigin` - POST /api/shipping/easyship/origin/validate - 验证发货地址
 - `getRates` - POST /api/shipping/easyship/rates - 计算运费
 - `createShipment` - POST /api/shipping/easyship/shipments - 创建运单
+- `validateAddress` - POST /api/shipping/easyship/validate-address - 验证收货地址
 - `listCountries` - GET /api/shipping/easyship/countries - 获取支持国家列表
 - `listCouriers` - GET /api/shipping/easyship/couriers - 获取快递公司列表
 
