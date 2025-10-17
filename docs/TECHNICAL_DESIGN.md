@@ -347,49 +347,61 @@ Optima Commerce 是一个 AI 驱动的对话式电商平台，目前提供以下
 基于 `commerceClient` 封装电商业务 API，采用对象分组的方式组织：
 
 **商品管理 (products)**：
-- `create` - POST /products - 创建商品
-- `list` - GET /products - 商品列表（支持分页）
-- `get` - GET /products/{id} - 商品详情
-- `update` - PUT /products/{id} - 更新商品
-- `delete` - DELETE /products/{id} - 删除商品
-- `addImages` - POST /products/{id}/images - 上传图片（FormData）
-- `removeImages` - POST /products/{id}/images/remove - 删除图片
+- `create` - POST /api/products - 创建商品（支持简单商品和变体商品）
+- `list` - GET /api/products - 商品列表（支持分页和高级过滤）
+- `get` - GET /api/products/{product_id} - 商品详情
+- `update` - PUT /api/products/{product_id} - 更新商品
+- `delete` - DELETE /api/products/{product_id} - 软删除商品
 
 **订单管理 (orders)**：
-- `list` - GET /orders/merchant - 商户订单列表
-- `get` - GET /orders/merchant/{id} - 订单详情
-- `ship` - POST /orders/merchant/{id}/ship - 订单发货
-- `complete` - POST /orders/merchant/{id}/complete - 完成订单
-- `cancel` - POST /orders/merchant/{id}/cancel - 取消订单
+- `list` - GET /api/orders/merchant - 商户订单列表（支持过滤）
+- `get` - GET /api/orders/merchant/{order_id} - 订单详情
+- `ship` - POST /api/orders/merchant/{order_id}/ship - 标记订单已发货
+- `complete` - POST /api/orders/merchant/{order_id}/complete - 完成订单
+- `cancel` - POST /api/orders/merchant/{order_id}/cancel - 取消订单
+- `markDelivered` - POST /api/orders/merchant/{order_id}/mark-delivered - 标记已送达
 
 **库存管理 (inventory)**：
-- `getLowStock` - GET /inventory/low-stock - 低库存商品
-- `update` - POST /inventory/update - 更新库存
-- `getHistory` - GET /inventory/{productId}/history - 库存历史
+- `getLowStock` - GET /api/inventory/low-stock - 获取低库存商品
+- `updateStock` - PUT /api/inventory/products/{product_id}/stock - 调整商品库存
+- `getHistory` - GET /api/inventory/products/{product_id}/history - 查看库存变更历史
 
-**物流管理 (shipping)**：
-- `calculate` - POST /shipping/calculate - 计算运费
-- `create` - POST /shipping/create - 创建运单
-- `track` - GET /shipping/track/{trackingNumber} - 物流跟踪
-
-**店铺管理 (shop)**：
-- `getInfo` - GET /shop/info - 店铺信息
-- `updateProfile` - PUT /merchant/profile - 更新商户资料
-- `setup` - POST /merchant/setup - 初始化店铺
+**商户管理 (merchant)**：
+- `getProfile` - GET /api/merchants/me - 获取当前商户信息
+- `updateProfile` - PUT /api/merchants/me - 更新商户资料
+- `setupProfile` - POST /api/merchants/me - 初始化 OAuth 用户的商户资料
 
 ### Auth API 封装
 
 **实现位置**：`src/api/rest/auth.ts`
 
-基于 `authClient` 封装认证相关 API：
+基于 `authClient` 封装认证相关 API，使用标准 OAuth 2.0 协议：
 
-- `register` - POST /auth/register - 用户注册
-- `login` - POST /auth/login - 用户登录（返回 access_token 和 refresh_token）
-- `logout` - POST /auth/logout - 用户登出
-- `refresh` - POST /auth/refresh - 刷新 Token
-- `getCurrentUser` - GET /users/me - 获取当前用户信息
-- `createApiKey` - POST /users/api-keys - 创建 API Key
-- `deleteApiKey` - DELETE /users/api-keys/{id} - 删除 API Key
+**OAuth Token 管理**：
+- `getToken` - POST /api/v1/oauth/token - 获取访问令牌
+  - 支持多种授权类型：password（密码模式）、client_credentials、authorization_code、refresh_token
+- `revokeToken` - POST /api/v1/oauth/revoke - 撤销访问令牌或刷新令牌
+
+**用户注册**：
+- `registerCustomer` - POST /api/v1/auth/register - 客户注册（角色：customer）
+- `registerMerchant` - POST /api/v1/auth/register/merchant - 商户注册（角色：merchant）
+
+**用户资料**：
+- `getCurrentUser` - GET /api/v1/users/me - 获取当前用户信息
+- `updateProfile` - PUT /api/v1/users/me - 更新用户资料
+
+**OAuth 客户端管理**（需要 admin 权限）：
+- `createClient` - POST /api/v1/oauth/clients - 创建 OAuth 客户端
+- `listClients` - GET /api/v1/oauth/clients - 列出 OAuth 客户端
+- `getClient` - GET /api/v1/oauth/clients/{client_id} - 获取客户端详情
+- `updateClient` - PUT /api/v1/oauth/clients/{client_id} - 更新客户端
+- `deleteClient` - DELETE /api/v1/oauth/clients/{client_id} - 删除客户端
+
+**第三方登录**（Google、GitHub、Apple）：
+- `authorize` - GET /api/v1/oauth/authorize/{provider} - 发起第三方授权
+- `callback` - GET /api/v1/oauth/callback/{provider} - 处理第三方回调
+
+**注意**：CLI 登录使用 OAuth 2.0 密码模式（grant_type=password），需要提供 client_id 和 client_secret
 
 ### MCP 客户端封装 (Phase 3)
 
@@ -470,14 +482,10 @@ optima
 │   ├── low-stock          # 低库存商品
 │   ├── update <id>        # 更新库存
 │   └── history <id>       # 库存历史
-├── shipping               # 物流管理 (Phase 1)
-│   ├── calculate          # 计算运费
-│   ├── create <order-id>  # 创建运单
-│   └── track <number>     # 物流跟踪
-├── shop                   # 店铺管理 (Phase 1)
-│   ├── info               # 店铺信息
-│   ├── update             # 更新店铺
-│   └── setup              # 设置店铺
+├── merchant               # 商户管理 (Phase 1)
+│   ├── info               # 获取商户信息
+│   ├── update             # 更新商户资料
+│   └── setup              # 初始化商户资料（OAuth 用户）
 ├── ads                    # Google Ads 管理 (Phase 2+)
 │   ├── create-campaign    # 创建广告活动
 │   ├── list-campaigns     # 广告活动列表
@@ -554,19 +562,10 @@ optima inventory low-stock --threshold 5
 # 12. 更新库存
 optima inventory update prod_123 --quantity 20
 
-# 13. 计算运费
-optima shipping calculate \
-  --from "Hong Kong" \
-  --to "New York, USA" \
-  --weight 0.5
+# 13. 商户信息
+optima merchant info
 
-# 14. 物流跟踪
-optima shipping track DHL123456
-
-# 15. 店铺信息
-optima shop info
-
-# 16. 配置 Claude Code
+# 14. 配置 Claude Code
 optima setup-claude
 ```
 
@@ -876,14 +875,14 @@ Optima CLI 在全局安装时通过 `postinstall` hook 自动配置 Claude Code 
   - [ ] `optima inventory low-stock`
   - [ ] `optima inventory update`
   - [ ] `optima inventory history`
-- [ ] 物流管理
-  - [ ] `optima shipping calculate`
-  - [ ] `optima shipping create`
-  - [ ] `optima shipping track`
-- [ ] 店铺管理
-  - [ ] `optima shop info`
-  - [ ] `optima shop update`
-  - [ ] `optima shop setup`
+- [ ] 物流管理（待后端实现）
+  - [ ] `optima shipping calculate` - 计算运费
+  - [ ] `optima shipping create` - 创建运单
+  - [ ] `optima shipping track` - 物流跟踪
+- [ ] 商户管理
+  - [ ] `optima merchant info`
+  - [ ] `optima merchant update`
+  - [ ] `optima merchant setup`
 - [ ] 更多订单操作
   - [ ] `optima order complete`
   - [ ] `optima order cancel`
@@ -1078,23 +1077,24 @@ jobs:
 
 | CLI 命令 | API 端点 | HTTP 方法 |
 |---------|---------|----------|
-| `product create` | `/products` | POST |
-| `product list` | `/products` | GET |
-| `product get` | `/products/{id}` | GET |
-| `product update` | `/products/{id}` | PUT |
-| `product delete` | `/products/{id}` | DELETE |
-| `product add-images` | `/products/{id}/images` | POST |
-| `order list` | `/orders/merchant` | GET |
-| `order get` | `/orders/merchant/{id}` | GET |
-| `order ship` | `/orders/merchant/{id}/ship` | POST |
-| `order complete` | `/orders/merchant/{id}/complete` | POST |
-| `order cancel` | `/orders/merchant/{id}/cancel` | POST |
-| `inventory low-stock` | `/inventory/low-stock` | GET |
-| `inventory update` | `/inventory/update` | POST |
-| `shipping calculate` | `/shipping/calculate` | POST |
-| `shipping track` | `/shipping/track/{number}` | GET |
-| `shop info` | `/shop/info` | GET |
-| `shop update` | `/merchant/profile` | PUT |
+| `product create` | `/api/products` | POST |
+| `product list` | `/api/products` | GET |
+| `product get` | `/api/products/{product_id}` | GET |
+| `product update` | `/api/products/{product_id}` | PUT |
+| `product delete` | `/api/products/{product_id}` | DELETE |
+| `order list` | `/api/orders/merchant` | GET |
+| `order get` | `/api/orders/merchant/{order_id}` | GET |
+| `order ship` | `/api/orders/merchant/{order_id}/ship` | POST |
+| `order complete` | `/api/orders/merchant/{order_id}/complete` | POST |
+| `order cancel` | `/api/orders/merchant/{order_id}/cancel` | POST |
+| `inventory low-stock` | `/api/inventory/low-stock` | GET |
+| `inventory update` | `/api/inventory/products/{product_id}/stock` | PUT |
+| `inventory history` | `/api/inventory/products/{product_id}/history` | GET |
+| `merchant info` | `/api/merchants/me` | GET |
+| `merchant update` | `/api/merchants/me` | PUT |
+| `auth login` | `/api/v1/oauth/token` (grant_type=password) | POST |
+| `auth register` | `/api/v1/auth/register/merchant` | POST |
+| `auth whoami` | `/api/v1/users/me` | GET |
 
 ### C. 错误码映射
 
