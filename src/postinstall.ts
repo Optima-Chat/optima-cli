@@ -12,7 +12,7 @@ Optima CLI 是用自然语言管理电商店铺的命令行工具，专为 Claud
 
 **当前版本**: v0.1.0（占位版本，核心功能开发中）
 
-安装：\`npm install -g @optima/cli@latest\`
+安装：\`npm install -g @optima-chat/optima-cli@latest\`
 
 ### 使用方式
 

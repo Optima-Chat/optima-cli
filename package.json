@@ -1,5 +1,5 @@
 {
-  "name": "@optima/cli",
+  "name": "@optima-chat/optima-cli",
   "version": "0.1.0",
   "description": "用自然语言管理电商店铺 - 专为 Claude Code 设计的对话式 CLI 工具",
   "main": "dist/index.js",

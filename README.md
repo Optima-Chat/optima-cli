@@ -20,7 +20,7 @@ Optima CLI 是 [Optima Commerce](https://optima.chat) 生态的命令行工具�
 ## 📦 安装
 
 ```bash
-npm install -g @optima/cli@latest
+npm install -g @optima-chat/optima-cli@latest
 ```
 
 **要求**：Node.js >= 18
@@ -32,7 +32,7 @@ npm install -g @optima/cli@latest
 ### 1. 安装（自动配置）
 
 ```bash
-npm install -g @optima/cli@latest
+npm install -g @optima-chat/optima-cli@latest
 ```
 
 安装完成后会自动配置 Claude Code 集成，无需任何额外步骤！
