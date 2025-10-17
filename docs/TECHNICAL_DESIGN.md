@@ -32,7 +32,7 @@
 Optima Commerce 是一个 AI 驱动的对话式电商平台，目前提供以下用户界面：
 - **Agentic Chat**: 卖家对话界面 (https://ai.optima.chat)
 - **Optima Store**: 买家购物前端 (https://go.optima.shop)
-- **Admin Panel**: 管理后台
+- **Admin Panel**: 管理后台 (https://admin.optima.chat)
 
 为了提升开发者体验和自动化能力，我们需要提供一个 **CLI 工具**，使开发者和商家能够：
 1. 通过命令行快速管理店铺
