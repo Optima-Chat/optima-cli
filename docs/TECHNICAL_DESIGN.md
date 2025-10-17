@@ -319,386 +319,126 @@ Optima Commerce 是一个 AI 驱动的对话式电商平台，目前提供以下
 
 ### 基础 HTTP 客户端
 
-```typescript
-// src/api/client.ts
-import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
-import { getConfig, updateConfig } from '../utils/config.js';
-import { ApiError } from '../utils/error.js';
+**实现位置**：`src/api/rest/client.ts`
 
-class ApiClient {
-  private client: AxiosInstance;
-  private baseURL: string;
+**核心功能**：
+- 基于 Axios 封装统一的 HTTP 客户端类 `ApiClient`
+- 支持 GET、POST、PUT、DELETE、UPLOAD 等常用方法
+- 默认超时 30 秒，Content-Type 为 application/json
 
-  constructor(baseURL: string) {
-    this.baseURL = baseURL;
-    this.client = axios.create({
-      baseURL,
-      timeout: 30000,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+**请求拦截器**：
+- 自动从配置中读取 Token
+- 自动添加 `Authorization: Bearer <token>` 请求头
 
-    this.setupInterceptors();
-  }
+**响应拦截器**：
+- 捕获 401 错误，自动调用 `/auth/refresh` 刷新 Token
+- Token 刷新成功后重试原请求
+- 刷新失败则清除认证信息，提示用户重新登录
+- 统一处理 API 错误，包装为 `ApiError` 类型
 
-  private setupInterceptors() {
-    // 请求拦截器 - 添加 Token
-    this.client.interceptors.request.use(
-      (config) => {
-        const token = getConfig('auth.token');
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-      },
-      (error) => Promise.reject(error)
-    );
-
-    // 响应拦截器 - 处理错误和 Token 刷新
-    this.client.interceptors.response.use(
-      (response) => response,
-      async (error) => {
-        const originalRequest = error.config;
-
-        // Token 过期，尝试刷新
-        if (error.response?.status === 401 && !originalRequest._retry) {
-          originalRequest._retry = true;
-
-          try {
-            const refreshToken = getConfig('auth.refreshToken');
-            const { data } = await axios.post(
-              `https://auth.optima.chat/auth/refresh`,
-              { refresh_token: refreshToken }
-            );
-
-            updateConfig('auth.token', data.access_token);
-            updateConfig('auth.refreshToken', data.refresh_token);
-
-            originalRequest.headers.Authorization = `Bearer ${data.access_token}`;
-            return this.client(originalRequest);
-          } catch (refreshError) {
-            // 刷新失败，清除认证信息
-            updateConfig('auth', null);
-            throw new ApiError('认证已过期，请重新登录', 401);
-          }
-        }
-
-        throw new ApiError(
-          error.response?.data?.message || error.message,
-          error.response?.status
-        );
-      }
-    );
-  }
-
-  async get<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
-    const response = await this.client.get<T>(url, config);
-    return response.data;
-  }
-
-  async post<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
-    const response = await this.client.post<T>(url, data, config);
-    return response.data;
-  }
-
-  async put<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
-    const response = await this.client.put<T>(url, data, config);
-    return response.data;
-  }
-
-  async delete<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
-    const response = await this.client.delete<T>(url, config);
-    return response.data;
-  }
-
-  async upload<T>(url: string, formData: FormData): Promise<T> {
-    const response = await this.client.post<T>(url, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-    return response.data;
-  }
-}
-
-export const commerceClient = new ApiClient('https://api.optima.chat');
-export const authClient = new ApiClient('https://auth.optima.chat');
-```
+**客户端实例**：
+- `commerceClient`: 连接 https://api.optima.chat
+- `authClient`: 连接 https://auth.optima.chat
 
 ### Commerce API 封装
 
-```typescript
-// src/api/commerce.ts
-import { commerceClient } from './client.js';
-import type {
-  Product,
-  ProductCreateInput,
-  ProductUpdateInput,
-  Order,
-  OrderListParams,
-  ShippingCalculateParams,
-  ShippingRate,
-  Inventory,
-} from './types.js';
+**实现位置**：`src/api/rest/commerce.ts`
 
-export const commerceApi = {
-  // 商品管理
-  products: {
-    create: (data: ProductCreateInput) =>
-      commerceClient.post<Product>('/products', data),
+基于 `commerceClient` 封装电商业务 API，采用对象分组的方式组织：
 
-    list: (params?: { limit?: number; offset?: number }) =>
-      commerceClient.get<{ items: Product[]; total: number }>('/products', { params }),
+**商品管理 (products)**：
+- `create` - POST /products - 创建商品
+- `list` - GET /products - 商品列表（支持分页）
+- `get` - GET /products/{id} - 商品详情
+- `update` - PUT /products/{id} - 更新商品
+- `delete` - DELETE /products/{id} - 删除商品
+- `addImages` - POST /products/{id}/images - 上传图片（FormData）
+- `removeImages` - POST /products/{id}/images/remove - 删除图片
 
-    get: (id: string) =>
-      commerceClient.get<Product>(`/products/${id}`),
+**订单管理 (orders)**：
+- `list` - GET /orders/merchant - 商户订单列表
+- `get` - GET /orders/merchant/{id} - 订单详情
+- `ship` - POST /orders/merchant/{id}/ship - 订单发货
+- `complete` - POST /orders/merchant/{id}/complete - 完成订单
+- `cancel` - POST /orders/merchant/{id}/cancel - 取消订单
 
-    update: (id: string, data: ProductUpdateInput) =>
-      commerceClient.put<Product>(`/products/${id}`, data),
+**库存管理 (inventory)**：
+- `getLowStock` - GET /inventory/low-stock - 低库存商品
+- `update` - POST /inventory/update - 更新库存
+- `getHistory` - GET /inventory/{productId}/history - 库存历史
 
-    delete: (id: string) =>
-      commerceClient.delete(`/products/${id}`),
+**物流管理 (shipping)**：
+- `calculate` - POST /shipping/calculate - 计算运费
+- `create` - POST /shipping/create - 创建运单
+- `track` - GET /shipping/track/{trackingNumber} - 物流跟踪
 
-    addImages: (id: string, formData: FormData) =>
-      commerceClient.upload(`/products/${id}/images`, formData),
-
-    removeImages: (id: string, imageIds: string[]) =>
-      commerceClient.post(`/products/${id}/images/remove`, { image_ids: imageIds }),
-  },
-
-  // 订单管理
-  orders: {
-    list: (params?: OrderListParams) =>
-      commerceClient.get<{ items: Order[]; total: number }>('/orders/merchant', { params }),
-
-    get: (id: string) =>
-      commerceClient.get<Order>(`/orders/merchant/${id}`),
-
-    ship: (id: string, data: { tracking_number: string; carrier?: string }) =>
-      commerceClient.post(`/orders/merchant/${id}/ship`, data),
-
-    complete: (id: string) =>
-      commerceClient.post(`/orders/merchant/${id}/complete`),
-
-    cancel: (id: string, reason?: string) =>
-      commerceClient.post(`/orders/merchant/${id}/cancel`, { reason }),
-  },
-
-  // 库存管理
-  inventory: {
-    getLowStock: (threshold?: number) =>
-      commerceClient.get<Inventory[]>('/inventory/low-stock', {
-        params: { threshold },
-      }),
-
-    update: (productId: string, quantity: number) =>
-      commerceClient.post('/inventory/update', {
-        product_id: productId,
-        quantity,
-      }),
-
-    getHistory: (productId: string) =>
-      commerceClient.get(`/inventory/${productId}/history`),
-  },
-
-  // 物流管理
-  shipping: {
-    calculate: (data: ShippingCalculateParams) =>
-      commerceClient.post<ShippingRate[]>('/shipping/calculate', data),
-
-    create: (orderId: string) =>
-      commerceClient.post(`/shipping/create`, { order_id: orderId }),
-
-    track: (trackingNumber: string) =>
-      commerceClient.get(`/shipping/track/${trackingNumber}`),
-  },
-
-  // 店铺管理
-  shop: {
-    getInfo: () =>
-      commerceClient.get('/shop/info'),
-
-    updateProfile: (data: any) =>
-      commerceClient.put('/merchant/profile', data),
-
-    setup: (data: any) =>
-      commerceClient.post('/merchant/setup', data),
-  },
-};
-```
+**店铺管理 (shop)**：
+- `getInfo` - GET /shop/info - 店铺信息
+- `updateProfile` - PUT /merchant/profile - 更新商户资料
+- `setup` - POST /merchant/setup - 初始化店铺
 
 ### Auth API 封装
 
-```typescript
-// src/api/auth.ts
-import { authClient } from './client.js';
-import type { User, LoginResponse, RegisterInput } from './types.js';
+**实现位置**：`src/api/rest/auth.ts`
 
-export const authApi = {
-  register: (data: RegisterInput) =>
-    authClient.post<LoginResponse>('/auth/register', data),
+基于 `authClient` 封装认证相关 API：
 
-  login: (email: string, password: string) =>
-    authClient.post<LoginResponse>('/auth/login', {
-      username: email,
-      password,
-    }),
+- `register` - POST /auth/register - 用户注册
+- `login` - POST /auth/login - 用户登录（返回 access_token 和 refresh_token）
+- `logout` - POST /auth/logout - 用户登出
+- `refresh` - POST /auth/refresh - 刷新 Token
+- `getCurrentUser` - GET /users/me - 获取当前用户信息
+- `createApiKey` - POST /users/api-keys - 创建 API Key
+- `deleteApiKey` - DELETE /users/api-keys/{id} - 删除 API Key
 
-  logout: () =>
-    authClient.post('/auth/logout'),
+### MCP 客户端封装 (Phase 3)
 
-  refresh: (refreshToken: string) =>
-    authClient.post<LoginResponse>('/auth/refresh', {
-      refresh_token: refreshToken,
-    }),
-
-  getCurrentUser: () =>
-    authClient.get<User>('/users/me'),
-
-  createApiKey: (name: string) =>
-    authClient.post('/users/api-keys', { name }),
-
-  deleteApiKey: (id: string) =>
-    authClient.delete(`/users/api-keys/${id}`),
-};
-```
-
-### MCP 客户端封装 (Phase 2+)
+**实现位置**：`src/api/mcp/client.ts`
 
 MCP (Model Context Protocol) 使用 SSE (Server-Sent Events) 协议进行通信。
 
-```typescript
-// src/api/mcp/client.ts
-import EventSource from 'eventsource';
-import axios from 'axios';
+**核心功能**：
+- `MCPClient` 类：封装 MCP 协议通信
+- `callTool(toolName, args)` - 调用 MCP 工具（POST /call_tool）
+- `listTools()` - 列出可用工具（GET /tools）
+- `disconnect()` - 关闭 SSE 连接
 
-interface MCPToolCall {
-  name: string;
-  arguments: Record<string, any>;
-}
+**响应处理**：
+- 解析 MCP 响应的 `content` 数组
+- 自动尝试 JSON 解析 text 内容
+- 返回结构化数据或原始文本
 
-interface MCPResponse {
-  content: Array<{
-    type: 'text';
-    text: string;
-  }>;
-}
+**客户端实例**：
+- `googleAdsMcp` - 连接 http://dev.optima.chat:8240/sse
+- `comfyMcp` - 连接 http://dev.optima.chat:8220/sse
 
-class MCPClient {
-  private baseURL: string;
-  private eventSource?: EventSource;
-
-  constructor(baseURL: string) {
-    this.baseURL = baseURL;
-  }
-
-  async callTool(toolName: string, args: Record<string, any>): Promise<any> {
-    const response = await axios.post<MCPResponse>(
-      this.baseURL.replace('/sse', '/call_tool'),
-      {
-        name: toolName,
-        arguments: args,
-      }
-    );
-
-    // 解析响应
-    const textContent = response.data.content.find((c) => c.type === 'text');
-    if (textContent) {
-      try {
-        return JSON.parse(textContent.text);
-      } catch {
-        return textContent.text;
-      }
-    }
-
-    return response.data;
-  }
-
-  async listTools(): Promise<string[]> {
-    const response = await axios.get(`${this.baseURL.replace('/sse', '/tools')}`);
-    return response.data.tools.map((t: any) => t.name);
-  }
-
-  disconnect(): void {
-    if (this.eventSource) {
-      this.eventSource.close();
-      this.eventSource = undefined;
-    }
-  }
-}
-
-// 导出各个 MCP 客户端实例
-export const googleAdsMcp = new MCPClient('http://dev.optima.chat:8240/sse');
-export const comfyMcp = new MCPClient('http://dev.optima.chat:8220/sse');
-```
+**依赖**：需要安装 `eventsource` 包
 
 ### Google Ads MCP 封装
 
-```typescript
-// src/api/mcp/google-ads.ts
-import { googleAdsMcp } from './client.js';
+**实现位置**：`src/api/mcp/google-ads.ts`
 
-export const googleAdsApi = {
-  // 广告活动管理
-  campaigns: {
-    create: (data: {
-      name: string;
-      budget: number;
-      targetLocation: string;
-    }) => googleAdsMcp.callTool('create_campaign', data),
+基于 `googleAdsMcp` 封装 Google Ads 广告管理功能：
 
-    list: () => googleAdsMcp.callTool('get_campaigns', {}),
+**广告活动管理 (campaigns)**：
+- `create` - 创建广告活动（create_campaign）
+- `list` - 广告活动列表（get_campaigns）
+- `getPerformance` - 活动效果数据（get_campaign_performance）
 
-    getPerformance: (campaignId: string) =>
-      googleAdsMcp.callTool('get_campaign_performance', { campaign_id: campaignId }),
-  },
-
-  // 关键词管理
-  keywords: {
-    research: (keyword: string) =>
-      googleAdsMcp.callTool('research_keywords', { keyword }),
-
-    add: (campaignId: string, keywords: string[]) =>
-      googleAdsMcp.callTool('add_keywords', {
-        campaign_id: campaignId,
-        keywords,
-      }),
-  },
-};
-```
+**关键词管理 (keywords)**：
+- `research` - 关键词研究（research_keywords）
+- `add` - 添加关键词到活动（add_keywords）
 
 ### Comfy MCP 封装
 
-```typescript
-// src/api/mcp/comfy.ts
-import { comfyMcp } from './client.js';
+**实现位置**：`src/api/mcp/comfy.ts`
 
-export const comfyApi = {
-  // 图像生成
-  generateImage: (prompt: string, options?: {
-    width?: number;
-    height?: number;
-    steps?: number;
-  }) =>
-    comfyMcp.callTool('create_image_from_prompt', {
-      prompt,
-      ...options,
-    }),
+基于 `comfyMcp` 封装 AI 图像生成功能：
 
-  // 图像转换
-  transformImage: (imageUrl: string, prompt: string) =>
-    comfyMcp.callTool('create_image_to_image', {
-      image_url: imageUrl,
-      prompt,
-    }),
-};
-```
-
-**依赖安装**：
-```bash
-npm install eventsource
-```
+- `generateImage` - 文本生成图片（create_image_from_prompt）
+  - 参数：prompt, width, height, steps
+- `transformImage` - 图片转换（create_image_to_image）
+  - 参数：imageUrl, prompt
 
 ---
 
@@ -832,149 +572,27 @@ optima setup-claude
 
 ### 命令实现示例
 
-```typescript
-// src/commands/product/create.ts
-import inquirer from 'inquirer';
-import chalk from 'chalk';
-import ora from 'ora';
-import { commerceApi } from '../../api/commerce.js';
-import { handleError } from '../../utils/error.js';
-import { formatProduct } from '../../utils/format.js';
-import FormData from 'form-data';
-import fs from 'fs';
+以 `optima product create` 为例说明命令实现模式：
 
-interface CreateOptions {
-  title?: string;
-  price?: number;
-  description?: string;
-  stock?: number;
-  images?: string;
-}
+**实现位置**：`src/commands/product/create.ts`
 
-export async function createProduct(options: CreateOptions) {
-  try {
-    let productData;
+**核心流程**：
+1. **参数处理**：检查是否提供了必需参数（title, price）
+2. **交互式模式**：如果缺少参数，使用 inquirer 进入交互式输入
+   - 使用 `inquirer.prompt` 收集商品信息
+   - 支持输入验证（如价格必须 > 0）
+   - 询问是否上传图片，支持多张图片路径输入
+3. **API 调用**：使用 ora 显示加载动画，调用 `commerceApi.products.create()`
+4. **图片上传**：如果有图片，构造 FormData 并调用 `addImages()`
+5. **结果展示**：使用 `formatProduct()` 格式化输出，显示商品链接
+6. **错误处理**：使用统一的 `handleError()` 处理异常
 
-    // 如果没有提供参数，进入交互式模式
-    if (!options.title || !options.price) {
-      const answers = await inquirer.prompt([
-        {
-          type: 'input',
-          name: 'title',
-          message: '商品名称:',
-          default: options.title,
-          validate: (input) => input.length > 0 || '商品名称不能为空',
-        },
-        {
-          type: 'number',
-          name: 'price',
-          message: '价格 (USD):',
-          default: options.price,
-          validate: (input) => input > 0 || '价格必须大于 0',
-        },
-        {
-          type: 'input',
-          name: 'description',
-          message: '描述:',
-          default: options.description || '',
-        },
-        {
-          type: 'number',
-          name: 'stock',
-          message: '库存数量:',
-          default: options.stock || 0,
-        },
-        {
-          type: 'confirm',
-          name: 'uploadImages',
-          message: '是否上传图片?',
-          default: false,
-        },
-      ]);
-
-      productData = answers;
-
-      // 如果选择上传图片
-      if (answers.uploadImages) {
-        const images: string[] = [];
-        let addMore = true;
-
-        while (addMore) {
-          const { imagePath } = await inquirer.prompt([
-            {
-              type: 'input',
-              name: 'imagePath',
-              message: '图片路径:',
-              validate: (input) => {
-                if (!fs.existsSync(input)) {
-                  return '文件不存在';
-                }
-                return true;
-              },
-            },
-          ]);
-
-          images.push(imagePath);
-
-          const { continueAdding } = await inquirer.prompt([
-            {
-              type: 'confirm',
-              name: 'continueAdding',
-              message: '继续添加图片?',
-              default: false,
-            },
-          ]);
-
-          addMore = continueAdding;
-        }
-
-        productData.images = images;
-      }
-    } else {
-      productData = {
-        title: options.title,
-        price: options.price,
-        description: options.description || '',
-        stock: options.stock || 0,
-        images: options.images?.split(',') || [],
-      };
-    }
-
-    // 创建商品
-    const spinner = ora('正在创建商品...').start();
-
-    const product = await commerceApi.products.create({
-      name: productData.title,
-      price: productData.price,
-      description: productData.description,
-      stock_quantity: productData.stock,
-    });
-
-    spinner.succeed('商品创建成功！');
-
-    // 上传图片
-    if (productData.images && productData.images.length > 0) {
-      const uploadSpinner = ora('正在上传图片...').start();
-
-      const formData = new FormData();
-      for (const imagePath of productData.images) {
-        const fileBuffer = fs.readFileSync(imagePath);
-        const fileName = imagePath.split('/').pop();
-        formData.append('files', fileBuffer, fileName);
-      }
-
-      await commerceApi.products.addImages(product.id, formData);
-      uploadSpinner.succeed(`${productData.images.length} 张图片上传成功！`);
-    }
-
-    // 显示商品信息
-    console.log('\n' + formatProduct(product));
-    console.log(chalk.gray(`\n商品链接: https://go.optima.shop/${product.merchant_id}/${product.id}`));
-  } catch (error) {
-    handleError(error);
-  }
-}
-```
+**关键技术**：
+- **inquirer** - 交互式输入
+- **ora** - 加载动画
+- **chalk** - 彩色输出
+- **form-data** - 文件上传
+- **统一错误处理** - try/catch + handleError()
 
 ---
 
@@ -993,122 +611,33 @@ export async function createProduct(options: CreateOptions) {
 
 ### Token 存储
 
-使用 `conf` 包存储配置，默认路径：
+**实现位置**：`src/utils/config.ts`
+
+使用 `conf` 包存储配置，跨平台默认路径：
 - macOS: `~/Library/Preferences/optima-cli-nodejs/`
 - Linux: `~/.config/optima-cli/`
 - Windows: `%APPDATA%\optima-cli\Config\`
 
-```typescript
-// src/utils/config.ts
-import Conf from 'conf';
+**配置结构**：
+- `auth` - 认证信息（token, refreshToken, user）
+- `api` - API 配置（baseUrl）
+- 使用 `encryptionKey` 加密敏感信息
 
-interface ConfigSchema {
-  auth: {
-    token: string;
-    refreshToken: string;
-    user: {
-      id: string;
-      email: string;
-      name: string;
-    };
-  };
-  api: {
-    baseUrl: string;
-  };
-}
-
-export const config = new Conf<ConfigSchema>({
-  projectName: 'optima-cli',
-  defaults: {
-    api: {
-      baseUrl: 'https://api.optima.chat',
-    },
-  },
-  // 加密敏感信息
-  encryptionKey: 'optima-cli-secret-key',
-});
-
-export function getConfig<K extends keyof ConfigSchema>(key: K): ConfigSchema[K] | undefined {
-  return config.get(key);
-}
-
-export function updateConfig<K extends keyof ConfigSchema>(
-  key: K,
-  value: ConfigSchema[K]
-): void {
-  config.set(key, value);
-}
-
-export function deleteConfig<K extends keyof ConfigSchema>(key: K): void {
-  config.delete(key);
-}
-```
+**核心方法**：
+- `getConfig(key)` - 读取配置
+- `updateConfig(key, value)` - 更新配置
+- `deleteConfig(key)` - 删除配置
 
 ### 登录实现
 
-```typescript
-// src/commands/auth/login.ts
-import inquirer from 'inquirer';
-import chalk from 'chalk';
-import ora from 'ora';
-import { authApi } from '../../api/auth.js';
-import { updateConfig } from '../../utils/config.js';
-import { handleError } from '../../utils/error.js';
+**实现位置**：`src/commands/auth/login.ts`
 
-interface LoginOptions {
-  email?: string;
-  password?: string;
-}
-
-export async function login(options: LoginOptions) {
-  try {
-    let email = options.email;
-    let password = options.password;
-
-    // 交互式输入
-    if (!email || !password) {
-      const answers = await inquirer.prompt([
-        {
-          type: 'input',
-          name: 'email',
-          message: '邮箱:',
-          default: email,
-          validate: (input) => {
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            return emailRegex.test(input) || '请输入有效的邮箱地址';
-          },
-        },
-        {
-          type: 'password',
-          name: 'password',
-          message: '密码:',
-          mask: '*',
-          validate: (input) => input.length > 0 || '密码不能为空',
-        },
-      ]);
-
-      email = answers.email;
-      password = answers.password;
-    }
-
-    const spinner = ora('正在登录...').start();
-
-    const response = await authApi.login(email, password);
-
-    // 存储 Token 和用户信息
-    updateConfig('auth', {
-      token: response.access_token,
-      refreshToken: response.refresh_token,
-      user: response.user,
-    });
-
-    spinner.succeed(chalk.green('登录成功！'));
-    console.log(chalk.gray(`\n欢迎回来，${response.user.name || response.user.email}！`));
-  } catch (error) {
-    handleError(error);
-  }
-}
-```
+**核心流程**：
+1. 检查是否提供 email 和 password 参数
+2. 如果缺少，使用 inquirer 交互式输入（支持邮箱格式验证）
+3. 显示加载动画，调用 `authApi.login()`
+4. 将返回的 Token 和用户信息存储到配置
+5. 显示欢迎信息
 
 ---
 
@@ -1116,7 +645,6 @@ export async function login(options: LoginOptions) {
 
 ### 图片上传流程
 
-```
 1. 用户指定图片路径（命令行参数或交互式输入）
 2. 验证文件存在性和格式
 3. 读取文件为 Buffer
@@ -1124,378 +652,129 @@ export async function login(options: LoginOptions) {
 5. 调用 API 上传
 6. 显示上传进度
 7. 返回图片 URL
-```
 
 ### 实现方案
 
-```typescript
-// src/utils/upload.ts
-import fs from 'fs';
-import path from 'path';
-import FormData from 'form-data';
-import chalk from 'chalk';
+**实现位置**：`src/utils/upload.ts`
 
-const ALLOWED_IMAGE_FORMATS = ['.jpg', '.jpeg', '.png', '.gif', '.webp'];
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+**文件验证**：
+- `validateImageFile()` - 验证图片文件
+  - 检查文件是否存在
+  - 支持格式：.jpg, .jpeg, .png, .gif, .webp
+  - 最大文件大小：10MB
+  - 抛出友好的错误信息
 
-export function validateImageFile(filePath: string): void {
-  if (!fs.existsSync(filePath)) {
-    throw new Error(`文件不存在: ${filePath}`);
-  }
+**FormData 构建**：
+- `createImageFormData(imagePaths)` - 构造上传表单
+  - 遍历图片路径列表
+  - 读取文件为 Buffer
+  - 添加到 FormData，设置正确的 Content-Type
 
-  const ext = path.extname(filePath).toLowerCase();
-  if (!ALLOWED_IMAGE_FORMATS.includes(ext)) {
-    throw new Error(
-      `不支持的图片格式: ${ext}。支持的格式: ${ALLOWED_IMAGE_FORMATS.join(', ')}`
-    );
-  }
-
-  const stats = fs.statSync(filePath);
-  if (stats.size > MAX_FILE_SIZE) {
-    throw new Error(`文件太大: ${(stats.size / 1024 / 1024).toFixed(2)}MB (最大 10MB)`);
-  }
-}
-
-export function createImageFormData(imagePaths: string[]): FormData {
-  const formData = new FormData();
-
-  for (const imagePath of imagePaths) {
-    validateImageFile(imagePath);
-
-    const fileBuffer = fs.readFileSync(imagePath);
-    const fileName = path.basename(imagePath);
-
-    formData.append('files', fileBuffer, {
-      filename: fileName,
-      contentType: `image/${path.extname(imagePath).slice(1)}`,
-    });
-  }
-
-  return formData;
-}
-
-export function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} KB`;
-  return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
-}
-```
+**工具函数**：
+- `formatFileSize(bytes)` - 格式化文件大小显示（B/KB/MB）
 
 ### 添加图片命令
 
-```typescript
-// src/commands/product/images.ts
-import chalk from 'chalk';
-import ora from 'ora';
-import { commerceApi } from '../../api/commerce.js';
-import { createImageFormData, formatFileSize } from '../../utils/upload.js';
-import { handleError } from '../../utils/error.js';
-import fs from 'fs';
+**实现位置**：`src/commands/product/images.ts`
 
-export async function addImages(productId: string, imagePaths: string[]) {
-  try {
-    if (imagePaths.length === 0) {
-      console.log(chalk.yellow('请提供至少一张图片'));
-      return;
-    }
-
-    // 显示文件信息
-    console.log(chalk.cyan('\n准备上传:'));
-    for (const imagePath of imagePaths) {
-      const stats = fs.statSync(imagePath);
-      console.log(`  ${chalk.gray('•')} ${imagePath} ${chalk.gray(`(${formatFileSize(stats.size)})`)}`);
-    }
-
-    const spinner = ora('正在上传图片...').start();
-
-    const formData = createImageFormData(imagePaths);
-    await commerceApi.products.addImages(productId, formData);
-
-    spinner.succeed(chalk.green(`成功上传 ${imagePaths.length} 张图片！`));
-  } catch (error) {
-    handleError(error);
-  }
-}
-```
+**核心流程**：
+1. 验证至少有一张图片路径
+2. 列出待上传文件信息（路径、大小）
+3. 使用 ora 显示上传动画
+4. 调用 `createImageFormData()` 构造表单
+5. 调用 `commerceApi.products.addImages()`
+6. 显示成功信息
 
 ---
 
 ## 数据格式与展示
 
+**实现位置**：`src/utils/format.ts`
+
 ### 表格展示
 
-使用 `cli-table3` 展示列表数据：
+使用 `cli-table3` 展示列表数据，包括：
 
-```typescript
-// src/utils/format.ts
-import Table from 'cli-table3';
-import chalk from 'chalk';
-import dayjs from 'dayjs';
+**商品列表格式化 (formatProductList)**：
+- 表格列：ID、名称、价格、库存、状态、创建时间
+- ID 截取前 12 位显示
+- 状态用颜色区分（绿色=上架，灰色=下架）
+- 时间格式：YYYY-MM-DD HH:mm
 
-export function formatProductList(products: Product[]): string {
-  const table = new Table({
-    head: [
-      chalk.cyan('ID'),
-      chalk.cyan('名称'),
-      chalk.cyan('价格'),
-      chalk.cyan('库存'),
-      chalk.cyan('状态'),
-      chalk.cyan('创建时间'),
-    ],
-    colWidths: [15, 30, 12, 8, 10, 20],
-  });
+**商品详情格式化 (formatProduct)**：
+- 键值对格式，使用分隔线美化
+- 价格用绿色高亮显示
+- 支持显示创建时间和更新时间
 
-  products.forEach((product) => {
-    table.push([
-      product.id.slice(0, 12) + '...',
-      product.name,
-      `$${product.price.toFixed(2)}`,
-      product.stock_quantity,
-      product.is_active ? chalk.green('上架') : chalk.gray('下架'),
-      dayjs(product.created_at).format('YYYY-MM-DD HH:mm'),
-    ]);
-  });
+**订单列表格式化 (formatOrderList)**：
+- 表格列：订单号、客户、金额、状态、时间
+- 状态映射中文并用颜色区分：
+  - 待处理（黄色）、已支付（蓝色）、已发货（青色）
+  - 已完成（绿色）、已取消（灰色）
 
-  return table.toString();
-}
-
-export function formatProduct(product: Product): string {
-  return `
-${chalk.bold('商品详情')}
-${'─'.repeat(50)}
-${chalk.gray('ID:')}           ${product.id}
-${chalk.gray('名称:')}         ${product.name}
-${chalk.gray('价格:')}         ${chalk.green('$' + product.price.toFixed(2))}
-${chalk.gray('描述:')}         ${product.description || chalk.gray('无')}
-${chalk.gray('库存:')}         ${product.stock_quantity}
-${chalk.gray('状态:')}         ${product.is_active ? chalk.green('上架') : chalk.gray('下架')}
-${chalk.gray('创建时间:')}     ${dayjs(product.created_at).format('YYYY-MM-DD HH:mm:ss')}
-${chalk.gray('更新时间:')}     ${dayjs(product.updated_at).format('YYYY-MM-DD HH:mm:ss')}
-${'─'.repeat(50)}
-  `.trim();
-}
-
-export function formatOrderList(orders: Order[]): string {
-  const table = new Table({
-    head: [
-      chalk.cyan('订单号'),
-      chalk.cyan('客户'),
-      chalk.cyan('金额'),
-      chalk.cyan('状态'),
-      chalk.cyan('时间'),
-    ],
-    colWidths: [20, 25, 12, 12, 20],
-  });
-
-  orders.forEach((order) => {
-    table.push([
-      order.id,
-      order.customer_email,
-      `$${order.total_amount.toFixed(2)}`,
-      formatOrderStatus(order.status),
-      dayjs(order.created_at).format('MM-DD HH:mm'),
-    ]);
-  });
-
-  return table.toString();
-}
-
-function formatOrderStatus(status: string): string {
-  const statusMap: Record<string, { text: string; color: typeof chalk.green }> = {
-    pending: { text: '待处理', color: chalk.yellow },
-    paid: { text: '已支付', color: chalk.blue },
-    shipped: { text: '已发货', color: chalk.cyan },
-    completed: { text: '已完成', color: chalk.green },
-    cancelled: { text: '已取消', color: chalk.gray },
-  };
-
-  const mapped = statusMap[status] || { text: status, color: chalk.white };
-  return mapped.color(mapped.text);
-}
-```
+**技术栈**：
+- `cli-table3` - 表格展示
+- `chalk` - 彩色输出
+- `dayjs` - 日期格式化
 
 ---
 
 ## 错误处理
 
+**实现位置**：`src/utils/error.ts`
+
 ### 错误类型
 
-```typescript
-// src/utils/error.ts
-import chalk from 'chalk';
-
-export class ApiError extends Error {
-  constructor(
-    message: string,
-    public statusCode?: number,
-    public code?: string
-  ) {
-    super(message);
-    this.name = 'ApiError';
-  }
-}
-
-export class ValidationError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'ValidationError';
-  }
-}
-
-export class AuthenticationError extends Error {
-  constructor(message: string = '未登录，请先执行 optima auth login') {
-    super(message);
-    this.name = 'AuthenticationError';
-  }
-}
-```
+定义三种自定义错误类：
+- `ApiError` - API 调用错误（包含 statusCode 和 code）
+- `ValidationError` - 输入验证错误
+- `AuthenticationError` - 未认证错误
 
 ### 错误处理器
 
-```typescript
-export function handleError(error: unknown): void {
-  if (error instanceof AuthenticationError) {
-    console.error(chalk.red('❌ ' + error.message));
-    process.exit(1);
-  }
+`handleError(error)` 统一处理各种错误：
+- `AuthenticationError` - 红色显示，提示登录
+- `ValidationError` - 黄色警告显示
+- `ApiError` - 红色显示，附带状态码和错误码
+- `Error` - 红色显示，DEBUG 模式下显示堆栈
+- 其他 - 显示未知错误
 
-  if (error instanceof ValidationError) {
-    console.error(chalk.yellow('⚠️  ' + error.message));
-    process.exit(1);
-  }
-
-  if (error instanceof ApiError) {
-    console.error(chalk.red('❌ API 错误: ' + error.message));
-    if (error.statusCode) {
-      console.error(chalk.gray(`   状态码: ${error.statusCode}`));
-    }
-    if (error.code) {
-      console.error(chalk.gray(`   错误码: ${error.code}`));
-    }
-    process.exit(1);
-  }
-
-  if (error instanceof Error) {
-    console.error(chalk.red('❌ ' + error.message));
-    if (process.env.DEBUG) {
-      console.error(chalk.gray(error.stack));
-    }
-    process.exit(1);
-  }
-
-  console.error(chalk.red('❌ 未知错误:'), error);
-  process.exit(1);
-}
-```
+所有错误处理后调用 `process.exit(1)` 退出
 
 ### 网络重试
 
-```typescript
-// src/utils/retry.ts
-export async function retry<T>(
-  fn: () => Promise<T>,
-  options: {
-    retries?: number;
-    delay?: number;
-    onRetry?: (attempt: number, error: Error) => void;
-  } = {}
-): Promise<T> {
-  const { retries = 3, delay = 1000, onRetry } = options;
+**实现位置**：`src/utils/retry.ts`
 
-  let lastError: Error;
-
-  for (let attempt = 1; attempt <= retries; attempt++) {
-    try {
-      return await fn();
-    } catch (error) {
-      lastError = error as Error;
-
-      if (attempt < retries) {
-        onRetry?.(attempt, lastError);
-        await new Promise((resolve) => setTimeout(resolve, delay * attempt));
-      }
-    }
-  }
-
-  throw lastError!;
-}
-```
+`retry(fn, options)` 支持失败重试：
+- 默认重试 3 次
+- 延迟时间递增（1s, 2s, 3s...）
+- 支持 onRetry 回调监听重试事件
+- 最终仍失败则抛出最后一次的错误
 
 ---
 
 ## 配置管理
 
-### 配置项
+**实现位置**：`src/utils/config.ts`, `src/commands/config.ts`
 
-```typescript
-interface ConfigSchema {
-  // 认证信息
-  auth: {
-    token: string;
-    refreshToken: string;
-    user: {
-      id: string;
-      email: string;
-      name: string;
-    };
-  };
+### 配置结构 (ConfigSchema)
 
-  // API 配置
-  api: {
-    baseUrl: string;
-    timeout: number;
-  };
-
-  // CLI 配置
-  cli: {
-    defaultLimit: number;
-    colorOutput: boolean;
-    verbose: boolean;
-  };
-}
-```
+- `auth` - 认证信息（token, refreshToken, user）
+- `api` - API 配置（baseUrl, timeout）
+- `cli` - CLI 配置（defaultLimit, colorOutput, verbose）
 
 ### 配置命令
 
-```typescript
-// src/commands/config.ts
-import chalk from 'chalk';
-import { config, getConfig, updateConfig } from '../utils/config.js';
+**configSet** - 设置配置项：
+- 自动类型转换（'true' → boolean, 数字字符串 → number）
+- 显示设置成功提示
 
-export function configSet(key: string, value: string) {
-  try {
-    // 类型转换
-    let parsedValue: any = value;
-    if (value === 'true') parsedValue = true;
-    if (value === 'false') parsedValue = false;
-    if (!isNaN(Number(value))) parsedValue = Number(value);
+**configGet** - 获取配置项：
+- 格式化 JSON 输出
+- 不存在时显示黄色警告
 
-    updateConfig(key as any, parsedValue);
-    console.log(chalk.green(`✓ ${key} = ${value}`));
-  } catch (error) {
-    console.error(chalk.red(`设置配置失败: ${error.message}`));
-  }
-}
-
-export function configGet(key: string) {
-  try {
-    const value = getConfig(key as any);
-    if (value === undefined) {
-      console.log(chalk.yellow(`配置项 ${key} 不存在`));
-    } else {
-      console.log(chalk.cyan(key + ':'), JSON.stringify(value, null, 2));
-    }
-  } catch (error) {
-    console.error(chalk.red(`获取配置失败: ${error.message}`));
-  }
-}
-
-export function configList() {
-  const allConfig = config.store;
-  console.log(chalk.bold('当前配置:'));
-  console.log(JSON.stringify(allConfig, null, 2));
-}
-```
+**configList** - 列出所有配置：
+- 以 JSON 格式展示完整配置
 
 ---
 
@@ -1503,206 +782,41 @@ export function configList() {
 
 ### 自动配置机制
 
-Optima CLI 在安装时会通过 `postinstall` hook 自动配置 Claude Code 集成，用户无需手动操作。
+**实现位置**：`src/postinstall.ts`
 
-```typescript
-// src/postinstall.ts
-import fs from 'fs';
-import path from 'path';
-import os from 'os';
+Optima CLI 在全局安装时通过 `postinstall` hook 自动配置 Claude Code 集成。
 
-const CLAUDE_MD_PATH = path.join(os.homedir(), '.claude', 'CLAUDE.md');
+**核心流程**：
+1. 检测是否全局安装（`process.env.npm_config_global === 'true'`）
+2. 确保 `~/.claude/` 目录存在
+3. 读取 `CLAUDE.md` 现有内容
+4. 移除旧的 Optima CLI 配置（使用正则替换）
+5. 追加新的配置内容到文件末尾
+6. 静默失败，不影响安装流程
 
-const OPTIMA_CLI_SECTION = `
-## Optima CLI
-Optima CLI 是用自然语言管理电商店铺的命令行工具，专为 Claude Code 设计。
+**配置内容**：
+- 简短的工具介绍和安装命令
+- 自然语言使用示例（商品、订单、库存、物流）
+- 可用命令列表（供参考）
 
-安装：\`npm install -g @optima-chat/optima-cli@latest\`
-
-### 使用方式
-
-直接用自然语言描述你的需求，我会自动调用相应的 optima 命令。
-
-**商品管理示例**:
-- "创建珍珠耳环，299 美元，库存 10"
-- "查看所有商品"
-- "商品 prod_123 改价 399"
-- "删除商品 prod_456"
-
-**订单管理示例**:
-- "今天的订单"
-- "待发货订单"
-- "订单 order_123 发货，DHL123456"
-- "取消订单 order_789"
-
-**库存管理示例**:
-- "库存低于 5"
-- "商品 prod_123 库存改 50"
-
-**物流查询示例**:
-- "香港到纽约运费，0.5 公斤"
-- "跟踪 DHL123456"
-
-### 可用命令（供参考，建议用自然语言）
-
-**商品**: \`optima product create/list/get/update/delete/add-images\`
-**订单**: \`optima order list/get/ship/complete/cancel\`
-**库存**: \`optima inventory low-stock/update/history\`
-**物流**: \`optima shipping calculate/create/track\`
-**店铺**: \`optima shop info/update/setup\`
-**认证**: \`optima auth login/logout/whoami\`
-`;
-
-async function setupClaude() {
-  try {
-    // 确保 .claude 目录存在
-    const claudeDir = path.dirname(CLAUDE_MD_PATH);
-    if (!fs.existsSync(claudeDir)) {
-      fs.mkdirSync(claudeDir, { recursive: true });
-    }
-
-    // 读取现有内容
-    let existingContent = '';
-    if (fs.existsSync(CLAUDE_MD_PATH)) {
-      existingContent = fs.readFileSync(CLAUDE_MD_PATH, 'utf-8');
-
-      // 如果已包含 Optima CLI 配置，先移除
-      if (existingContent.includes('## Optima CLI')) {
-        existingContent = existingContent.replace(
-          /## Optima CLI[\s\S]*?(?=\n##|$)/,
-          ''
-        );
-      }
-    }
-
-    // 写入新配置
-    const newContent = existingContent.trim() + '\n\n' + OPTIMA_CLI_SECTION.trim() + '\n';
-    fs.writeFileSync(CLAUDE_MD_PATH, newContent, 'utf-8');
-
-    console.log('✓ Optima CLI 已配置到 Claude Code');
-    console.log('  现在可以在 Claude Code 中用自然语言管理店铺了！');
-  } catch (error) {
-    // 静默失败，不影响安装
-    console.log('⚠️  Claude Code 配置失败，可以稍后手动运行: optima setup-claude');
-  }
-}
-
-// 只在全局安装时执行
-if (process.env.npm_config_global === 'true') {
-  setupClaude();
-}
-
-export { setupClaude };
-```
+**目标路径**：`~/.claude/CLAUDE.md`
 
 ### 手动配置命令（备用）
 
-如果自动配置失败，用户可以手动运行：
+**实现位置**：`src/commands/setup-claude.ts`
 
-```typescript
-// src/commands/setup-claude.ts
-import fs from 'fs';
-import path from 'path';
-import os from 'os';
-import chalk from 'chalk';
-import inquirer from 'inquirer';
+**命令**：`optima setup-claude`
 
-const CLAUDE_MD_PATH = path.join(os.homedir(), '.claude', 'CLAUDE.md');
+**核心流程**：
+1. 检查 CLAUDE.md 是否已存在 Optima CLI 配置
+2. 如果存在且非 `--force`，使用 inquirer 询问是否更新
+3. 移除旧配置，写入新配置
+4. 显示成功信息和文件路径
 
-const OPTIMA_CLI_SECTION = `
-## Optima CLI
-Optima CLI 是 Optima Commerce 的命令行工具，用于管理电商业务。
-
-安装：\`npm install -g @optima-chat/optima-cli\`
-
-### 常用命令
-
-**商品管理**:
-- 创建商品: \`optima product create --title "商品名" --price 299 --stock 10\`
-- 商品列表: \`optima product list\`
-- 商品详情: \`optima product get <product-id>\`
-- 更新商品: \`optima product update <product-id> --price 399\`
-- 删除商品: \`optima product delete <product-id>\`
-
-**订单管理**:
-- 订单列表: \`optima order list\`
-- 订单详情: \`optima order get <order-id>\`
-- 发货: \`optima order ship <order-id> --tracking DHL123\`
-- 完成订单: \`optima order complete <order-id>\`
-
-**库存管理**:
-- 低库存: \`optima inventory low-stock --threshold 5\`
-- 更新库存: \`optima inventory update <product-id> --quantity 20\`
-
-**店铺管理**:
-- 店铺信息: \`optima shop info\`
-- 更新店铺: \`optima shop update\`
-
-**认证**:
-- 登录: \`optima auth login\`
-- 查看当前用户: \`optima auth whoami\`
-
-### 自然语言示例
-
-你可以直接对我说：
-- "帮我创建一个珍珠耳环商品，售价 299 美元"
-- "查看今天的订单"
-- "把订单 #123 标记为已发货，快递单号 DHL123456"
-- "查看库存低于 5 的商品"
-- "更新商品 prod_123 的价格为 399 美元"
-
-我会自动调用相应的 optima 命令来完成操作。
-`;
-
-export async function setupClaude(options: { force?: boolean }) {
-  try {
-    // 检查 .claude 目录是否存在
-    const claudeDir = path.dirname(CLAUDE_MD_PATH);
-    if (!fs.existsSync(claudeDir)) {
-      fs.mkdirSync(claudeDir, { recursive: true });
-    }
-
-    // 检查 CLAUDE.md 是否已存在
-    let existingContent = '';
-    if (fs.existsSync(CLAUDE_MD_PATH)) {
-      existingContent = fs.readFileSync(CLAUDE_MD_PATH, 'utf-8');
-
-      // 如果已包含 Optima CLI 配置
-      if (existingContent.includes('## Optima CLI') && !options.force) {
-        const { shouldUpdate } = await inquirer.prompt([
-          {
-            type: 'confirm',
-            name: 'shouldUpdate',
-            message: 'CLAUDE.md 中已存在 Optima CLI 配置，是否更新？',
-            default: false,
-          },
-        ]);
-
-        if (!shouldUpdate) {
-          console.log(chalk.yellow('取消更新'));
-          return;
-        }
-
-        // 移除旧的 Optima CLI 配置
-        existingContent = existingContent.replace(
-          /## Optima CLI[\s\S]*?(?=\n##|$)/,
-          ''
-        );
-      }
-    }
-
-    // 写入新配置
-    const newContent = existingContent.trim() + '\n\n' + OPTIMA_CLI_SECTION.trim() + '\n';
-    fs.writeFileSync(CLAUDE_MD_PATH, newContent, 'utf-8');
-
-    console.log(chalk.green('✓ Claude Code 配置已更新！'));
-    console.log(chalk.gray(`  位置: ${CLAUDE_MD_PATH}`));
-    console.log(chalk.cyan('\n现在你可以在 Claude Code 中使用自然语言操作 Optima Commerce 了！'));
-  } catch (error) {
-    console.error(chalk.red('设置失败:'), error.message);
-  }
-}
-```
+**使用场景**：
+- 自动配置失败时手动执行
+- 更新配置内容时重新执行
+- 使用 `--force` 参数跳过确认
 
 ---
 
