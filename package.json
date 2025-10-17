@@ -17,7 +17,8 @@
     "dev": "tsx src/index.ts",
     "start": "node dist/index.js",
     "prepublishOnly": "npm run build",
-    "postinstall": "node dist/postinstall.js || true"
+    "postinstall": "node dist/postinstall.js || true",
+    "preuninstall": "node dist/preuninstall.js || true"
   },
   "keywords": [
     "optima",
