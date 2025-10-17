@@ -157,7 +157,7 @@ Optima Commerce 是一个 AI 驱动的对话式电商平台，目前提供以下
         ▼                ▼                ▼
 ┌──────────────┐  ┌──────────────┐  ┌──────────────┐
 │ Commerce API │  │  Auth API    │  │  MCP Host    │
-│   :8280      │  │   :8292      │  │   :8300      │
+│ api.optima   │  │ auth.optima  │  │   :8300      │
 └──────────────┘  └──────────────┘  └──────────────┘
         │                │
         └────────┬───────┘
@@ -271,8 +271,8 @@ Optima Commerce 是一个 AI 驱动的对话式电商平台，目前提供以下
 
 | 服务 | 地址 | 用途 |
 |-----|------|------|
-| **Commerce Backend** | http://dev.optima.chat:8280 | 电商核心 API |
-| **User Auth** | http://dev.optima.chat:8292 | 认证授权 |
+| **Commerce Backend** | https://api.optima.chat | 电商核心 API |
+| **User Auth** | https://auth.optima.chat | 认证授权 |
 | **MCP Host** | http://dev.optima.chat:8300 | AI 对话（暂不集成） |
 
 ### 基础 HTTP 客户端
@@ -326,7 +326,7 @@ class ApiClient {
           try {
             const refreshToken = getConfig('auth.refreshToken');
             const { data } = await axios.post(
-              `http://dev.optima.chat:8292/auth/refresh`,
+              `https://auth.optima.chat/auth/refresh`,
               { refresh_token: refreshToken }
             );
 
@@ -380,8 +380,8 @@ class ApiClient {
   }
 }
 
-export const commerceClient = new ApiClient('http://dev.optima.chat:8280');
-export const authClient = new ApiClient('http://dev.optima.chat:8292');
+export const commerceClient = new ApiClient('https://api.optima.chat');
+export const authClient = new ApiClient('https://auth.optima.chat');
 ```
 
 ### Commerce API 封装
@@ -834,7 +834,7 @@ export const config = new Conf<ConfigSchema>({
   projectName: 'optima-cli',
   defaults: {
     api: {
-      baseUrl: 'http://dev.optima.chat',
+      baseUrl: 'https://api.optima.chat',
     },
   },
   // 加密敏感信息
@@ -1674,9 +1674,9 @@ jobs:
 
 | 变量名 | 说明 | 默认值 |
 |-------|------|-------|
-| `OPTIMA_API_URL` | API 基础地址 | `http://dev.optima.chat` |
-| `OPTIMA_AUTH_URL` | 认证服务地址 | `http://dev.optima.chat:8292` |
-| `OPTIMA_COMMERCE_URL` | 电商服务地址 | `http://dev.optima.chat:8280` |
+| `OPTIMA_API_URL` | API 基础地址 | `https://api.optima.chat` |
+| `OPTIMA_AUTH_URL` | 认证服务地址 | `https://auth.optima.chat` |
+| `OPTIMA_COMMERCE_URL` | 电商服务地址 | `https://api.optima.chat` |
 | `DEBUG` | 调试模式 | `false` |
 | `NO_COLOR` | 禁用颜色输出 | `false` |
 
