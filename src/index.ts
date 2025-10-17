@@ -2,14 +2,22 @@
 
 import { Command } from 'commander';
 import chalk from 'chalk';
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 import { authCommand } from './commands/auth/index.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const packageJson = JSON.parse(readFileSync(join(__dirname, '../package.json'), 'utf-8'));
+const VERSION = packageJson.version;
 
 const program = new Command();
 
 program
   .name('optima')
   .description('用自然语言管理电商店铺 - 专为 Claude Code 设计')
-  .version('0.1.0');
+  .version(VERSION);
 
 // 注册认证命令
 program.addCommand(authCommand);
@@ -18,12 +26,12 @@ program
   .command('version')
   .description('显示版本信息')
   .action(() => {
-    console.log(chalk.cyan('Optima CLI v0.1.0'));
+    console.log(chalk.cyan(`Optima CLI v${VERSION}`));
     console.log(chalk.gray('功能开发中，敬请期待...'));
   });
 
 program.action(() => {
-  console.log(chalk.cyan.bold('\n✨ Optima CLI v0.1.0\n'));
+  console.log(chalk.cyan.bold(`\n✨ Optima CLI v${VERSION}\n`));
   console.log(chalk.white('用自然语言管理你的电商店铺\n'));
   console.log(chalk.yellow('📦 当前版本为占位版本，核心功能正在开发中'));
   console.log(chalk.gray('   预计 Phase 1 将于 2-3 周内完成\n'));
