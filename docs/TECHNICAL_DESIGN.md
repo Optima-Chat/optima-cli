@@ -1744,7 +1744,7 @@ export async function setupClaude(options: { force?: boolean }) {
 {
   "name": "@optima/cli",
   "version": "0.1.0",
-  "description": "Optima Commerce 的命令行工具",
+  "description": "用自然语言管理电商店铺 - 专为 Claude Code 设计的对话式 CLI 工具",
   "main": "dist/index.js",
   "type": "module",
   "bin": {
