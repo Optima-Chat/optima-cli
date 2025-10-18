@@ -261,6 +261,18 @@ class CommerceApiClient {
       );
       return response.data;
     },
+
+    /**
+     * 添加商品图片（通过 Media ID）
+     * 直接用 media_id 关联到商品（从 upload 命令获取）
+     */
+    addImagesByMediaIds: async (productId: string, mediaIds: string[]): Promise<Product> => {
+      const response = await this.client.post<Product>(
+        `/api/products/${productId}/images`,
+        { media_ids: mediaIds }
+      );
+      return response.data;
+    },
   };
 
   // ==========================================================================
@@ -857,14 +869,14 @@ class CommerceApiClient {
     /**
      * 上传图片
      */
-    uploadImage: async (imagePath: string): Promise<{ url: string }> => {
+    uploadImage: async (imagePath: string): Promise<{ url: string; media_id?: string }> => {
       const formData = new FormData();
       const filename = sanitizeFilename(path.basename(imagePath));
       formData.append('file', createReadStream(imagePath), {
         filename: filename,
       });
 
-      const response = await this.client.post<{ url: string }>('/api/upload/image', formData, {
+      const response = await this.client.post<{ url: string; media_id?: string }>('/api/upload/image', formData, {
         headers: {
           ...formData.getHeaders(),
         },

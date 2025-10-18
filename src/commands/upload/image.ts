@@ -32,7 +32,10 @@ async function uploadImage(imagePath: string) {
     spinner.succeed('图片上传成功！');
 
     console.log();
-    console.log(chalk.gray('图片 URL: ') + chalk.cyan(result.url));
+    console.log(chalk.gray('图片 URL:   ') + chalk.cyan(result.url));
+    if (result.media_id) {
+      console.log(chalk.gray('Media ID:   ') + chalk.green(result.media_id));
+    }
     console.log();
   } catch (error: any) {
     spinner.fail('图片上传失败');

@@ -17,6 +17,7 @@ interface CreateProductOptions {
   status?: 'active' | 'inactive' | 'draft';
   categoryId?: string;
   images?: string;
+  mediaIds?: string;
 }
 
 export const createProductCommand = new Command('create')
@@ -29,7 +30,8 @@ export const createProductCommand = new Command('create')
   .option('--currency <currency>', '货币单位', 'USD')
   .option('--status <status>', '商品状态 (active/inactive/draft)', 'active')
   .option('--category-id <categoryId>', '分类 ID')
-  .option('--images <paths>', '图片路径（逗号分隔）')
+  .option('--images <paths>', '图片路径（逗号分隔，本地文件）')
+  .option('--media-ids <ids>', 'Media ID（逗号分隔，从 upload 命令获取）')
   .action(async (options: CreateProductOptions) => {
     try {
       await createProduct(options);
@@ -197,7 +199,24 @@ async function createProduct(options: CreateProductOptions) {
     const product = await commerceApi.products.create(productData);
     spinner.succeed('商品创建成功！');
 
-    // 如果有图片，上传图片
+    // 如果有 media IDs，直接关联
+    if (options.mediaIds) {
+      const mediaIds = options.mediaIds.split(',').map((id) => id.trim());
+
+      if (mediaIds.length > 0) {
+        const linkSpinner = ora(`正在关联 ${mediaIds.length} 张图片...`).start();
+
+        try {
+          await commerceApi.products.addImagesByMediaIds(product.id || product.product_id!, mediaIds);
+          linkSpinner.succeed(`图片关联成功！(${mediaIds.length} 张)`);
+        } catch (error: any) {
+          linkSpinner.fail('图片关联失败');
+          throw createApiError(error);
+        }
+      }
+    }
+
+    // 如果有图片路径，上传图片
     if (options.images) {
       const imagePaths = options.images.split(',').map((p) => p.trim());
 
