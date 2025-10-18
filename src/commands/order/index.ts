@@ -4,6 +4,7 @@ import { getOrderCommand } from './get.js';
 import { shipOrderCommand } from './ship.js';
 import { completeOrderCommand } from './complete.js';
 import { cancelOrderCommand } from './cancel.js';
+import { markDeliveredCommand } from './mark-delivered.js';
 
 export const orderCommand = new Command('order')
   .description('订单管理')
@@ -11,4 +12,5 @@ export const orderCommand = new Command('order')
   .addCommand(getOrderCommand)
   .addCommand(shipOrderCommand)
   .addCommand(completeOrderCommand)
-  .addCommand(cancelOrderCommand);
+  .addCommand(cancelOrderCommand)
+  .addCommand(markDeliveredCommand);

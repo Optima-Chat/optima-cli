@@ -13,6 +13,10 @@ import { orderCommand } from './commands/order/index.js';
 import { inventoryCommand } from './commands/inventory/index.js';
 import { merchantCommand } from './commands/merchant/index.js';
 import { shippingCommand } from './commands/shipping/index.js';
+import { categoryCommand } from './commands/category/index.js';
+import { variantCommand } from './commands/variant/index.js';
+import { refundCommand } from './commands/refund/index.js';
+import { uploadCommand } from './commands/upload/index.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -31,10 +35,14 @@ program.addCommand(authCommand);
 program.addCommand(cleanupCommand);
 program.addCommand(initCommand);
 program.addCommand(productCommand);
+program.addCommand(categoryCommand);
+program.addCommand(variantCommand);
 program.addCommand(orderCommand);
+program.addCommand(refundCommand);
 program.addCommand(inventoryCommand);
 program.addCommand(merchantCommand);
 program.addCommand(shippingCommand);
+program.addCommand(uploadCommand);
 
 program
   .command('version')

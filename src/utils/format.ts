@@ -314,3 +314,155 @@ export function formatWarning(message: string): string {
 export function formatInfo(message: string): string {
   return chalk.blue(`ℹ ${message}`);
 }
+
+/**
+ * 格式化分类列表
+ */
+export function formatCategoryList(categories: any[]): string {
+  if (!categories || categories.length === 0) {
+    return chalk.yellow('暂无分类');
+  }
+
+  const table = new Table({
+    head: [
+      chalk.cyan('ID'),
+      chalk.cyan('名称'),
+      chalk.cyan('描述'),
+      chalk.cyan('父分类 ID'),
+      chalk.cyan('创建时间'),
+    ],
+    colWidths: [38, 30, 40, 38, 18],
+    wordWrap: true,
+  });
+
+  categories.forEach((category) => {
+    table.push([
+      category.id || category.category_id || '-',
+      category.name || '-',
+      category.description || '-',
+      category.parent_id || '-',
+      formatDate(category.created_at),
+    ]);
+  });
+
+  return table.toString();
+}
+
+/**
+ * 格式化分类详情
+ */
+export function formatCategory(category: any): string {
+  const lines: string[] = [];
+  const separator = chalk.gray('─'.repeat(60));
+
+  lines.push(separator);
+  lines.push(chalk.cyan.bold('分类详情'));
+  lines.push(separator);
+
+  lines.push(`${chalk.gray('ID:')}          ${category.id || category.category_id}`);
+  lines.push(`${chalk.gray('名称:')}        ${category.name || '-'}`);
+
+  if (category.description) {
+    lines.push(`${chalk.gray('描述:')}        ${category.description}`);
+  }
+
+  if (category.parent_id) {
+    lines.push(`${chalk.gray('父分类 ID:')}  ${category.parent_id}`);
+  }
+
+  lines.push(`${chalk.gray('创建时间:')}    ${formatDate(category.created_at)}`);
+  lines.push(`${chalk.gray('更新时间:')}    ${formatDate(category.updated_at)}`);
+
+  lines.push(separator);
+
+  return lines.join('\n');
+}
+
+/**
+ * 格式化变体列表
+ */
+export function formatVariantList(variants: any[]): string {
+  if (!variants || variants.length === 0) {
+    return chalk.yellow('暂无变体');
+  }
+
+  const table = new Table({
+    head: [
+      chalk.cyan('ID'),
+      chalk.cyan('SKU'),
+      chalk.cyan('价格'),
+      chalk.cyan('库存'),
+      chalk.cyan('属性'),
+      chalk.cyan('创建时间'),
+    ],
+    colWidths: [38, 20, 15, 12, 30, 18],
+    wordWrap: true,
+  });
+
+  variants.forEach((variant) => {
+    const attributes = variant.attributes
+      ? Object.entries(variant.attributes)
+          .map(([key, value]) => `${key}:${value}`)
+          .join(', ')
+      : '-';
+
+    table.push([
+      variant.id || variant.variant_id || '-',
+      variant.sku || '-',
+      variant.price !== undefined ? `${variant.price}` : '-',
+      variant.stock !== undefined ? formatStockStatus(variant.stock) : '-',
+      attributes,
+      formatDate(variant.created_at),
+    ]);
+  });
+
+  return table.toString();
+}
+
+/**
+ * 格式化变体详情
+ */
+export function formatVariant(variant: any): string {
+  const lines: string[] = [];
+  const separator = chalk.gray('─'.repeat(60));
+
+  lines.push(separator);
+  lines.push(chalk.cyan.bold('变体详情'));
+  lines.push(separator);
+
+  lines.push(`${chalk.gray('ID:')}          ${variant.id || variant.variant_id}`);
+
+  if (variant.product_id) {
+    lines.push(`${chalk.gray('商品 ID:')}    ${variant.product_id}`);
+  }
+
+  if (variant.sku) {
+    lines.push(`${chalk.gray('SKU:')}         ${variant.sku}`);
+  }
+
+  if (variant.price !== undefined) {
+    lines.push(`${chalk.gray('价格:')}        ${chalk.green(variant.price.toString())}`);
+  }
+
+  if (variant.stock !== undefined) {
+    lines.push(`${chalk.gray('库存:')}        ${formatStockStatus(variant.stock)}`);
+  }
+
+  if (variant.attributes && Object.keys(variant.attributes).length > 0) {
+    lines.push(`${chalk.gray('属性:')}`);
+    Object.entries(variant.attributes).forEach(([key, value]) => {
+      lines.push(`  ${chalk.gray(`${key}:`)} ${value}`);
+    });
+  }
+
+  if (variant.images && variant.images.length > 0) {
+    lines.push(`${chalk.gray('图片数量:')}    ${variant.images.length}`);
+  }
+
+  lines.push(`${chalk.gray('创建时间:')}    ${formatDate(variant.created_at)}`);
+  lines.push(`${chalk.gray('更新时间:')}    ${formatDate(variant.updated_at)}`);
+
+  lines.push(separator);
+
+  return lines.join('\n');
+}

@@ -1,0 +1,88 @@
+import { Command } from 'commander';
+import ora from 'ora';
+import { commerceApi } from '../../api/rest/commerce.js';
+import { handleError, createApiError, ValidationError } from '../../utils/error.js';
+import { formatVariant } from '../../utils/format.js';
+
+interface UpdateVariantOptions {
+  sku?: string;
+  price?: string;
+  stock?: string;
+  attributes?: string;
+}
+
+export const updateVariantCommand = new Command('update')
+  .description('更新变体')
+  .argument('<product-id>', '商品 ID')
+  .argument('<variant-id>', '变体 ID')
+  .option('-s, --sku <sku>', 'SKU 编码')
+  .option('-p, --price <price>', '价格')
+  .option('--stock <quantity>', '库存数量')
+  .option('-a, --attributes <json>', '属性（JSON 格式）')
+  .action(async (productId: string, variantId: string, options: UpdateVariantOptions) => {
+    try {
+      await updateVariant(productId, variantId, options);
+    } catch (error) {
+      handleError(error);
+    }
+  });
+
+async function updateVariant(productId: string, variantId: string, options: UpdateVariantOptions) {
+  // 验证参数
+  if (!productId || productId.trim().length === 0) {
+    throw new ValidationError('商品 ID 不能为空', 'product-id');
+  }
+  if (!variantId || variantId.trim().length === 0) {
+    throw new ValidationError('变体 ID 不能为空', 'variant-id');
+  }
+
+  // 构建更新数据
+  const updateData: any = {};
+
+  if (options.sku !== undefined) {
+    updateData.sku = options.sku;
+  }
+
+  if (options.price !== undefined) {
+    const priceNum = parseFloat(options.price);
+    if (isNaN(priceNum)) {
+      throw new ValidationError('价格必须是有效数字', 'price');
+    }
+    updateData.price = priceNum;
+  }
+
+  if (options.stock !== undefined) {
+    const stockNum = parseInt(options.stock, 10);
+    if (isNaN(stockNum)) {
+      throw new ValidationError('库存必须是有效整数', 'stock');
+    }
+    updateData.stock = stockNum;
+  }
+
+  if (options.attributes !== undefined) {
+    try {
+      updateData.attributes = JSON.parse(options.attributes);
+    } catch {
+      throw new ValidationError('属性必须是有效的 JSON 格式', 'attributes');
+    }
+  }
+
+  // 检查是否有更新内容
+  if (Object.keys(updateData).length === 0) {
+    throw new ValidationError('请至少提供一个要更新的字段', 'options');
+  }
+
+  const spinner = ora('正在更新变体...').start();
+
+  try {
+    const variant = await commerceApi.variants.update(productId, variantId, updateData);
+    spinner.succeed('变体更新成功！');
+
+    // 显示变体详情
+    console.log();
+    console.log(formatVariant(variant));
+  } catch (error: any) {
+    spinner.fail('变体更新失败');
+    throw createApiError(error);
+  }
+}
