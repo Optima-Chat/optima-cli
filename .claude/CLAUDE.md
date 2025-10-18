@@ -1,8 +1,10 @@
+
+
 ## Optima CLI
 
 电商店铺管理命令行工具 - 用自然语言管理商品、订单、库存和物流。
 
-**版本**: v0.8.1 | **安装**: `npm install -g @optima-chat/optima-cli@latest`
+**版本**: v0.8.2 | **安装**: `npm install -g @optima-chat/optima-cli@latest`
 
 ### 可用命令
 

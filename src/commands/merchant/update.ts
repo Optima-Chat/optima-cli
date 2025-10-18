@@ -6,6 +6,7 @@ import { handleError, createApiError, ValidationError } from '../../utils/error.
 
 interface UpdateMerchantOptions {
   name?: string;
+  slug?: string;
   description?: string;
   email?: string;
   logoUrl?: string;
@@ -15,6 +16,7 @@ interface UpdateMerchantOptions {
 export const updateCommand = new Command('update')
   .description('更新商户资料')
   .option('-n, --name <name>', '商户名称')
+  .option('-s, --slug <slug>', '店铺 URL 标识符（用于 https://<slug>.optima.shop）')
   .option('-d, --description <description>', '商户描述')
   .option('-e, --email <email>', '邮箱')
   .option('--logo-url <url>', 'Logo URL')
@@ -31,6 +33,7 @@ async function updateMerchant(options: UpdateMerchantOptions) {
   // 检查是否提供了至少一个更新字段
   const hasUpdates = !!(
     options.name ||
+    options.slug ||
     options.description !== undefined ||
     options.email ||
     options.logoUrl ||
@@ -46,6 +49,10 @@ async function updateMerchant(options: UpdateMerchantOptions) {
 
   if (options.name) {
     updateData.name = options.name;
+  }
+
+  if (options.slug) {
+    updateData.slug = options.slug;
   }
 
   if (options.description !== undefined) {
@@ -72,6 +79,10 @@ async function updateMerchant(options: UpdateMerchantOptions) {
 
     console.log();
     console.log(chalk.gray('商户名称: ') + chalk.cyan(merchant.name || '-'));
+
+    if (merchant.slug) {
+      console.log(chalk.gray('店铺链接: ') + chalk.cyan.underline(`https://${merchant.slug}.optima.shop`));
+    }
 
     if (merchant.description) {
       console.log(chalk.gray('商户描述: ') + merchant.description);
