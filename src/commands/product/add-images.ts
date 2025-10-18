@@ -79,10 +79,12 @@ async function addImages(productId: string, imagePaths: string[]) {
     spinner.succeed(`图片上传成功！(${validPaths.length} 张)`);
 
     console.log();
-    console.log(chalk.gray('已上传的图片 URL:'));
-    result.images.forEach((url, index) => {
-      console.log(chalk.gray(`  ${index + 1}. `) + chalk.cyan(url));
-    });
+    if (result.images && result.images.length > 0) {
+      console.log(chalk.gray('已上传的图片 URL:'));
+      result.images.forEach((url, index) => {
+        console.log(chalk.gray(`  ${index + 1}. `) + chalk.cyan(url));
+      });
+    }
     console.log();
   } catch (error: any) {
     spinner.fail('图片上传失败');

@@ -44,11 +44,13 @@ async function addVariantImages(productId: string, variantId: string, imagePaths
     spinner.succeed('图片上传成功！');
 
     console.log();
-    console.log(chalk.gray('已上传图片数量: ') + chalk.green(result.images.length.toString()));
-    console.log(chalk.gray('图片 URL:'));
-    result.images.forEach((url: string, index: number) => {
-      console.log(chalk.cyan(`  ${index + 1}. ${url}`));
-    });
+    if (result.images && result.images.length > 0) {
+      console.log(chalk.gray('已上传图片数量: ') + chalk.green(result.images.length.toString()));
+      console.log(chalk.gray('图片 URL:'));
+      result.images.forEach((url: string, index: number) => {
+        console.log(chalk.cyan(`  ${index + 1}. ${url}`));
+      });
+    }
     console.log();
   } catch (error: any) {
     spinner.fail('图片上传失败');

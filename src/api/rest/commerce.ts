@@ -2,8 +2,24 @@ import { createAuthenticatedClient } from './base.js';
 import { AxiosInstance } from 'axios';
 import FormData from 'form-data';
 import { createReadStream } from 'fs';
+import path from 'path';
+import { createHash } from 'crypto';
 
 const COMMERCE_API_BASE_URL = 'https://api.optima.chat';
+
+// 辅助函数：清理文件名，移除非ASCII字符
+function sanitizeFilename(filename: string): string {
+  const ext = path.extname(filename);
+  const basename = path.basename(filename, ext);
+
+  // 如果文件名包含非ASCII字符，使用hash
+  if (!/^[\x00-\x7F]*$/.test(basename)) {
+    const hash = createHash('md5').update(basename).digest('hex').substring(0, 8);
+    return `upload-${hash}${ext}`;
+  }
+
+  return filename;
+}
 
 // ============================================================================
 // 类型定义
@@ -197,23 +213,39 @@ class CommerceApiClient {
     },
 
     /**
-     * 添加商品图片
+     * 添加商品图片（两步流程）
+     * 1. 先上传图片到存储获取 media_id
+     * 2. 再关联 media_id 到商品
      */
-    addImages: async (productId: string, imagePaths: string[]): Promise<{ images: string[] }> => {
-      const formData = new FormData();
-
+    addImages: async (productId: string, imagePaths: string[]): Promise<Product> => {
+      // 第1步：上传图片获取 media_id
+      const mediaIds: string[] = [];
       for (const imagePath of imagePaths) {
-        formData.append('images', createReadStream(imagePath));
+        const formData = new FormData();
+        const filename = sanitizeFilename(path.basename(imagePath));
+        formData.append('file', createReadStream(imagePath), {
+          filename: filename,
+        });
+
+        const uploadResponse = await this.client.post<{ media_id?: string; url: string }>(
+          '/api/upload/image',
+          formData,
+          {
+            headers: {
+              ...formData.getHeaders(),
+            },
+          }
+        );
+
+        if (uploadResponse.data.media_id) {
+          mediaIds.push(uploadResponse.data.media_id);
+        }
       }
 
-      const response = await this.client.post<{ images: string[] }>(
+      // 第2步：关联图片到商品
+      const response = await this.client.post<Product>(
         `/api/products/${productId}/images`,
-        formData,
-        {
-          headers: {
-            ...formData.getHeaders(),
-          },
-        }
+        { media_ids: mediaIds }
       );
       return response.data;
     },
@@ -745,23 +777,39 @@ class CommerceApiClient {
     },
 
     /**
-     * 添加变体图片
+     * 添加变体图片（两步流程）
+     * 1. 先上传图片到存储获取 media_id
+     * 2. 再关联 media_id 到变体
      */
-    addImages: async (masterId: string, variantId: string, imagePaths: string[]): Promise<{ images: string[] }> => {
-      const formData = new FormData();
-
+    addImages: async (masterId: string, variantId: string, imagePaths: string[]): Promise<Variant> => {
+      // 第1步：上传图片获取 media_id
+      const mediaIds: string[] = [];
       for (const imagePath of imagePaths) {
-        formData.append('images', createReadStream(imagePath));
+        const formData = new FormData();
+        const filename = sanitizeFilename(path.basename(imagePath));
+        formData.append('file', createReadStream(imagePath), {
+          filename: filename,
+        });
+
+        const uploadResponse = await this.client.post<{ media_id?: string; url: string }>(
+          '/api/upload/image',
+          formData,
+          {
+            headers: {
+              ...formData.getHeaders(),
+            },
+          }
+        );
+
+        if (uploadResponse.data.media_id) {
+          mediaIds.push(uploadResponse.data.media_id);
+        }
       }
 
-      const response = await this.client.post<{ images: string[] }>(
+      // 第2步：关联图片到变体
+      const response = await this.client.post<Variant>(
         `/api/products/${masterId}/variants/${variantId}/images`,
-        formData,
-        {
-          headers: {
-            ...formData.getHeaders(),
-          },
-        }
+        { media_ids: mediaIds }
       );
       return response.data;
     },
@@ -799,7 +847,10 @@ class CommerceApiClient {
      */
     uploadImage: async (imagePath: string): Promise<{ url: string }> => {
       const formData = new FormData();
-      formData.append('image', createReadStream(imagePath));
+      const filename = sanitizeFilename(path.basename(imagePath));
+      formData.append('file', createReadStream(imagePath), {
+        filename: filename,
+      });
 
       const response = await this.client.post<{ url: string }>('/api/upload/image', formData, {
         headers: {
@@ -814,7 +865,7 @@ class CommerceApiClient {
      */
     uploadVideo: async (videoPath: string): Promise<{ url: string }> => {
       const formData = new FormData();
-      formData.append('video', createReadStream(videoPath));
+      formData.append('file', createReadStream(videoPath));
 
       const response = await this.client.post<{ url: string }>('/api/upload/video', formData, {
         headers: {
