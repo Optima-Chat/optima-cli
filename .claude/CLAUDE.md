@@ -2,7 +2,7 @@
 
 电商店铺管理命令行工具 - 用自然语言管理商品、订单、库存和物流。
 
-**版本**: v0.4.1 | **安装**: `npm install -g @optima-chat/optima-cli@latest`
+**版本**: v0.5.0 | **安装**: `npm install -g @optima-chat/optima-cli@latest`
 
 ### 可用命令
 
@@ -61,6 +61,13 @@
 - `calculate` - 计算运费
 - `history <id>` - 物流历史
 - `update-status <id>` - 更新状态
+
+**运费区域** (`optima shipping-zone`)
+- `list` - 区域列表
+- `create` - 创建区域
+- `delete <id>` - 删除区域
+- `list-rates <zone-id>` - 查看区域费率
+- `add-rate <zone-id>` - 添加费率
 
 **上传** (`optima upload`)
 - `image <path>` - 上传图片
