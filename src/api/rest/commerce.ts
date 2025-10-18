@@ -888,6 +888,103 @@ class CommerceApiClient {
       return response.data;
     },
   };
+
+  // ==========================================================================
+  // 国际化翻译 (i18n)
+  // ==========================================================================
+
+  i18n = {
+    /**
+     * 获取支持的语言列表
+     */
+    listLanguages: async (activeOnly = true): Promise<any[]> => {
+      const response = await this.client.get<any[]>('/api/languages', {
+        params: { active_only: activeOnly },
+      });
+      return response.data;
+    },
+
+    // 商品翻译
+    productTranslations: {
+      list: async (productId: string): Promise<any[]> => {
+        const response = await this.client.get<any[]>(`/api/products/${productId}/translations`);
+        return response.data;
+      },
+
+      get: async (productId: string, languageCode: string): Promise<any> => {
+        const response = await this.client.get<any>(`/api/products/${productId}/translations/${languageCode}`);
+        return response.data;
+      },
+
+      create: async (productId: string, data: any): Promise<any> => {
+        const response = await this.client.post<any>(`/api/products/${productId}/translations`, data);
+        return response.data;
+      },
+
+      update: async (productId: string, languageCode: string, data: any): Promise<any> => {
+        const response = await this.client.put<any>(`/api/products/${productId}/translations/${languageCode}`, data);
+        return response.data;
+      },
+
+      delete: async (productId: string, languageCode: string): Promise<void> => {
+        await this.client.delete(`/api/products/${productId}/translations/${languageCode}`);
+      },
+    },
+
+    // 分类翻译
+    categoryTranslations: {
+      list: async (categoryId: string): Promise<any[]> => {
+        const response = await this.client.get<any[]>(`/api/categories/${categoryId}/translations`);
+        return response.data;
+      },
+
+      get: async (categoryId: string, languageCode: string): Promise<any> => {
+        const response = await this.client.get<any>(`/api/categories/${categoryId}/translations/${languageCode}`);
+        return response.data;
+      },
+
+      create: async (categoryId: string, data: any): Promise<any> => {
+        const response = await this.client.post<any>(`/api/categories/${categoryId}/translations`, data);
+        return response.data;
+      },
+
+      update: async (categoryId: string, languageCode: string, data: any): Promise<any> => {
+        const response = await this.client.put<any>(`/api/categories/${categoryId}/translations/${languageCode}`, data);
+        return response.data;
+      },
+
+      delete: async (categoryId: string, languageCode: string): Promise<void> => {
+        await this.client.delete(`/api/categories/${categoryId}/translations/${languageCode}`);
+      },
+    },
+
+    // 商户翻译
+    merchantTranslations: {
+      list: async (): Promise<any[]> => {
+        const response = await this.client.get<any[]>('/api/merchants/me/translations');
+        return response.data;
+      },
+
+      get: async (languageCode: string): Promise<any> => {
+        const response = await this.client.get<any>(`/api/merchants/me/translations/${languageCode}`);
+        return response.data;
+      },
+
+      create: async (data: any): Promise<any> => {
+        const response = await this.client.post<any>('/api/merchants/me/translations', data);
+        return response.data;
+      },
+
+      update: async (languageCode: string, data: any): Promise<any> => {
+        const response = await this.client.put<any>(`/api/merchants/me/translations/${languageCode}`, data);
+        return response.data;
+      },
+
+      delete: async (languageCode: string): Promise<void> => {
+        await this.client.delete(`/api/merchants/me/translations/${languageCode}`);
+      },
+    },
+  };
 }
 
 // 导出单例实例

@@ -21,6 +21,7 @@ import { conversationCommand } from './commands/conversation/index.js';
 import { addressCommand } from './commands/address/index.js';
 import { transferCommand } from './commands/transfer/index.js';
 import { shippingZoneCommand } from './commands/shipping-zone/index.js';
+import { i18nCommand } from './commands/i18n/index.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -51,6 +52,7 @@ program.addCommand(conversationCommand);
 program.addCommand(addressCommand);
 program.addCommand(transferCommand);
 program.addCommand(shippingZoneCommand);
+program.addCommand(i18nCommand);
 
 program
   .command('version')

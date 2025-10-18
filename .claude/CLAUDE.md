@@ -2,7 +2,7 @@
 
 电商店铺管理命令行工具 - 用自然语言管理商品、订单、库存和物流。
 
-**版本**: v0.5.0 | **安装**: `npm install -g @optima-chat/optima-cli@latest`
+**版本**: v0.6.0 | **安装**: `npm install -g @optima-chat/optima-cli@latest`
 
 ### 可用命令
 
@@ -94,6 +94,24 @@
 **财务** (`optima transfer`)
 - `list` - 转账列表
 - `summary` - 财务汇总
+
+**国际化翻译** (`optima i18n`)
+- `languages` - 查看支持的语言列表
+- `product list <product-id>` - 商品翻译列表
+- `product get <product-id> <lang>` - 查看商品翻译详情
+- `product create <product-id>` - 创建商品翻译
+- `product update <product-id> <lang>` - 更新商品翻译
+- `product delete <product-id> <lang>` - 删除商品翻译
+- `category list <category-id>` - 分类翻译列表
+- `category get <category-id> <lang>` - 查看分类翻译详情
+- `category create <category-id>` - 创建分类翻译
+- `category update <category-id> <lang>` - 更新分类翻译
+- `category delete <category-id> <lang>` - 删除分类翻译
+- `merchant list` - 商户翻译列表
+- `merchant get <lang>` - 查看商户翻译详情
+- `merchant create` - 创建商户翻译
+- `merchant update <lang>` - 更新商户翻译
+- `merchant delete <lang>` - 删除商户翻译
 
 **提示**:
 - 使用 `optima <命令> --help` 查看详细用法和选项
