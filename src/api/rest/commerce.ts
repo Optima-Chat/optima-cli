@@ -601,8 +601,20 @@ class CommerceApiClient {
      * 获取分类列表
      */
     list: async (): Promise<Category[]> => {
-      const response = await this.client.get<Category[]>('/api/categories');
-      return response.data;
+      const response = await this.client.get<{ items?: Category[]; categories?: Category[] } | Category[]>('/api/categories');
+      const data = response.data;
+
+      // 处理不同的响应格式
+      if (Array.isArray(data)) {
+        return data;
+      }
+      if ((data as any).items) {
+        return (data as any).items;
+      }
+      if ((data as any).categories) {
+        return (data as any).categories;
+      }
+      return [];
     },
 
     /**
@@ -646,8 +658,20 @@ class CommerceApiClient {
      * 获取商品变体列表
      */
     list: async (productId: string): Promise<Variant[]> => {
-      const response = await this.client.get<Variant[]>(`/api/products/${productId}/variants`);
-      return response.data;
+      const response = await this.client.get<{ items?: Variant[]; variants?: Variant[] } | Variant[]>(`/api/products/${productId}/variants`);
+      const data = response.data;
+
+      // 处理不同的响应格式
+      if (Array.isArray(data)) {
+        return data;
+      }
+      if ((data as any).items) {
+        return (data as any).items;
+      }
+      if ((data as any).variants) {
+        return (data as any).variants;
+      }
+      return [];
     },
 
     /**
