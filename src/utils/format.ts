@@ -180,7 +180,7 @@ export function formatOrderList(orders: any[]): string {
 
   orders.forEach((order) => {
     table.push([
-      truncateId(order.id || order.order_id),
+      order.order_number || truncateId(order.id || order.order_id),
       order.customer_name || order.customer_email || '-',
       formatPrice(order.total_amount || order.total || order.amount || 0, order.currency || 'USD'),
       formatOrderStatus(order.status || 'pending'),
