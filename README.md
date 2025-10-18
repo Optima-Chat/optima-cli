@@ -82,10 +82,10 @@ TODO: 录制商品管理演示 GIF
 npm install -g @optima-chat/optima-cli@latest
 ```
 
-安装完成后会自动配置 Claude Code 集成。如需在项目中启用，运行：
+安装完成后会自动配置 Claude Code 集成。如需在项目中启用，对 Claude 说：
 
-```bash
-optima init
+```
+"在这个项目启用 Optima CLI"
 ```
 
 ### 2. 登录你的账号
@@ -98,13 +98,7 @@ optima init
 "帮我登录到 Optima"
 ```
 
-或者直接在终端运行：
-
-```bash
-optima auth login
-```
-
-Claude/CLI 会自动打开浏览器引导你完成 OAuth 授权。
+Claude 会自动打开浏览器引导你完成 OAuth 授权。
 
 ### 3. 开始用自然语言管理店铺 ✨
 
