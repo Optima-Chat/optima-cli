@@ -61,7 +61,7 @@ async function updateStock(productId: string, options: UpdateStockOptions) {
   const spinner = ora('正在更新库存...').start();
 
   try {
-    await commerceApi.inventory.updateStock(productId, quantity);
+    await commerceApi.inventory.updateStock(productId, quantity, 'Manual adjustment via CLI');
     spinner.succeed('库存更新成功！');
 
     console.log();

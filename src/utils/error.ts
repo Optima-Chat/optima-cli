@@ -63,7 +63,7 @@ export function handleError(error: unknown): never {
       console.error(chalk.gray(`   错误码: ${error.code}`));
     }
     if (error.details && process.env.DEBUG) {
-      console.error(chalk.gray('   详情:'), error.details);
+      console.error(chalk.gray('   详情:'), JSON.stringify(error.details, null, 2));
     }
     console.error();
     process.exit(1);

@@ -270,18 +270,24 @@ class CommerceApiClient {
      * 获取低库存商品
      */
     getLowStock: async (threshold?: number): Promise<InventoryItem[]> => {
-      const response = await this.client.get<InventoryItem[]>('/api/inventory/low-stock', {
+      const response = await this.client.get<{ items: InventoryItem[] } | InventoryItem[]>('/api/inventory/low-stock', {
         params: { threshold },
       });
-      return response.data;
+      // 处理不同的响应格式
+      const data = response.data;
+      if (Array.isArray(data)) {
+        return data;
+      }
+      return (data as any).items || [];
     },
 
     /**
      * 调整商品库存
      */
-    updateStock: async (productId: string, quantity: number): Promise<InventoryItem> => {
+    updateStock: async (productId: string, quantity: number, reason?: string): Promise<InventoryItem> => {
       const response = await this.client.put<InventoryItem>(`/api/inventory/products/${productId}/stock`, {
         quantity,
+        reason: reason || 'Manual adjustment',
       });
       return response.data;
     },

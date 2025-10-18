@@ -123,11 +123,16 @@ async function createProduct(options: CreateProductOptions) {
       },
     ]);
 
+    const stock = parseInt(answers.stock, 10);
+    const title = answers.title.trim();
+
     productData = {
-      title: answers.title.trim(),
+      name: title, // API 期望的字段名
+      title: title, // 兼容性字段
       price: parseFloat(answers.price),
       description: answers.description?.trim() || undefined,
-      stock: parseInt(answers.stock, 10),
+      stock: stock,
+      quantity: stock, // 同时发送 quantity 字段以兼容不同的 API
       sku: answers.sku?.trim() || undefined,
       currency: answers.currency,
       status: answers.status,
@@ -159,11 +164,15 @@ async function createProduct(options: CreateProductOptions) {
     }
   } else {
     // 命令行参数模式
+    const stock = parseInt(options.stock || '0', 10);
+
     productData = {
-      title: options.title,
+      name: options.title, // API 期望的字段名
+      title: options.title, // 兼容性字段
       price: parseFloat(options.price),
       description: options.description,
-      stock: parseInt(options.stock || '0', 10),
+      stock: stock,
+      quantity: stock, // 同时发送 quantity 字段以兼容不同的 API
       sku: options.sku,
       currency: options.currency || 'USD',
       status: options.status || 'active',
@@ -176,7 +185,7 @@ async function createProduct(options: CreateProductOptions) {
     }
 
     // 验证库存
-    if (isNaN(productData.stock) || productData.stock < 0) {
+    if (isNaN(stock) || stock < 0) {
       throw new ValidationError('库存必须是大于等于 0 的整数', 'stock');
     }
   }
