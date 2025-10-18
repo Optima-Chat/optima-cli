@@ -240,7 +240,7 @@ Let me know if you run into any issues!
 
 ### 回答 "需要账号吗" 问题
 ```
-Yes, you'll need an Optima Commerce account. You can sign up at https://optima.chat
+Yes, you'll need an Optima Commerce account. You can sign up at https://www.optima.shop
 
 We offer a free trial to get started!
 ```

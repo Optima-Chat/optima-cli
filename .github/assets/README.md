@@ -20,4 +20,4 @@ This directory contains demo GIFs and images for the README.
 
 ## Tools
 
-See [DEMO_GUIDE.md](../../DEMO_GUIDE.md) for recommended recording tools and instructions.
+See [DEMO_GUIDE.md](../../docs/DEMO_GUIDE.md) for recommended recording tools and instructions.

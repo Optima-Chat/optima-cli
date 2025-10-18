@@ -16,11 +16,11 @@
 - [x] GitHub Actions CI/CD 配置
 
 ### 内容准备
-- [x] PROMOTION.md - 完整推广策略
-- [x] PROMOTION_POSTS.md - 各平台文案模板
-- [x] RELEASE_NOTES.md - 发布说明
-- [x] DEMO_GUIDE.md - 演示录制指南
-- [x] SUBMISSION_GUIDE.md - 平台提交指南
+- [x] docs/PROMOTION.md - 完整推广策略
+- [x] docs/PROMOTION_POSTS.md - 各平台文案模板
+- [x] docs/RELEASE_NOTES.md - 发布说明
+- [x] docs/DEMO_GUIDE.md - 演示录制指南
+- [x] docs/SUBMISSION_GUIDE.md - 平台提交指南
 - [ ] 演示 GIF 录制 (demo-install.gif, demo-claude-code.gif, demo-product.gif)
 - [ ] Product Hunt 图片素材 (icon, preview, gallery 1-4)
 - [ ] 演示视频录制 (30-60 秒)

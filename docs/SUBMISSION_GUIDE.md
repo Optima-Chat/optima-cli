@@ -125,7 +125,7 @@ Website: https://cli.optima.shop
 A: Claude Code 是 Anthropic 官方的 CLI 工具，对开发者工作流有深度集成。Optima CLI 专门为其优化，提供最佳的自然语言交互体验。
 
 **Q: 需要 Optima Commerce 账号吗？**
-A: 是的，需要先在 optima.chat 注册商户账号。我们提供免费试用。
+A: 是的，需要先在 www.optima.shop 注册商户账号。我们提供免费试用。
 
 **Q: 支持哪些平台？**
 A: macOS、Linux 和 Windows，需要 Node.js >= 18。

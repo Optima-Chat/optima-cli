@@ -20,7 +20,7 @@
 
 ## 🎯 简介
 
-Optima CLI 是 [Optima Commerce](https://optima.chat) 生态的命令行工具，**专为 Claude Code 设计**。
+Optima CLI 是 [Optima Commerce](https://www.optima.shop) 生态的命令行工具，**专为 Claude Code 设计**。
 
 无需记住命令 - 直接用中文对话，Claude 会自动调用相应的 CLI 命令来管理你的电商店铺。
 
@@ -48,7 +48,7 @@ TODO: 录制演示 GIF 后取消注释
 - 🚚 对话式订单发货
 - 📊 智能库存管理
 
-> 📹 演示内容录制中。参见 [DEMO_GUIDE.md](./DEMO_GUIDE.md) 查看录制计划
+> 📹 演示内容录制中。参见 [DEMO_GUIDE.md](./docs/DEMO_GUIDE.md) 查看录制计划
 
 ### 安装和基本使用
 <!--
@@ -529,7 +529,7 @@ npm publish
 
 ## 🔗 相关链接
 
-- [Optima Commerce 官网](https://optima.chat)
+- [Optima Commerce 官网](https://www.optima.shop)
 - [Agentic Chat](https://ai.optima.chat) - 卖家对话界面
 - [Optima Store](https://go.optima.shop) - 买家购物前端
 - [Claude Code](https://claude.com/claude-code)
@@ -546,4 +546,4 @@ npm publish
 
 ---
 
-**由 [Optima Commerce Team](https://optima.chat) 用 ❤️ 打造**
+**由 [Optima Commerce Team](https://www.optima.shop) 用 ❤️ 打造**

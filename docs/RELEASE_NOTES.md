@@ -56,7 +56,7 @@ npm install -g @optima-chat/optima-cli@0.6.2
 - 📦 [NPM 包](https://www.npmjs.com/package/@optima-chat/optima-cli) - 安装和版本历史
 - 📖 [GitHub 仓库](https://github.com/Optima-Chat/optima-cli) - 源代码和贡献指南
 - 💬 [问题反馈](https://github.com/Optima-Chat/optima-cli/issues) - Bug 报告和功能建议
-- 🏢 [Optima Commerce](https://optima.chat) - 完整的电商解决方案
+- 🏢 [Optima Commerce](https://www.optima.shop) - 完整的电商解决方案
 
 ## 🛠 技术栈
 
@@ -88,4 +88,4 @@ npm install -g @optima-chat/optima-cli@0.6.2
 
 **感谢使用 Optima CLI！** 如有问题或建议，欢迎提 Issue 或 PR。
 
-由 ❤️ 和 TypeScript 打造 | [Optima Commerce Team](https://optima.chat)
+由 ❤️ 和 TypeScript 打造 | [Optima Commerce Team](https://www.optima.shop)
