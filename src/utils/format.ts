@@ -168,19 +168,21 @@ export function formatOrderList(orders: any[]): string {
 
   const table = new Table({
     head: [
+      chalk.cyan('ID'),
       chalk.cyan('订单号'),
       chalk.cyan('客户'),
       chalk.cyan('金额'),
       chalk.cyan('状态'),
       chalk.cyan('时间'),
     ],
-    colWidths: [15, 25, 15, 12, 18],
+    colWidths: [38, 15, 20, 15, 12, 18],
     wordWrap: true,
   });
 
   orders.forEach((order) => {
     table.push([
-      order.order_number || order.id || order.order_id || '-',
+      order.id || order.order_id || '-',
+      order.order_number || '-',
       order.customer_name || order.customer_email || '-',
       formatPrice(order.total_amount || order.total || order.amount || 0, order.currency || 'USD'),
       formatOrderStatus(order.status || 'pending'),
@@ -202,9 +204,9 @@ export function formatOrder(order: any): string {
   lines.push(chalk.cyan.bold('订单详情'));
   lines.push(separator);
 
-  lines.push(`${chalk.gray('订单号:')}      ${order.id || order.order_id}`);
+  lines.push(`${chalk.gray('订单号:')}      ${order.order_number || order.id || order.order_id}`);
   lines.push(`${chalk.gray('状态:')}        ${formatOrderStatus(order.status || 'pending')}`);
-  lines.push(`${chalk.gray('金额:')}        ${chalk.green(formatPrice(order.total || order.amount || 0, order.currency || 'USD'))}`);
+  lines.push(`${chalk.gray('金额:')}        ${chalk.green(formatPrice(order.total_amount || order.total || order.amount || 0, order.currency || 'USD'))}`);
 
   if (order.customer_name) {
     lines.push(`${chalk.gray('客户姓名:')}    ${order.customer_name}`);
@@ -214,7 +216,19 @@ export function formatOrder(order: any): string {
   }
 
   if (order.shipping_address) {
-    lines.push(`${chalk.gray('收货地址:')}    ${order.shipping_address}`);
+    const addr = order.shipping_address;
+    const addrParts = [
+      addr.line_1,
+      addr.line_2,
+      addr.city,
+      addr.state,
+      addr.postal_code,
+      addr.country_alpha2,
+    ].filter(Boolean);
+    lines.push(`${chalk.gray('收货地址:')}    ${addrParts.join(', ')}`);
+    if (addr.contact_name) {
+      lines.push(`${chalk.gray('收件人:')}      ${addr.contact_name} ${addr.contact_phone || ''}`);
+    }
   }
 
   if (order.tracking_number) {
