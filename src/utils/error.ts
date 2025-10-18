@@ -62,7 +62,8 @@ export function handleError(error: unknown): never {
     if (error.code) {
       console.error(chalk.gray(`   错误码: ${error.code}`));
     }
-    if (error.details && process.env.DEBUG) {
+    if (error.details) {
+      // 总是显示 details（如果有的话），因为它包含有用的诊断信息
       console.error(chalk.gray('   详情:'), JSON.stringify(error.details, null, 2));
     }
     console.error();
