@@ -397,15 +397,26 @@
           </div>
           <div class="flex-1 min-w-0">
             <h3 class="text-xl sm:text-2xl font-semibold mb-2 sm:mb-3">登录账号</h3>
-            <div class="bg-gray-900 border border-gray-800 rounded-lg p-3 sm:p-4 font-mono text-xs sm:text-sm overflow-x-auto">
-              <div class="flex items-center justify-between gap-2 min-w-max">
-                <span class="text-gray-300">optima auth login</span>
-                <button onclick="copyToClipboard('optima auth login')" class="px-2 sm:px-3 py-1 bg-gray-800 hover:bg-gray-700 active:bg-gray-600 rounded text-xs transition flex-shrink-0">
-                  复制
-                </button>
+            <p class="text-gray-400 mb-3 text-sm sm:text-base">在 Claude Code 中直接说：</p>
+            <div class="bg-gray-900 border border-gray-800 rounded-lg p-3 sm:p-4">
+              <div class="space-y-2 text-sm sm:text-base text-gray-300">
+                <div>💬 "登录 Optima"</div>
+                <div>💬 "Optima 登录"</div>
+                <div>💬 "帮我登录到 Optima"</div>
               </div>
             </div>
-            <p class="text-gray-400 mt-2 text-xs sm:text-sm">浏览器会自动打开，完成 OAuth 授权</p>
+            <p class="text-gray-400 mt-2 text-xs sm:text-sm">Claude 会自动打开浏览器，完成 OAuth 授权</p>
+            <details class="mt-3">
+              <summary class="text-coral-400 hover:text-coral-300 cursor-pointer text-xs sm:text-sm">或者使用命令行</summary>
+              <div class="bg-gray-900 border border-gray-800 rounded-lg p-3 sm:p-4 font-mono text-xs sm:text-sm overflow-x-auto mt-2">
+                <div class="flex items-center justify-between gap-2 min-w-max">
+                  <span class="text-gray-300">optima auth login</span>
+                  <button onclick="copyToClipboard('optima auth login')" class="px-2 sm:px-3 py-1 bg-gray-800 hover:bg-gray-700 active:bg-gray-600 rounded text-xs transition flex-shrink-0">
+                    复制
+                  </button>
+                </div>
+              </div>
+            </details>
           </div>
         </div>
 
