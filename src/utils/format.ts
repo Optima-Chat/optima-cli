@@ -182,7 +182,7 @@ export function formatOrderList(orders: any[]): string {
     table.push([
       truncateId(order.id || order.order_id),
       order.customer_name || order.customer_email || '-',
-      formatPrice(order.total || order.amount || 0, order.currency || 'USD'),
+      formatPrice(order.total_amount || order.total || order.amount || 0, order.currency || 'USD'),
       formatOrderStatus(order.status || 'pending'),
       formatDate(order.created_at || order.order_date),
     ]);

@@ -231,8 +231,23 @@ class CommerceApiClient {
       start_date?: string;
       end_date?: string;
     }): Promise<{ orders: Order[]; total: number }> => {
-      const response = await this.client.get<{ orders: Order[]; total: number }>('/api/orders/merchant', { params });
-      return response.data;
+      const response = await this.client.get<{ items?: Order[]; orders?: Order[]; total?: number; pagination?: any }>('/api/orders/merchant', { params });
+      const data = response.data;
+
+      // 处理不同的响应格式
+      if (data.items) {
+        // 新格式: { items: [...] }
+        return {
+          orders: data.items,
+          total: data.total || data.items.length,
+        };
+      }
+
+      // 旧格式: { orders: [...], total: number }
+      return {
+        orders: data.orders || [],
+        total: data.total || 0,
+      };
     },
 
     /**
