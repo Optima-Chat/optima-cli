@@ -14,6 +14,7 @@ interface Product {
   product_id?: string;
   title: string;
   name?: string;
+  handle?: string;
   description?: string;
   price: number;
   currency?: string;
@@ -66,6 +67,7 @@ interface Merchant {
   id?: string;
   merchant_id?: string;
   name: string;
+  slug?: string;
   email?: string;
   description?: string;
   logo_url?: string;

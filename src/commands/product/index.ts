@@ -5,6 +5,7 @@ import { getProductCommand } from './get.js';
 import { updateProductCommand } from './update.js';
 import { deleteProductCommand } from './delete.js';
 import { addImagesCommand } from './add-images.js';
+import { urlCommand } from './url.js';
 
 export const productCommand = new Command('product')
   .description('商品管理')
@@ -13,4 +14,5 @@ export const productCommand = new Command('product')
   .addCommand(getProductCommand)
   .addCommand(updateProductCommand)
   .addCommand(deleteProductCommand)
-  .addCommand(addImagesCommand);
+  .addCommand(addImagesCommand)
+  .addCommand(urlCommand);

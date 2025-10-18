@@ -32,6 +32,12 @@ async function getMerchantInfo() {
     console.log(`${chalk.gray('商户 ID:')}     ${merchant.id || merchant.merchant_id || '-'}`);
     console.log(`${chalk.gray('商户名称:')}   ${merchant.name || '-'}`);
 
+    // 店铺链接（重要！）
+    if (merchant.slug) {
+      const storeUrl = `https://${merchant.slug}.optima.shop`;
+      console.log(`${chalk.gray('店铺链接:')}   ${chalk.cyan.underline(storeUrl)}`);
+    }
+
     if (merchant.email) {
       console.log(`${chalk.gray('邮箱:')}       ${merchant.email}`);
     }
