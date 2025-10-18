@@ -3,7 +3,7 @@
 ## Optima CLI
 Optima CLI 是用自然语言管理电商店铺的命令行工具，专为 Claude Code 设计。
 
-**当前版本**: v0.1.7
+**当前版本**: v0.2.0 🎉
 
 **安装**：`npm install -g @optima-chat/optima-cli@latest`
 
@@ -31,28 +31,42 @@ Optima CLI 是用自然语言管理电商店铺的命令行工具，专为 Claud
 - "香港到纽约运费，0.5 公斤"
 - "跟踪 DHL123456"
 
-### 可用命令（供参考，建议用自然语言）
+### 已实现功能（Phase 1 MVP）
 
-**商品**: `optima product create/list/get/update/delete/add-images`
-**订单**: `optima order list/get/ship/complete/cancel`
-**库存**: `optima inventory low-stock/update/history`
-**物流**: `optima shipping calculate/create/track`
-**店铺**: `optima shop info/update/setup`
-**认证**: `optima auth login/logout/whoami`
+✅ **完整的 23 个业务命令**，涵盖电商核心流程：
 
-### 已实现功能
+**认证管理** (auth):
+- `login` - OAuth 2.0 Device Flow 登录（自动打开浏览器授权）
+- `logout` - 登出并清除本地凭证
+- `whoami` - 显示当前用户信息
 
-**认证**：
-- `optima auth login` - OAuth 2.0 Device Flow 登录（自动打开浏览器授权）
-- `optima auth logout` - 登出并清除本地凭证
-- `optima auth whoami` - 显示当前用户信息
-- 自动 Token 刷新（15 分钟有效期，自动使用 refresh_token 续期）
+**商品管理** (product):
+- `create` - 创建商品（支持交互式模式 + 图片上传）
+- `list` - 商品列表（分页、过滤、搜索）
+- `get` - 商品详情
+- `update` - 更新商品
+- `delete` - 删除商品
+- `add-images` - 添加商品图片
 
-### 开发中功能（预计 2-3 周）
+**订单管理** (order):
+- `list` - 订单列表（状态过滤、日期范围）
+- `get` - 订单详情
+- `ship` - 订单发货（物流单号 + 快递公司）
+- `complete` - 完成订单
+- `cancel` - 取消订单
 
-**商品**: `optima product create/list/get/update/delete/add-images`
-**订单**: `optima order list/get/ship/complete/cancel`
-**库存**: `optima inventory low-stock/update/history`
-**物流**: `optima shipping calculate/create/track`
-**店铺**: `optima shop info/update/setup`
+**库存管理** (inventory):
+- `low-stock` - 获取低库存商品
+- `update` - 更新商品库存
+- `history` - 查看库存变更历史
+
+**商户管理** (merchant):
+- `info` - 获取商户信息
+- `update` - 更新商户资料
+- `setup` - 初始化商户资料（OAuth 用户首次使用）
+
+**物流管理** (shipping):
+- `calculate` - 计算运费
+- `history` - 查看物流历史
+- `update-status` - 更新物流状态
 <!-- END_OPTIMA_CLI -->
