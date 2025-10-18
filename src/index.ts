@@ -9,6 +9,7 @@ import { authCommand } from './commands/auth/index.js';
 import { cleanupCommand } from './commands/cleanup.js';
 import { initCommand } from './commands/init.js';
 import { productCommand } from './commands/product/index.js';
+import { orderCommand } from './commands/order/index.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -27,6 +28,7 @@ program.addCommand(authCommand);
 program.addCommand(cleanupCommand);
 program.addCommand(initCommand);
 program.addCommand(productCommand);
+program.addCommand(orderCommand);
 
 program
   .command('version')
