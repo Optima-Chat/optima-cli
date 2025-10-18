@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Optima CLI - 用自然语言管理你的电商店铺</title>
+  <meta name="description" content="专为 Claude Code 设计的对话式电商管理工具，15 个模块，78 个命令，一句话搞定商品、订单、库存管理。">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body class="bg-gray-950 text-gray-100 font-sans antialiased">
+
+  <!-- Navigation -->
+  <nav class="fixed top-0 w-full bg-gray-950/80 backdrop-blur-md border-b border-gray-800 z-50">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center space-x-2">
+        <svg class="w-8 h-8 text-coral-500" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M13 3L4 14h7l-1 7 9-11h-7l1-7z"/>
+        </svg>
+        <span class="text-xl font-bold">Optima CLI</span>
+      </div>
+      <div class="hidden md:flex items-center space-x-8">
+        <a href="#features" class="text-gray-300 hover:text-white transition">功能</a>
+        <a href="#demo" class="text-gray-300 hover:text-white transition">演示</a>
+        <a href="#install" class="text-gray-300 hover:text-white transition">安装</a>
+        <a href="https://github.com/Optima-Chat/optima-cli" target="_blank" class="text-gray-300 hover:text-white transition">GitHub</a>
+        <a href="#install" class="px-4 py-2 bg-coral-500 hover:bg-coral-600 rounded-lg font-medium transition">开始使用</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="pt-32 pb-20 px-6">
+    <div class="max-w-7xl mx-auto">
+      <div class="grid lg:grid-cols-2 gap-12 items-center">
+        <!-- Left: Text Content -->
+        <div class="space-y-8">
+          <div class="inline-block px-4 py-2 bg-coral-500/10 border border-coral-500/20 rounded-full text-coral-400 text-sm font-medium">
+            专为 Claude Code 设计
+          </div>
+
+          <h1 class="text-5xl md:text-6xl font-bold leading-tight">
+            用<span class="text-coral-500">自然语言</span><br/>
+            管理你的电商店铺
+          </h1>
+
+          <p class="text-xl text-gray-400 leading-relaxed">
+            无需记住命令，直接对 Claude 说话。<br/>
+            15 个模块，78 个命令，一句话搞定商品、订单、库存管理。
+          </p>
+
+          <div class="flex flex-col sm:flex-row gap-4">
+            <a href="#install" class="px-8 py-4 bg-coral-500 hover:bg-coral-600 rounded-lg font-semibold text-lg transition shadow-lg shadow-coral-500/20">
+              立即开始
+            </a>
+            <a href="https://github.com/Optima-Chat/optima-cli" target="_blank" class="px-8 py-4 bg-gray-800 hover:bg-gray-700 rounded-lg font-semibold text-lg transition border border-gray-700">
+              查看 GitHub
+            </a>
+          </div>
+
+          <div class="flex items-center space-x-6 text-sm text-gray-400">
+            <div class="flex items-center space-x-2">
+              <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+              </svg>
+              <span>开源免费</span>
+            </div>
+            <div class="flex items-center space-x-2">
+              <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+              </svg>
+              <span>即装即用</span>
+            </div>
+            <div class="flex items-center space-x-2">
+              <svg class="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+              </svg>
+              <span>OAuth 2.0</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Terminal Demo -->
+        <div class="relative">
+          <div class="absolute inset-0 bg-coral-500/20 blur-3xl rounded-full"></div>
+          <div class="relative bg-gray-900 rounded-2xl shadow-2xl border border-gray-800 overflow-hidden">
+            <!-- Terminal Header -->
+            <div class="bg-gray-800 px-4 py-3 flex items-center space-x-2 border-b border-gray-700">
+              <div class="w-3 h-3 rounded-full bg-red-500"></div>
+              <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+              <div class="w-3 h-3 rounded-full bg-green-500"></div>
+              <span class="ml-4 text-sm text-gray-400 font-mono">optima-cli</span>
+            </div>
+
+            <!-- Terminal Content -->
+            <div class="p-6 font-mono text-sm space-y-3">
+              <div class="flex items-start space-x-2">
+                <span class="text-coral-500">$</span>
+                <span class="text-gray-300">npm install -g @optima-chat/optima-cli</span>
+              </div>
+              <div class="text-green-400">✓ Optima CLI 已安装</div>
+
+              <div class="flex items-start space-x-2 mt-4">
+                <span class="text-coral-500">$</span>
+                <span class="text-gray-300">optima auth login</span>
+              </div>
+              <div class="text-blue-400">🔐 正在打开浏览器授权...</div>
+              <div class="text-green-400">✓ 登录成功！欢迎 admin@example.com</div>
+
+              <div class="flex items-start space-x-2 mt-4">
+                <span class="text-purple-500">Claude:</span>
+                <span class="text-gray-300">"创建陶瓷杯商品，89 美元，库存 20"</span>
+              </div>
+              <div class="text-gray-400 ml-8">→ optima product create --title "陶瓷杯" ...</div>
+              <div class="text-green-400 ml-8">✓ 商品创建成功！</div>
+              <div class="text-cyan-400 ml-8">商品 ID: prod_abc123</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section id="features" class="py-20 px-6 bg-gray-900/50">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-16">
+        <h2 class="text-4xl font-bold mb-4">强大的功能模块</h2>
+        <p class="text-xl text-gray-400">15 个模块，78 个命令，覆盖电商运营全流程</p>
+      </div>
+
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Feature Card -->
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-6 hover:border-coral-500/50 transition">
+          <div class="w-12 h-12 bg-coral-500/10 rounded-lg flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-coral-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+            </svg>
+          </div>
+          <h3 class="text-xl font-semibold mb-2">商品管理</h3>
+          <p class="text-gray-400">CRUD、图片上传、SKU 变体管理</p>
+        </div>
+
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-6 hover:border-coral-500/50 transition">
+          <div class="w-12 h-12 bg-coral-500/10 rounded-lg flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-coral-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+            </svg>
+          </div>
+          <h3 class="text-xl font-semibold mb-2">订单处理</h3>
+          <p class="text-gray-400">查询、发货、取消、标记送达</p>
+        </div>
+
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-6 hover:border-coral-500/50 transition">
+          <div class="w-12 h-12 bg-coral-500/10 rounded-lg flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-coral-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+            </svg>
+          </div>
+          <h3 class="text-xl font-semibold mb-2">库存管理</h3>
+          <p class="text-gray-400">预警、调整、历史记录、预留</p>
+        </div>
+
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-6 hover:border-coral-500/50 transition">
+          <div class="w-12 h-12 bg-coral-500/10 rounded-lg flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-coral-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+            </svg>
+          </div>
+          <h3 class="text-xl font-semibold mb-2">运费计算</h3>
+          <p class="text-gray-400">区域配置、费率管理、自动计算</p>
+        </div>
+
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-6 hover:border-coral-500/50 transition">
+          <div class="w-12 h-12 bg-coral-500/10 rounded-lg flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-coral-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"/>
+            </svg>
+          </div>
+          <h3 class="text-xl font-semibold mb-2">国际化</h3>
+          <p class="text-gray-400">多语言翻译管理，支持商品/分类/商户</p>
+        </div>
+
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-6 hover:border-coral-500/50 transition">
+          <div class="w-12 h-12 bg-coral-500/10 rounded-lg flex items-center justify-center mb-4">
+            <svg class="w-6 h-6 text-coral-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+            </svg>
+          </div>
+          <h3 class="text-xl font-semibold mb-2">客服对话</h3>
+          <p class="text-gray-400">对话管理、消息收发、已读标记</p>
+        </div>
+      </div>
+
+      <div class="mt-12 text-center">
+        <a href="https://github.com/Optima-Chat/optima-cli#readme" target="_blank" class="text-coral-400 hover:text-coral-300 font-medium inline-flex items-center space-x-2">
+          <span>查看完整功能列表</span>
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Natural Language Demo -->
+  <section id="demo" class="py-20 px-6">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-16">
+        <h2 class="text-4xl font-bold mb-4">自然语言，极致简单</h2>
+        <p class="text-xl text-gray-400">在 Claude Code 中直接用中文对话，无需记住任何命令</p>
+      </div>
+
+      <div class="space-y-6">
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-6">
+          <div class="flex items-start space-x-4">
+            <div class="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0">
+              <span class="text-lg">👤</span>
+            </div>
+            <div>
+              <div class="text-gray-300 mb-2">"创建陶瓷杯商品，89 美元，库存 20"</div>
+              <div class="text-sm text-gray-500 font-mono">→ optima product create --title "陶瓷杯" --price 89 --stock 20</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-6">
+          <div class="flex items-start space-x-4">
+            <div class="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0">
+              <span class="text-lg">👤</span>
+            </div>
+            <div>
+              <div class="text-gray-300 mb-2">"查看今天的待发货订单"</div>
+              <div class="text-sm text-gray-500 font-mono">→ optima order list --status pending</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-6">
+          <div class="flex items-start space-x-4">
+            <div class="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0">
+              <span class="text-lg">👤</span>
+            </div>
+            <div>
+              <div class="text-gray-300 mb-2">"订单 order_123 发货，快递单号 DHL123456"</div>
+              <div class="text-sm text-gray-500 font-mono">→ optima order ship order_123 --tracking DHL123456</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-gray-900 border border-gray-800 rounded-xl p-6">
+          <div class="flex items-start space-x-4">
+            <div class="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0">
+              <span class="text-lg">👤</span>
+            </div>
+            <div>
+              <div class="text-gray-300 mb-2">"给商品 prod_123 添加中文翻译"</div>
+              <div class="text-sm text-gray-500 font-mono">→ optima i18n product create prod_123 --lang zh-CN ...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Installation Section -->
+  <section id="install" class="py-20 px-6 bg-gray-900/50">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-center mb-16">
+        <h2 class="text-4xl font-bold mb-4">三步开始使用</h2>
+        <p class="text-xl text-gray-400">不到一分钟，即可开始用自然语言管理店铺</p>
+      </div>
+
+      <div class="space-y-8">
+        <!-- Step 1 -->
+        <div class="flex items-start space-x-6">
+          <div class="w-12 h-12 rounded-full bg-coral-500 flex items-center justify-center flex-shrink-0 text-xl font-bold">
+            1
+          </div>
+          <div class="flex-1">
+            <h3 class="text-2xl font-semibold mb-3">安装 CLI</h3>
+            <div class="bg-gray-900 border border-gray-800 rounded-lg p-4 font-mono text-sm">
+              <div class="flex items-center justify-between">
+                <span class="text-gray-300">npm install -g @optima-chat/optima-cli</span>
+                <button onclick="copyToClipboard('npm install -g @optima-chat/optima-cli')" class="px-3 py-1 bg-gray-800 hover:bg-gray-700 rounded text-xs transition">
+                  复制
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="flex items-start space-x-6">
+          <div class="w-12 h-12 rounded-full bg-coral-500 flex items-center justify-center flex-shrink-0 text-xl font-bold">
+            2
+          </div>
+          <div class="flex-1">
+            <h3 class="text-2xl font-semibold mb-3">登录账号</h3>
+            <div class="bg-gray-900 border border-gray-800 rounded-lg p-4 font-mono text-sm">
+              <div class="flex items-center justify-between">
+                <span class="text-gray-300">optima auth login</span>
+                <button onclick="copyToClipboard('optima auth login')" class="px-3 py-1 bg-gray-800 hover:bg-gray-700 rounded text-xs transition">
+                  复制
+                </button>
+              </div>
+            </div>
+            <p class="text-gray-400 mt-2 text-sm">浏览器会自动打开，完成 OAuth 授权</p>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="flex items-start space-x-6">
+          <div class="w-12 h-12 rounded-full bg-coral-500 flex items-center justify-center flex-shrink-0 text-xl font-bold">
+            3
+          </div>
+          <div class="flex-1">
+            <h3 class="text-2xl font-semibold mb-3">开始对话</h3>
+            <p class="text-gray-400 mb-3">在 Claude Code 中直接用自然语言说话：</p>
+            <div class="bg-gray-900 border border-gray-800 rounded-lg p-4">
+              <div class="space-y-2 text-sm text-gray-300">
+                <div>"创建商品..."</div>
+                <div>"查看订单..."</div>
+                <div>"库存低于 5 的商品"</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-12 text-center">
+        <p class="text-gray-400 mb-4">需要 Node.js >= 18</p>
+        <a href="https://github.com/Optima-Chat/optima-cli#readme" target="_blank" class="text-coral-400 hover:text-coral-300 font-medium inline-flex items-center space-x-2">
+          <span>查看完整文档</span>
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tech Stack -->
+  <section class="py-20 px-6">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl font-bold mb-4">现代化技术栈</h2>
+      </div>
+
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div class="bg-gray-900 border border-gray-800 rounded-lg p-6 text-center">
+          <div class="text-2xl mb-2">📘</div>
+          <div class="font-semibold">TypeScript</div>
+          <div class="text-sm text-gray-400">类型安全</div>
+        </div>
+        <div class="bg-gray-900 border border-gray-800 rounded-lg p-6 text-center">
+          <div class="text-2xl mb-2">⚡️</div>
+          <div class="font-semibold">Commander.js</div>
+          <div class="text-sm text-gray-400">CLI 框架</div>
+        </div>
+        <div class="bg-gray-900 border border-gray-800 rounded-lg p-6 text-center">
+          <div class="text-2xl mb-2">🔐</div>
+          <div class="font-semibold">OAuth 2.0</div>
+          <div class="text-sm text-gray-400">安全认证</div>
+        </div>
+        <div class="bg-gray-900 border border-gray-800 rounded-lg p-6 text-center">
+          <div class="text-2xl mb-2">🎨</div>
+          <div class="font-semibold">Inquirer</div>
+          <div class="text-sm text-gray-400">交互提示</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="py-20 px-6 bg-gradient-to-r from-coral-500/10 to-purple-500/10">
+    <div class="max-w-4xl mx-auto text-center">
+      <h2 class="text-4xl font-bold mb-6">准备好开始了吗？</h2>
+      <p class="text-xl text-gray-400 mb-8">
+        一行命令，即可用自然语言管理你的电商店铺
+      </p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a href="#install" class="px-8 py-4 bg-coral-500 hover:bg-coral-600 rounded-lg font-semibold text-lg transition shadow-lg shadow-coral-500/20">
+          立即安装
+        </a>
+        <a href="https://github.com/Optima-Chat/optima-cli" target="_blank" class="px-8 py-4 bg-gray-800 hover:bg-gray-700 rounded-lg font-semibold text-lg transition border border-gray-700">
+          查看 GitHub
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="py-12 px-6 border-t border-gray-800">
+    <div class="max-w-7xl mx-auto">
+      <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+        <div class="flex items-center space-x-2">
+          <svg class="w-6 h-6 text-coral-500" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M13 3L4 14h7l-1 7 9-11h-7l1-7z"/>
+          </svg>
+          <span class="font-bold">Optima CLI</span>
+        </div>
+
+        <div class="flex items-center space-x-6 text-sm text-gray-400">
+          <a href="https://optima.chat" target="_blank" class="hover:text-white transition">官网</a>
+          <a href="https://github.com/Optima-Chat/optima-cli" target="_blank" class="hover:text-white transition">GitHub</a>
+          <a href="https://www.npmjs.com/package/@optima-chat/optima-cli" target="_blank" class="hover:text-white transition">NPM</a>
+          <a href="https://github.com/Optima-Chat/optima-cli#readme" target="_blank" class="hover:text-white transition">文档</a>
+        </div>
+
+        <div class="text-sm text-gray-400">
+          © 2025 Optima Commerce
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        // Could add a toast notification here
+        console.log('Copied to clipboard');
+      });
+    }
+  </script>
+</body>
+</html>
