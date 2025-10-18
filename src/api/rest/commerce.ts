@@ -249,6 +249,18 @@ class CommerceApiClient {
       );
       return response.data;
     },
+
+    /**
+     * 添加商品图片（通过 URL）
+     * 直接用图片 URL 关联到商品（后端会下载）
+     */
+    addImageUrls: async (productId: string, imageUrls: string[]): Promise<Product> => {
+      const response = await this.client.post<Product>(
+        `/api/products/${productId}/images`,
+        { image_urls: imageUrls }
+      );
+      return response.data;
+    },
   };
 
   // ==========================================================================
