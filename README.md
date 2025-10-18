@@ -3,7 +3,7 @@
 > 用自然语言管理你的电商店铺 - 无需记住命令
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![NPM Version](https://img.shields.io/badge/npm-v0.6.0-blue)](https://www.npmjs.com/package/@optima-chat/optima-cli)
+[![NPM Version](https://img.shields.io/badge/npm-v0.6.1-blue)](https://www.npmjs.com/package/@optima-chat/optima-cli)
 [![Node Version](https://img.shields.io/badge/node-%3E%3D18-brightgreen)](https://nodejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue)](https://www.typescriptlang.org/)
 
@@ -37,13 +37,15 @@ optima init
 
 ### 2. 登录你的账号
 
-在 Claude Code 中说：
+在 Claude Code 中，你可以用自然语言说：
 
 ```
-登录 Optima
+"登录 Optima"
+"Optima 登录"
+"帮我登录到 Optima"
 ```
 
-或直接在终端运行：
+或者直接在终端运行：
 
 ```bash
 optima auth login
@@ -415,7 +417,7 @@ optima version         # 显示版本信息
 
 ## 🏗 项目状态
 
-**当前版本：v0.6.0**
+**当前版本：v0.6.1**
 
 ✅ **已完成功能**：
 - ✅ 完整的 OAuth 2.0 认证系统（Device Flow + 自动刷新）

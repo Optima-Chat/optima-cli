@@ -18,7 +18,18 @@ const VERSION = packageJson.version;
 const OPTIMA_CLI_SECTION = `
 ## Optima CLI
 
-当用户要求启用 Optima CLI 时：运行 \`optima init\`，然后提示用户 \`optima auth login\` 登录。
+**全局可用** - 安装后即可在任何项目中使用 Optima 命令。
+
+**常见需求映射**：
+- "登录 Optima" / "Optima 登录" → \`optima auth login\`
+- "查看商品" / "商品列表" → \`optima product list\`
+- "创建商品 XX，价格 YY" → \`optima product create --title XX --price YY\`
+- "订单 XX 发货" → \`optima order ship XX\`
+- "给商品添加中文翻译" → \`optima i18n product create ...\`
+
+**项目级启用**：如果用户想在当前项目启用完整配置文档，运行 \`optima init\`。
+
+使用 \`optima --help\` 查看所有可用命令。
 `;
 
 const OPTIMA_START_MARKER = '## Optima CLI';
