@@ -9,13 +9,19 @@ import { dirname } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const CLAUDE_MD_PATH = path.join(os.homedir(), '.claude', 'CLAUDE.md');
+const GLOBAL_CLAUDE_MD_PATH = path.join(os.homedir(), '.claude', 'CLAUDE.md');
+const PROJECT_CLAUDE_MD_PATH = path.join(process.cwd(), '.claude', 'CLAUDE.md');
+const TEMPLATE_CLAUDE_MD = path.join(__dirname, '..', '.claude', 'CLAUDE.md');
 
 // 动态读取版本号
 const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, '../package.json'), 'utf-8'));
 const VERSION = packageJson.version;
 
-const OPTIMA_CLI_SECTION = `
+const OPTIMA_START_MARKER = '## Optima CLI';
+const OPTIMA_END_MARKER = '<!-- END_OPTIMA_CLI -->';
+
+// 简化版配置（用于全局）
+const GLOBAL_OPTIMA_SECTION = `
 ## Optima CLI
 
 **全局可用** - 安装后即可在任何项目中使用 Optima 命令。
@@ -32,25 +38,39 @@ const OPTIMA_CLI_SECTION = `
 使用 \`optima --help\` 查看所有可用命令。
 `;
 
-const OPTIMA_START_MARKER = '## Optima CLI';
-const OPTIMA_END_MARKER = '<!-- END_OPTIMA_CLI -->';
-
-async function setupClaude() {
+// 从模板读取完整的 Optima CLI 配置
+function getFullOptimaSection(): string {
   try {
-    // 确保 .claude 目录存在
-    const claudeDir = path.dirname(CLAUDE_MD_PATH);
+    const templateContent = fs.readFileSync(TEMPLATE_CLAUDE_MD, 'utf-8');
+    const match = templateContent.match(
+      new RegExp(`${OPTIMA_START_MARKER}[\\s\\S]*?${OPTIMA_END_MARKER}`)
+    );
+    if (match) {
+      return match[0];
+    }
+  } catch (error) {
+    // 如果读取失败，返回 null
+  }
+  return '';
+}
+
+// 通用的更新 CLAUDE.md 函数
+function updateClaudeFile(filePath: string, optimaSection: string): boolean {
+  try {
+    const claudeDir = path.dirname(filePath);
+
+    // 确保目录存在
     if (!fs.existsSync(claudeDir)) {
       fs.mkdirSync(claudeDir, { recursive: true });
     }
 
     // 读取现有内容
     let existingContent = '';
-    if (fs.existsSync(CLAUDE_MD_PATH)) {
-      existingContent = fs.readFileSync(CLAUDE_MD_PATH, 'utf-8');
+    if (fs.existsSync(filePath)) {
+      existingContent = fs.readFileSync(filePath, 'utf-8');
 
-      // 如果已包含 Optima CLI 配置，先移除（更精确的正则）
+      // 移除旧的 Optima CLI 配置
       if (existingContent.includes(OPTIMA_START_MARKER)) {
-        // 方法1：使用标记（如果有）
         if (existingContent.includes(OPTIMA_END_MARKER)) {
           const regex = new RegExp(
             `${OPTIMA_START_MARKER}[\\s\\S]*?${OPTIMA_END_MARKER}\\n?`,
@@ -58,26 +78,46 @@ async function setupClaude() {
           );
           existingContent = existingContent.replace(regex, '');
         } else {
-          // 方法2：匹配到下一个 ## 标题或文件末尾
-          // 使用更准确的正则：匹配从 ## Optima CLI 开始，到下一个 ## 或文件末尾
           const regex = /## Optima CLI[\s\S]*?(?=\n## [^\n]|\n*$)/g;
           existingContent = existingContent.replace(regex, '');
         }
-        // 清理多余的空行
         existingContent = existingContent.replace(/\n{3,}/g, '\n\n').trim();
       }
     }
 
-    // 写入新配置（带结束标记）
-    const newContent = existingContent.trim() + '\n\n' + OPTIMA_CLI_SECTION.trim() + '\n' + OPTIMA_END_MARKER + '\n';
-    fs.writeFileSync(CLAUDE_MD_PATH, newContent, 'utf-8');
+    // 写入新配置
+    const newContent = existingContent.trim() + '\n\n' + optimaSection.trim() + '\n';
+    fs.writeFileSync(filePath, newContent, 'utf-8');
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
 
-    console.log('✓ Optima CLI 已配置到 Claude Code');
-    console.log(`  版本: v${VERSION}`);
-    console.log('  现在可以使用 optima auth login 登录了！');
+async function setupClaude() {
+  try {
+    // 更新全局 CLAUDE.md（简化版）
+    const globalUpdated = updateClaudeFile(
+      GLOBAL_CLAUDE_MD_PATH,
+      GLOBAL_OPTIMA_SECTION + '\n' + OPTIMA_END_MARKER
+    );
+
+    // 如果当前项目有 .claude/CLAUDE.md，更新完整版
+    if (fs.existsSync(PROJECT_CLAUDE_MD_PATH)) {
+      const fullSection = getFullOptimaSection();
+      if (fullSection) {
+        updateClaudeFile(PROJECT_CLAUDE_MD_PATH, fullSection);
+        console.log('✓ 已更新项目级 Optima CLI 配置');
+      }
+    }
+
+    if (globalUpdated) {
+      console.log('✓ Optima CLI 已配置到 Claude Code');
+      console.log(`  版本: v${VERSION}`);
+      console.log('  现在可以使用 optima auth login 登录了！');
+    }
   } catch (error) {
     // 静默失败，不影响安装
-    // console.log('⚠️  Claude Code 配置失败，可以稍后手动运行: optima setup-claude');
   }
 }
 
