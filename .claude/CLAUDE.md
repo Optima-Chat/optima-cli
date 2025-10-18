@@ -2,7 +2,7 @@
 
 电商店铺管理命令行工具 - 用自然语言管理商品、订单、库存和物流。
 
-**版本**: v0.6.5 | **安装**: `npm install -g @optima-chat/optima-cli@latest`
+**版本**: v0.6.6 | **安装**: `npm install -g @optima-chat/optima-cli@latest`
 
 ### 可用命令
 
