@@ -3,7 +3,6 @@ import chalk from 'chalk';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import inquirer from 'inquirer';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -39,8 +38,7 @@ ${OPTIMA_END_MARKER}`;
 
 export const initCommand = new Command('init')
   .description('在当前项目中启用 Optima CLI（添加完整配置到 .claude/CLAUDE.md）')
-  .option('--force', '强制覆盖已存在的配置')
-  .action(async (options) => {
+  .action(async () => {
     try {
       const claudeDir = path.dirname(PROJECT_CLAUDE_MD);
 
@@ -58,25 +56,10 @@ export const initCommand = new Command('init')
         hasExisting = existingContent.includes(OPTIMA_START_MARKER);
       }
 
-      // 如果已存在且未使用 --force，询问确认
-      if (hasExisting && !options.force) {
-        const answer = await inquirer.prompt([
-          {
-            type: 'confirm',
-            name: 'confirm',
-            message: '当前项目已配置 Optima CLI，是否覆盖？',
-            default: false,
-          },
-        ]);
-
-        if (!answer.confirm) {
-          console.log(chalk.gray('\n已取消\n'));
-          return;
-        }
-      }
-
       // 移除旧的 Optima CLI 区块（如果存在）
       if (hasExisting) {
+        console.log(chalk.cyan('\n正在更新 Optima CLI 配置...\n'));
+
         if (existingContent.includes(OPTIMA_END_MARKER)) {
           const regex = new RegExp(
             `${OPTIMA_START_MARKER}[\\s\\S]*?${OPTIMA_END_MARKER}\\n?`,
