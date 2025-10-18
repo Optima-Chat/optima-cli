@@ -18,6 +18,7 @@
 - `update <id>` - 更新商品
 - `delete <id>` - 删除商品
 - `add-images <id>` - 添加商品图片
+- `url <id>` - 获取产品链接（支持 `--open` 在浏览器打开）
 
 **分类** (`optima category`)
 - `list` - 分类列表
@@ -56,6 +57,7 @@
 - `info` - 商户信息
 - `update` - 更新资料
 - `setup` - 初始化资料
+- `url` - 获取店铺链接（支持 `--open` 在浏览器打开）
 
 **物流** (`optima shipping`)
 - `calculate` - 计算运费
@@ -116,4 +118,5 @@
 **提示**:
 - 使用 `optima <命令> --help` 查看详细用法和选项
 - 删除/取消等操作需要添加 `--yes` 或 `-y` 跳过交互式确认
+- 打开商品/店铺网页：使用 `optima product url <id> --open` 或 `optima merchant url --open`
 <!-- END_OPTIMA_CLI -->
