@@ -6,21 +6,20 @@ import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 
 export const addVariantImagesCommand = new Command('add-images')
-  .description('添加变体图片')
+  .description('添加变体图片（支持本地文件或 Media ID）')
   .argument('<product-id>', '商品 ID')
   .argument('<variant-id>', '变体 ID')
   .option('--path <paths...>', '本地图片文件路径（支持多个）')
-  .option('--url <urls...>', '图片 URL（支持多个）')
-  .action(async (productId: string, variantId: string, options: { path?: string[]; url?: string[] }) => {
+  .option('--media-id <ids...>', 'Media ID（从 upload 命令获取，支持多个）')
+  .action(async (productId: string, variantId: string, options: { path?: string[]; mediaId?: string[] }) => {
     try {
-      const imagePaths = [...(options.path || []), ...(options.url || [])];
-      await addVariantImages(productId, variantId, imagePaths);
+      await addVariantImages(productId, variantId, options);
     } catch (error) {
       handleError(error);
     }
   });
 
-async function addVariantImages(productId: string, variantId: string, imagePaths: string[]) {
+async function addVariantImages(productId: string, variantId: string, options: { path?: string[]; mediaId?: string[] }) {
   // 验证参数
   if (!productId || productId.trim().length === 0) {
     throw new ValidationError('商品 ID 不能为空', 'product-id');
@@ -28,11 +27,38 @@ async function addVariantImages(productId: string, variantId: string, imagePaths
   if (!variantId || variantId.trim().length === 0) {
     throw new ValidationError('变体 ID 不能为空', 'variant-id');
   }
-  if (!imagePaths || imagePaths.length === 0) {
-    throw new ValidationError('请至少提供一个图片路径', 'image-paths');
+
+  const { path: imagePaths = [], mediaId: mediaIds = [] } = options;
+
+  if (imagePaths.length === 0 && mediaIds.length === 0) {
+    throw new ValidationError('请至少提供一张图片（--path 或 --media-id）', 'images');
   }
 
-  // 验证图片文件存在
+  // 如果有 Media IDs，直接关联
+  if (mediaIds.length > 0) {
+    const spinner = ora(`正在关联 ${mediaIds.length} 张图片...`).start();
+
+    try {
+      const result = await commerceApi.variants.addImagesByMediaIds(productId, variantId, mediaIds);
+      spinner.succeed(`图片关联成功！(${mediaIds.length} 张)`);
+
+      console.log();
+      if (result.images && result.images.length > 0) {
+        console.log(chalk.gray('已关联图片数量: ') + chalk.green(result.images.length.toString()));
+        console.log(chalk.gray('图片 URL:'));
+        result.images.forEach((url: string, index: number) => {
+          console.log(chalk.cyan(`  ${index + 1}. ${url}`));
+        });
+      }
+      console.log();
+    } catch (error: any) {
+      spinner.fail('图片关联失败');
+      throw createApiError(error);
+    }
+    return;
+  }
+
+  // 验证本地图片文件存在
   for (const imagePath of imagePaths) {
     if (!existsSync(imagePath)) {
       throw new ValidationError(`图片文件不存在: ${imagePath}`, 'image-paths');

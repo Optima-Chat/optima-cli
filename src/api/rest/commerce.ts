@@ -837,6 +837,18 @@ class CommerceApiClient {
       );
       return response.data;
     },
+
+    /**
+     * 添加变体图片（通过 Media ID）
+     * 直接用 media_id 关联到变体（从 upload 命令获取）
+     */
+    addImagesByMediaIds: async (masterId: string, variantId: string, mediaIds: string[]): Promise<Variant> => {
+      const response = await this.client.post<Variant>(
+        `/api/products/${masterId}/variants/${variantId}/images`,
+        { media_ids: mediaIds }
+      );
+      return response.data;
+    },
   };
 
   // ==========================================================================

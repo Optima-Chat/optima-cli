@@ -7,44 +7,63 @@ import { formatFileSize } from '../../utils/format.js';
 import { existsSync, statSync } from 'fs';
 
 export const addImagesCommand = new Command('add-images')
-  .description('添加商品图片（支持本地文件路径或图片 URL）')
+  .description('添加商品图片（支持本地文件、URL 或 Media ID）')
   .argument('<product-id>', '商品 ID')
   .option('--path <paths...>', '本地图片文件路径（支持多个）')
   .option('--url <urls...>', '图片 URL（支持多个）')
-  .action(async (productId: string, options: { path?: string[]; url?: string[] }) => {
+  .option('--media-id <ids...>', 'Media ID（从 upload 命令获取，支持多个）')
+  .action(async (productId: string, options: { path?: string[]; url?: string[]; mediaId?: string[] }) => {
     try {
-      const imagePaths = [...(options.path || []), ...(options.url || [])];
-      await addImages(productId, imagePaths);
+      await addImages(productId, options);
     } catch (error) {
       handleError(error);
     }
   });
 
-async function addImages(productId: string, imagePaths: string[]) {
+async function addImages(productId: string, options: { path?: string[]; url?: string[]; mediaId?: string[] }) {
   // 验证参数
   if (!productId || productId.trim().length === 0) {
     throw new ValidationError('商品 ID 不能为空', 'product-id');
   }
 
-  if (!imagePaths || imagePaths.length === 0) {
-    throw new ValidationError('请至少提供一张图片路径或 URL', 'image-paths');
-  }
+  const { path: localPaths = [], url: imageUrls = [], mediaId: mediaIds = [] } = options;
 
-  // 分类：本地文件 vs URL
-  const localFiles: string[] = [];
-  const imageUrls: string[] = [];
+  if (localPaths.length === 0 && imageUrls.length === 0 && mediaIds.length === 0) {
+    throw new ValidationError('请至少提供一张图片（--path、--url 或 --media-id）', 'images');
+  }
 
   console.log(chalk.cyan('\n📷 验证输入...\n'));
 
-  for (const path of imagePaths) {
-    // 判断是否为 URL
-    if (path.startsWith('http://') || path.startsWith('https://')) {
-      console.log(chalk.green(`✓ URL: ${path}`));
-      imageUrls.push(path);
-      continue;
-    }
+  // 1. 如果有 Media IDs，直接关联
+  if (mediaIds.length > 0) {
+    console.log(chalk.green(`✓ Media IDs: ${mediaIds.length} 个`));
+    console.log();
 
-    // 验证本地文件
+    const spinner = ora(`正在关联 ${mediaIds.length} 张图片...`).start();
+
+    try {
+      const result = await commerceApi.products.addImagesByMediaIds(productId, mediaIds);
+      spinner.succeed(`图片关联成功！(${mediaIds.length} 张)`);
+
+      console.log();
+      if (result.images && result.images.length > 0) {
+        console.log(chalk.gray('已关联的图片 URL:'));
+        result.images.forEach((item: any, index: number) => {
+          const url = typeof item === 'string' ? item : (item.url || item.image_url || item);
+          console.log(chalk.gray(`  ${index + 1}. `) + chalk.cyan(url));
+        });
+      }
+      console.log();
+      return;
+    } catch (error: any) {
+      spinner.fail('图片关联失败');
+      throw createApiError(error);
+    }
+  }
+
+  // 2. 验证本地文件
+  const localFiles: string[] = [];
+  for (const path of localPaths) {
     if (!existsSync(path)) {
       console.log(chalk.red(`✗ 文件不存在: ${path}`));
       continue;
@@ -70,8 +89,13 @@ async function addImages(productId: string, imagePaths: string[]) {
     localFiles.push(path);
   }
 
+  // 3. 显示 URLs
+  for (const url of imageUrls) {
+    console.log(chalk.green(`✓ URL: ${url}`));
+  }
+
   if (localFiles.length === 0 && imageUrls.length === 0) {
-    throw new ValidationError('没有有效的图片文件或 URL', 'image-paths');
+    throw new ValidationError('没有有效的图片文件或 URL', 'images');
   }
 
   console.log();
