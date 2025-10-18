@@ -4,7 +4,7 @@
 
 电商店铺管理命令行工具 - 用自然语言管理商品、订单、库存和物流。
 
-**版本**: v0.8.2 | **安装**: `npm install -g @optima-chat/optima-cli@latest`
+**版本**: v0.9.0 | **安装**: `npm install -g @optima-chat/optima-cli@latest`
 
 ### 可用命令
 
@@ -121,5 +121,5 @@
 - 使用 `optima <命令> --help` 查看详细用法和选项
 - 删除/取消等操作需要添加 `--yes` 或 `-y` 跳过交互式确认
 - 打开商品/店铺网页：使用 `optima product url <id> --open` 或 `optima merchant url --open`
-- `product add-images` 支持图片 URL（避免重复上传）
+- 添加图片：`--path` 用于本地文件，`--url` 用于图片链接（避免重复上传）
 <!-- END_OPTIMA_CLI -->

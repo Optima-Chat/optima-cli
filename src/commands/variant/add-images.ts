@@ -9,9 +9,11 @@ export const addVariantImagesCommand = new Command('add-images')
   .description('添加变体图片')
   .argument('<product-id>', '商品 ID')
   .argument('<variant-id>', '变体 ID')
-  .argument('<image-paths...>', '图片文件路径（支持多个）')
-  .action(async (productId: string, variantId: string, imagePaths: string[]) => {
+  .option('--path <paths...>', '本地图片文件路径（支持多个）')
+  .option('--url <urls...>', '图片 URL（支持多个）')
+  .action(async (productId: string, variantId: string, options: { path?: string[]; url?: string[] }) => {
     try {
+      const imagePaths = [...(options.path || []), ...(options.url || [])];
       await addVariantImages(productId, variantId, imagePaths);
     } catch (error) {
       handleError(error);

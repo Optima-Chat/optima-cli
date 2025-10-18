@@ -9,9 +9,11 @@ import { existsSync, statSync } from 'fs';
 export const addImagesCommand = new Command('add-images')
   .description('添加商品图片（支持本地文件路径或图片 URL）')
   .argument('<product-id>', '商品 ID')
-  .argument('<image-paths...>', '图片路径或 URL（支持多个）')
-  .action(async (productId: string, imagePaths: string[]) => {
+  .option('--path <paths...>', '本地图片文件路径（支持多个）')
+  .option('--url <urls...>', '图片 URL（支持多个）')
+  .action(async (productId: string, options: { path?: string[]; url?: string[] }) => {
     try {
+      const imagePaths = [...(options.path || []), ...(options.url || [])];
       await addImages(productId, imagePaths);
     } catch (error) {
       handleError(error);
@@ -85,7 +87,9 @@ async function addImages(productId: string, imagePaths: string[]) {
       console.log();
       if (result.images && result.images.length > 0) {
         console.log(chalk.gray('已关联的图片 URL:'));
-        result.images.forEach((url, index) => {
+        result.images.forEach((item: any, index: number) => {
+          // 支持字符串或对象格式
+          const url = typeof item === 'string' ? item : (item.url || item.image_url || item);
           console.log(chalk.gray(`  ${index + 1}. `) + chalk.cyan(url));
         });
       }
@@ -108,7 +112,9 @@ async function addImages(productId: string, imagePaths: string[]) {
       console.log();
       if (result.images && result.images.length > 0) {
         console.log(chalk.gray('已上传的图片 URL:'));
-        result.images.forEach((url, index) => {
+        result.images.forEach((item: any, index: number) => {
+          // 支持字符串或对象格式
+          const url = typeof item === 'string' ? item : (item.url || item.image_url || item);
           console.log(chalk.gray(`  ${index + 1}. `) + chalk.cyan(url));
         });
       }
