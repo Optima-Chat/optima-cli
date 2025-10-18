@@ -105,7 +105,7 @@ export function formatProductList(products: any[]): string {
 
   products.forEach((product) => {
     table.push([
-      truncateId(product.id || product.product_id),
+      product.id || product.product_id || '-',
       product.title || product.name || '-',
       formatPrice(product.price || 0, product.currency || 'USD'),
       formatStockStatus(product.stock_quantity || product.stock || product.quantity || 0),
@@ -180,7 +180,7 @@ export function formatOrderList(orders: any[]): string {
 
   orders.forEach((order) => {
     table.push([
-      order.order_number || truncateId(order.id || order.order_id),
+      order.order_number || order.id || order.order_id || '-',
       order.customer_name || order.customer_email || '-',
       formatPrice(order.total_amount || order.total || order.amount || 0, order.currency || 'USD'),
       formatOrderStatus(order.status || 'pending'),
@@ -269,7 +269,7 @@ export function formatInventoryList(items: any[]): string {
   items.forEach((item) => {
     const stock = item.stock_quantity || item.stock || item.quantity || 0;
     table.push([
-      truncateId(item.product_id || item.id),
+      item.product_id || item.id || '-',
       item.product_name || item.name || '-',
       formatStockStatus(stock),
       stock <= 0 ? chalk.red('缺货') : stock <= 5 ? chalk.yellow('低库存') : chalk.green('正常'),
