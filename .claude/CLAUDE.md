@@ -2,7 +2,7 @@
 
 电商店铺管理命令行工具 - 用自然语言管理商品、订单、库存和物流。
 
-**版本**: v0.3.2 | **安装**: `npm install -g @optima-chat/optima-cli@latest`
+**版本**: v0.4.0 | **安装**: `npm install -g @optima-chat/optima-cli@latest`
 
 ### 可用命令
 
@@ -50,6 +50,7 @@
 - `low-stock` - 低库存商品
 - `update <id>` - 更新库存
 - `history <id>` - 库存历史
+- `reserve <id>` - 预留库存
 
 **商户** (`optima merchant`)
 - `info` - 商户信息
@@ -65,6 +66,22 @@
 - `image <path>` - 上传图片
 - `video <path>` - 上传视频
 - `file <path>` - 上传文件
+
+**对话** (`optima conversation`)
+- `list` - 对话列表
+- `get <id>` - 对话详情
+- `create` - 创建对话
+- `close <id>` - 关闭对话
+- `messages <id>` - 查看消息
+- `send <id>` - 发送消息
+- `mark-read <id>` - 标记已读
+
+**地址** (`optima address`)
+- `list` - 地址列表
+
+**财务** (`optima transfer`)
+- `list` - 转账列表
+- `summary` - 财务汇总
 
 **提示**:
 - 使用 `optima <命令> --help` 查看详细用法和选项

@@ -10,11 +10,19 @@ interface CreateRefundOptions {
   reason?: string;
 }
 
+const REFUND_REASONS = {
+  'requested_by_customer': '客户要求退款',
+  'duplicate': '重复收费',
+  'fraudulent': '欺诈交易',
+} as const;
+
+type RefundReasonKey = keyof typeof REFUND_REASONS;
+
 export const createRefundCommand = new Command('create')
   .description('创建退款')
   .argument('<order-id>', '订单 ID')
   .option('-a, --amount <amount>', '退款金额')
-  .option('-r, --reason <reason>', '退款原因')
+  .option('-r, --reason <reason>', '退款原因 (requested_by_customer/duplicate/fraudulent)')
   .action(async (orderId: string, options: CreateRefundOptions) => {
     try {
       await createRefund(orderId, options);
@@ -45,27 +53,45 @@ async function createRefund(orderId: string, options: CreateRefundOptions) {
     throw new ValidationError('订单没有关联的支付信息，无法创建退款', 'payment_intent_id');
   }
 
-  if (!amount) {
-    const answers = await inquirer.prompt([
-      {
+  // 验证退款原因
+  if (reason && !Object.keys(REFUND_REASONS).includes(reason)) {
+    throw new ValidationError(
+      `无效的退款原因。有效值: ${Object.keys(REFUND_REASONS).join(', ')}`,
+      'reason'
+    );
+  }
+
+  if (!amount || !reason) {
+    const questions: any[] = [];
+
+    if (!amount) {
+      questions.push({
         type: 'input',
         name: 'amount',
         message: '退款金额:',
-        validate: (input) => {
+        validate: (input: string) => {
           const num = parseFloat(input);
           return !isNaN(num) && num > 0 ? true : '退款金额必须是有效的正数';
         },
-      },
-      {
-        type: 'input',
-        name: 'reason',
-        message: '退款原因（可选）:',
-        default: '',
-      },
-    ]);
+      });
+    }
 
-    amount = answers.amount;
-    reason = answers.reason || undefined;
+    if (!reason) {
+      questions.push({
+        type: 'list',
+        name: 'reason',
+        message: '退款原因:',
+        choices: Object.entries(REFUND_REASONS).map(([key, value]) => ({
+          name: value,
+          value: key,
+        })),
+        default: 'requested_by_customer',
+      });
+    }
+
+    const answers = await inquirer.prompt(questions);
+    amount = amount || answers.amount;
+    reason = reason || answers.reason;
   }
 
   if (!amount) {
@@ -92,7 +118,8 @@ async function createRefund(orderId: string, options: CreateRefundOptions) {
     console.log(chalk.gray('订单 ID: ') + chalk.cyan(orderId));
     console.log(chalk.gray('退款金额: ') + chalk.green(amountNum.toString()));
     if (reason) {
-      console.log(chalk.gray('退款原因: ') + reason);
+      const reasonText = REFUND_REASONS[reason as RefundReasonKey] || reason;
+      console.log(chalk.gray('退款原因: ') + reasonText);
     }
     console.log();
   } catch (error: any) {

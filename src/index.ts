@@ -17,6 +17,9 @@ import { categoryCommand } from './commands/category/index.js';
 import { variantCommand } from './commands/variant/index.js';
 import { refundCommand } from './commands/refund/index.js';
 import { uploadCommand } from './commands/upload/index.js';
+import { conversationCommand } from './commands/conversation/index.js';
+import { addressCommand } from './commands/address/index.js';
+import { transferCommand } from './commands/transfer/index.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -43,6 +46,9 @@ program.addCommand(inventoryCommand);
 program.addCommand(merchantCommand);
 program.addCommand(shippingCommand);
 program.addCommand(uploadCommand);
+program.addCommand(conversationCommand);
+program.addCommand(addressCommand);
+program.addCommand(transferCommand);
 
 program
   .command('version')

@@ -554,10 +554,18 @@ class CommerceApiClient {
 
   conversations = {
     /**
-     * 获取对话列表（商户收件箱）
+     * 创建对话
      */
-    list: async (params?: { limit?: number; offset?: number }): Promise<any[]> => {
-      const response = await this.client.get<any[]>('/api/conversations', { params });
+    create: async (data: { customer_email?: string; customer_phone?: string; customer_name?: string; initial_message?: string }): Promise<any> => {
+      const response = await this.client.post<any>('/api/conversations', data);
+      return response.data;
+    },
+
+    /**
+     * 获取对话列表
+     */
+    list: async (params?: { page?: number; per_page?: number; status?: string }): Promise<any> => {
+      const response = await this.client.get<any>('/api/conversations', { params });
       return response.data;
     },
 
@@ -570,26 +578,43 @@ class CommerceApiClient {
     },
 
     /**
-     * 获取对话上下文
+     * 更新对话状态
      */
-    getContext: async (conversationId: string): Promise<any> => {
-      const response = await this.client.get<any>(`/api/conversations/${conversationId}/context`);
+    update: async (conversationId: string, data: { status?: string }): Promise<any> => {
+      const response = await this.client.patch<any>(`/api/conversations/${conversationId}`, data);
       return response.data;
     },
 
     /**
-     * 获取对话消息列表
+     * 发送消息
      */
-    listMessages: async (conversationId: string): Promise<any[]> => {
-      const response = await this.client.get<any[]>(`/api/conversations/${conversationId}/messages`);
+    sendMessage: async (conversationId: string, data: { content: string; message_type?: string; metadata?: any }): Promise<any> => {
+      const response = await this.client.post<any>(`/api/conversations/${conversationId}/messages`, data);
+      return response.data;
+    },
+
+    /**
+     * 获取消息列表
+     */
+    getMessages: async (conversationId: string, params?: { limit?: number; before?: string }): Promise<any> => {
+      const response = await this.client.get<any>(`/api/conversations/${conversationId}/messages`, { params });
       return response.data;
     },
 
     /**
      * 标记消息已读
      */
-    markRead: async (conversationId: string): Promise<void> => {
-      await this.client.post(`/api/conversations/${conversationId}/messages/mark-read`);
+    markRead: async (conversationId: string): Promise<any> => {
+      const response = await this.client.post<any>(`/api/conversations/${conversationId}/messages/mark-read`);
+      return response.data;
+    },
+
+    /**
+     * 获取对话上下文
+     */
+    getContext: async (conversationId: string): Promise<any> => {
+      const response = await this.client.get<any>(`/api/conversations/${conversationId}/context`);
+      return response.data;
     },
   };
 
@@ -809,6 +834,57 @@ class CommerceApiClient {
           ...formData.getHeaders(),
         },
       });
+      return response.data;
+    },
+  };
+
+  // ==========================================================================
+  // 客户地址管理 (addresses)
+  // ==========================================================================
+
+  addresses = {
+    list: async (): Promise<any[]> => {
+      const response = await this.client.get<any>('/api/customer/addresses');
+      return response.data.addresses || response.data || [];
+    },
+
+    get: async (addressId: string): Promise<any> => {
+      const response = await this.client.get<any>(`/api/customer/addresses/${addressId}`);
+      return response.data;
+    },
+
+    create: async (data: any): Promise<any> => {
+      const response = await this.client.post<any>('/api/customer/addresses', data);
+      return response.data;
+    },
+
+    update: async (addressId: string, data: any): Promise<any> => {
+      const response = await this.client.put<any>(`/api/customer/addresses/${addressId}`, data);
+      return response.data;
+    },
+
+    delete: async (addressId: string): Promise<void> => {
+      await this.client.delete(`/api/customer/addresses/${addressId}`);
+    },
+
+    setDefault: async (addressId: string): Promise<any> => {
+      const response = await this.client.put<any>(`/api/customer/addresses/${addressId}/default`);
+      return response.data;
+    },
+  };
+
+  // ==========================================================================
+  // 财务管理 (transfers)
+  // ==========================================================================
+
+  transfers = {
+    list: async (): Promise<any[]> => {
+      const response = await this.client.get<any>('/api/transfers/merchant');
+      return response.data.transfers || response.data || [];
+    },
+
+    summary: async (): Promise<any> => {
+      const response = await this.client.get<any>('/api/transfers/merchant/summary');
       return response.data;
     },
   };
