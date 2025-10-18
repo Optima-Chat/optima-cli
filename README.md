@@ -32,6 +32,36 @@ optima product create --title "陶瓷杯" --price 89 --stock 20
 "创建陶瓷杯商品，89 美元，库存 20" ✨
 ```
 
+## 🎬 演示
+
+### Claude Code 自然语言交互
+> 这是 Optima CLI 最强大的功能 - 用自然语言管理电商店铺
+
+<!--
+TODO: 录制演示 GIF 后取消注释
+![Claude Code 演示](.github/assets/demo-claude-code.gif)
+-->
+
+**计划展示场景**：
+- 💬 用中文对话创建商品
+- 📦 自然语言查询订单
+- 🚚 对话式订单发货
+- 📊 智能库存管理
+
+> 📹 演示内容录制中。参见 [DEMO_GUIDE.md](./DEMO_GUIDE.md) 查看录制计划
+
+### 安装和基本使用
+<!--
+TODO: 录制安装演示 GIF
+![安装演示](.github/assets/demo-install.gif)
+-->
+
+### 商品管理
+<!--
+TODO: 录制商品管理演示 GIF
+![商品管理演示](.github/assets/demo-product.gif)
+-->
+
 ## ✨ 核心特性
 
 - 🤖 **对话式操作** - 在 Claude Code 中用自然语言管理店铺，无需记住命令
