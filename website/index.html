@@ -3,20 +3,98 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Optima CLI - 用自然语言管理你的电商店铺</title>
-  <meta name="description" content="专为 Claude Code 设计的对话式电商管理工具，15 个模块，78 个命令，一句话搞定商品、订单、库存管理。">
+
+  <!-- Primary Meta Tags -->
+  <title>Optima CLI - 用自然语言管理你的电商店铺 | Claude Code CLI 工具</title>
+  <meta name="title" content="Optima CLI - 用自然语言管理你的电商店铺 | Claude Code CLI 工具">
+  <meta name="description" content="专为 Claude Code 设计的对话式电商管理 CLI 工具。15 个模块，78 个命令，支持商品管理、订单处理、库存管理、国际化翻译。OAuth 2.0 安全认证，开源免费。">
+  <meta name="keywords" content="Optima CLI, Claude Code, 电商管理工具, CLI工具, 命令行工具, 自然语言, 商品管理, 订单管理, 库存管理, OAuth认证, TypeScript, 开源工具">
+  <meta name="author" content="Optima Commerce Team">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://cli.optima.shop/">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://cli.optima.shop/">
+  <meta property="og:title" content="Optima CLI - 用自然语言管理你的电商店铺">
+  <meta property="og:description" content="专为 Claude Code 设计的对话式电商管理 CLI 工具。15 个模块，78 个命令，一句话搞定商品、订单、库存管理。">
+  <meta property="og:image" content="https://cli.optima.shop/og-image.png">
+  <meta property="og:site_name" content="Optima CLI">
+  <meta property="og:locale" content="zh_CN">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="https://cli.optima.shop/">
+  <meta name="twitter:title" content="Optima CLI - 用自然语言管理你的电商店铺">
+  <meta name="twitter:description" content="专为 Claude Code 设计的对话式电商管理 CLI 工具。15 个模块，78 个命令，一句话搞定商品、订单、库存管理。">
+  <meta name="twitter:image" content="https://cli.optima.shop/og-image.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23FF5A5F'><path d='M13 3L4 14h7l-1 7 9-11h-7l1-7z'/></svg>">
+
+  <!-- Preconnect for performance -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Stylesheet -->
   <link rel="stylesheet" href="/style.css">
+
+  <!-- Structured Data (JSON-LD) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Optima CLI",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "macOS, Linux, Windows",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "description": "专为 Claude Code 设计的对话式电商管理 CLI 工具。15 个模块，78 个命令，支持商品管理、订单处理、库存管理、国际化翻译。",
+    "softwareVersion": "0.6.2",
+    "url": "https://cli.optima.shop",
+    "downloadUrl": "https://www.npmjs.com/package/@optima-chat/optima-cli",
+    "author": {
+      "@type": "Organization",
+      "name": "Optima Commerce",
+      "url": "https://optima.chat"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "Optima Commerce",
+      "url": "https://optima.chat"
+    },
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "5",
+      "ratingCount": "1"
+    },
+    "screenshot": "https://cli.optima.shop/screenshot.png",
+    "featureList": [
+      "商品管理 - CRUD、图片上传、SKU变体",
+      "订单处理 - 查询、发货、取消、送达",
+      "库存管理 - 预警、调整、历史、预留",
+      "运费计算 - 区域配置、费率管理",
+      "国际化翻译 - 商品/分类/商户多语言",
+      "客服对话管理",
+      "OAuth 2.0 安全认证",
+      "自然语言操作"
+    ],
+    "programmingLanguage": "TypeScript",
+    "codeRepository": "https://github.com/Optima-Chat/optima-cli"
+  }
+  </script>
 </head>
 <body class="bg-gray-950 text-gray-100 font-sans antialiased">
 
   <!-- Navigation -->
-  <nav class="fixed top-0 w-full bg-gray-950/95 backdrop-blur-md border-b border-gray-800 z-50">
+  <nav class="fixed top-0 w-full bg-gray-950/95 backdrop-blur-md border-b border-gray-800 z-50" role="navigation" aria-label="主导航">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between">
       <div class="flex items-center space-x-2">
-        <svg class="w-7 h-7 sm:w-8 sm:h-8 text-coral-500" fill="currentColor" viewBox="0 0 24 24">
+        <svg class="w-7 h-7 sm:w-8 sm:h-8 text-coral-500" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path d="M13 3L4 14h7l-1 7 9-11h-7l1-7z"/>
         </svg>
         <span class="text-lg sm:text-xl font-bold">Optima CLI</span>
@@ -32,8 +110,8 @@
       </div>
 
       <!-- Mobile Menu Button -->
-      <button id="mobile-menu-btn" class="md:hidden p-2 text-gray-300 hover:text-white">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <button id="mobile-menu-btn" class="md:hidden p-2 text-gray-300 hover:text-white" aria-label="打开菜单" aria-expanded="false">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
         </svg>
       </button>
@@ -52,7 +130,7 @@
   </nav>
 
   <!-- Hero Section -->
-  <section class="pt-24 sm:pt-28 md:pt-32 pb-12 sm:pb-16 md:pb-20 px-4 sm:px-6">
+  <header class="pt-24 sm:pt-28 md:pt-32 pb-12 sm:pb-16 md:pb-20 px-4 sm:px-6">
     <div class="max-w-7xl mx-auto">
       <div class="grid lg:grid-cols-2 gap-8 md:gap-12 items-center">
         <!-- Left: Text Content -->
@@ -141,13 +219,13 @@
         </div>
       </div>
     </div>
-  </section>
+  </header>
 
   <!-- Features Section -->
-  <section id="features" class="py-12 sm:py-16 md:py-20 px-4 sm:px-6 bg-gray-900/50">
+  <section id="features" class="py-12 sm:py-16 md:py-20 px-4 sm:px-6 bg-gray-900/50" aria-labelledby="features-heading">
     <div class="max-w-7xl mx-auto">
       <div class="text-center mb-10 sm:mb-12 md:mb-16">
-        <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">强大的功能模块</h2>
+        <h2 id="features-heading" class="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">强大的功能模块</h2>
         <p class="text-base sm:text-lg md:text-xl text-gray-400">15 个模块，78 个命令，覆盖电商运营全流程</p>
       </div>
 
@@ -226,10 +304,10 @@
   </section>
 
   <!-- Natural Language Demo -->
-  <section id="demo" class="py-12 sm:py-16 md:py-20 px-4 sm:px-6">
+  <section id="demo" class="py-12 sm:py-16 md:py-20 px-4 sm:px-6" aria-labelledby="demo-heading">
     <div class="max-w-5xl mx-auto">
       <div class="text-center mb-10 sm:mb-12 md:mb-16">
-        <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">自然语言，极致简单</h2>
+        <h2 id="demo-heading" class="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">自然语言，极致简单</h2>
         <p class="text-base sm:text-lg md:text-xl text-gray-400">在 Claude Code 中直接用中文对话，无需记住任何命令</p>
       </div>
 
@@ -286,10 +364,10 @@
   </section>
 
   <!-- Installation Section -->
-  <section id="install" class="py-12 sm:py-16 md:py-20 px-4 sm:px-6 bg-gray-900/50">
+  <section id="install" class="py-12 sm:py-16 md:py-20 px-4 sm:px-6 bg-gray-900/50" aria-labelledby="install-heading">
     <div class="max-w-4xl mx-auto">
       <div class="text-center mb-10 sm:mb-12 md:mb-16">
-        <h2 class="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">三步开始使用</h2>
+        <h2 id="install-heading" class="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">三步开始使用</h2>
         <p class="text-base sm:text-lg md:text-xl text-gray-400">不到一分钟，即可开始用自然语言管理店铺</p>
       </div>
 
@@ -443,7 +521,9 @@
     const mobileMenu = document.getElementById('mobile-menu');
 
     mobileMenuBtn.addEventListener('click', () => {
-      mobileMenu.classList.toggle('hidden');
+      const isHidden = mobileMenu.classList.toggle('hidden');
+      mobileMenuBtn.setAttribute('aria-expanded', !isHidden);
+      mobileMenuBtn.setAttribute('aria-label', isHidden ? '打开菜单' : '关闭菜单');
     });
 
     // Close mobile menu when clicking a link

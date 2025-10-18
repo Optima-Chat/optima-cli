@@ -1,0 +1,6 @@
+# robots.txt for Optima CLI
+User-agent: *
+Allow: /
+
+# Sitemaps
+Sitemap: https://cli.optima.shop/sitemap.xml
