@@ -160,12 +160,13 @@ optima auth whoami      # 查看当前用户
 ### 📦 商品管理
 
 ```bash
-optima product create                        # 创建商品
-optima product list [--limit 20]             # 商品列表
-optima product get <id>                      # 商品详情
-optima product update <id>                   # 更新商品
-optima product delete <id> [-y]              # 删除商品
-optima product add-images <id> <paths...>    # 添加商品图片
+optima product create                           # 创建商品
+optima product list [--limit 20]                # 商品列表
+optima product get <id>                         # 商品详情
+optima product update <id>                      # 更新商品
+optima product delete <id> [-y]                 # 删除商品
+optima product add-images <id> --path <...>     # 添加本地图片
+optima product add-images <id> --url <...>      # 添加图片URL
 ```
 
 **示例**：
@@ -184,8 +185,14 @@ optima product update prod_123 \
   --price 99 \
   --stock 50
 
-# 添加图片
-optima product add-images prod_123 ./img1.jpg ./img2.jpg
+# 添加本地图片
+optima product add-images prod_123 --path ./img1.jpg ./img2.jpg
+
+# 添加图片 URL（避免重复上传）
+optima product add-images prod_123 --url https://example.com/image.jpg
+
+# 混合使用
+optima product add-images prod_123 --path ./local.jpg --url https://example.com/remote.jpg
 ```
 
 ### 🏷 分类管理
@@ -201,12 +208,12 @@ optima category delete <id> [-y]        # 删除分类
 ### 🎨 商品变体（SKU/规格）
 
 ```bash
-optima variant list <product-id>                    # 变体列表
-optima variant create <product-id>                  # 创建变体
-optima variant get <product-id> <id>                # 变体详情
-optima variant update <product-id> <id>             # 更新变体
-optima variant delete <product-id> <id> [-y]        # 删除变体
-optima variant add-images <product-id> <id> <...>   # 添加变体图片
+optima variant list <product-id>                       # 变体列表
+optima variant create <product-id>                     # 创建变体
+optima variant get <product-id> <id>                   # 变体详情
+optima variant update <product-id> <id>                # 更新变体
+optima variant delete <product-id> <id> [-y]           # 删除变体
+optima variant add-images <product-id> <id> --path <...>  # 添加变体图片
 ```
 
 **示例**：
@@ -285,9 +292,10 @@ optima inventory update prod_123 \
 ### 🏪 商户管理
 
 ```bash
-optima merchant info         # 获取商户信息
-optima merchant update       # 更新商户资料
-optima merchant setup        # 初始化商户资料（首次使用）
+optima merchant info          # 获取商户信息
+optima merchant update        # 更新商户资料
+optima merchant setup         # 初始化商户资料（首次使用）
+optima merchant url [--open]  # 获取店铺链接（可在浏览器打开）
 ```
 
 ### 🚚 物流管理
@@ -425,7 +433,8 @@ optima i18n product create prod_123 \
 - "查看所有商品"
 - "商品 prod_123 改价 99"
 - "删除商品 prod_456"
-- "给商品 prod_789 添加 3 张图片"
+- "给商品 prod_789 添加这张图片"
+- "把产品 handle 改成英文"
 - "创建白色 S 码变体，SKU 为 CUP-S-WHITE"
 
 **订单处理**：
@@ -470,7 +479,7 @@ optima version         # 显示版本信息
 
 ## 🏗 项目状态
 
-**当前版本：v0.6.1**
+**当前版本：v0.9.0**
 
 ✅ **已完成功能**：
 - ✅ 完整的 OAuth 2.0 认证系统（Device Flow + 自动刷新）
