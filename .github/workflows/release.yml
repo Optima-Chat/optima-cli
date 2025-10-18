@@ -1,0 +1,86 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'  # 当推送 v* 标签时触发（如 v0.6.1）
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # 需要写权限来创建 Release
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 获取完整历史，用于生成 changelog
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Build
+        run: npm run build
+
+      - name: Publish to npm
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Extract version from tag
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          # 获取上一个 tag
+          PREVIOUS_TAG=$(git describe --abbrev=0 --tags $(git rev-list --tags --skip=1 --max-count=1) 2>/dev/null || echo "")
+
+          if [ -z "$PREVIOUS_TAG" ]; then
+            # 如果没有上一个 tag，获取所有 commits
+            CHANGELOG=$(git log --pretty=format:"- %s (%h)" --no-merges)
+          else
+            # 获取两个 tag 之间的 commits
+            CHANGELOG=$(git log ${PREVIOUS_TAG}..HEAD --pretty=format:"- %s (%h)" --no-merges)
+          fi
+
+          # 保存到文件
+          echo "$CHANGELOG" > changelog.txt
+
+          # 输出到 GitHub Actions
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: Release ${{ steps.get_version.outputs.VERSION }}
+          body: |
+            ## 🎉 Optima CLI v${{ steps.get_version.outputs.VERSION }}
+
+            ### 📦 安装
+            ```bash
+            npm install -g @optima-chat/optima-cli@${{ steps.get_version.outputs.VERSION }}
+            ```
+
+            ### 📝 更新内容
+            ${{ steps.changelog.outputs.changelog }}
+
+            ### 🔗 链接
+            - 📦 [npm 包](https://www.npmjs.com/package/@optima-chat/optima-cli/v/${{ steps.get_version.outputs.VERSION }})
+            - 🌐 [官网](https://optima.chat)
+            - 📖 [文档](https://github.com/Optima-Chat/optima-cli#readme)
+          draft: false
+          prerelease: false
