@@ -1,0 +1,10 @@
+<svg width="240" height="240" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="120" cy="120" r="120" fill="#FF5A5F"/>
+
+  <!-- Lightning bolt icon -->
+  <path d="M130 40L80 120H110L100 200L150 120H120L130 40Z" fill="white" stroke="white" stroke-width="4" stroke-linejoin="round"/>
+
+  <!-- Optima text (optional, can be removed for simpler icon) -->
+  <text x="120" y="215" font-family="Inter, sans-serif" font-size="24" font-weight="bold" fill="white" text-anchor="middle">OPTIMA</text>
+</svg>
