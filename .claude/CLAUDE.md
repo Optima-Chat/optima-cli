@@ -2,7 +2,7 @@
 
 电商店铺管理命令行工具 - 用自然语言管理商品、订单、库存和物流。
 
-**版本**: v0.4.0 | **安装**: `npm install -g @optima-chat/optima-cli@latest`
+**版本**: v0.4.1 | **安装**: `npm install -g @optima-chat/optima-cli@latest`
 
 ### 可用命令
 
@@ -78,6 +78,11 @@
 
 **地址** (`optima address`)
 - `list` - 地址列表
+- `get <id>` - 地址详情
+- `create` - 创建地址
+- `update <id>` - 更新地址
+- `delete <id>` - 删除地址
+- `set-default <id>` - 设为默认地址
 
 **财务** (`optima transfer`)
 - `list` - 转账列表
