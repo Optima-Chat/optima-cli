@@ -1,13 +1,36 @@
-# Optima CLI
+<div align="center">
 
-> 用自然语言管理你的电商店铺 - 无需记住命令
+# ⚡️ Optima CLI
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![NPM Version](https://img.shields.io/badge/npm-v0.6.1-blue)](https://www.npmjs.com/package/@optima-chat/optima-cli)
-[![Node Version](https://img.shields.io/badge/node-%3E%3D18-brightgreen)](https://nodejs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue)](https://www.typescriptlang.org/)
+### 用自然语言管理你的电商店铺
 
-Optima CLI 是 [Optima Commerce](https://optima.chat) 生态的命令行工具，**专为 Claude Code 设计**，让你通过自然语言对话管理整个电商业务。
+**专为 Claude Code 设计的对话式 CLI 工具**
+
+[![NPM Version](https://img.shields.io/npm/v/@optima-chat/optima-cli?style=flat&logo=npm&color=CB3837)](https://www.npmjs.com/package/@optima-chat/optima-cli)
+[![Downloads](https://img.shields.io/npm/dt/@optima-chat/optima-cli?style=flat&logo=npm&color=CB3837)](https://www.npmjs.com/package/@optima-chat/optima-cli)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat)](https://opensource.org/licenses/MIT)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue?style=flat&logo=typescript)](https://www.typescriptlang.org/)
+[![Node Version](https://img.shields.io/badge/node-%3E%3D18-brightgreen?style=flat&logo=node.js)](https://nodejs.org/)
+
+[网站](https://cli.optima.shop) • [文档](https://github.com/Optima-Chat/optima-cli#readme) • [NPM](https://www.npmjs.com/package/@optima-chat/optima-cli) • [问题反馈](https://github.com/Optima-Chat/optima-cli/issues)
+
+</div>
+
+---
+
+## 🎯 简介
+
+Optima CLI 是 [Optima Commerce](https://optima.chat) 生态的命令行工具，**专为 Claude Code 设计**。
+
+无需记住命令 - 直接用中文对话，Claude 会自动调用相应的 CLI 命令来管理你的电商店铺。
+
+```bash
+# 传统方式（需要记住命令）
+optima product create --title "陶瓷杯" --price 89 --stock 20
+
+# Optima CLI + Claude Code（自然语言）
+"创建陶瓷杯商品，89 美元，库存 20" ✨
+```
 
 ## ✨ 核心特性
 
