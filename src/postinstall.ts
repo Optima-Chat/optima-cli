@@ -10,7 +10,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const GLOBAL_CLAUDE_MD_PATH = path.join(os.homedir(), '.claude', 'CLAUDE.md');
-const PROJECT_CLAUDE_MD_PATH = path.join(process.cwd(), '.claude', 'CLAUDE.md');
+// 从环境变量获取安装时的工作目录
+const INSTALL_CWD = process.env.INIT_CWD || process.env.PWD || process.cwd();
+const PROJECT_CLAUDE_MD_PATH = path.join(INSTALL_CWD, '.claude', 'CLAUDE.md');
 const TEMPLATE_CLAUDE_MD = path.join(__dirname, '..', '.claude', 'CLAUDE.md');
 
 // 动态读取版本号
