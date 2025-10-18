@@ -121,7 +121,5 @@ async function setupClaude() {
   }
 }
 
-// 只在全局安装时执行
-if (process.env.npm_config_global === 'true') {
-  setupClaude();
-}
+// 总是执行（函数内部会检查文件是否存在）
+setupClaude();
