@@ -30,6 +30,21 @@ async function createRefund(orderId: string, options: CreateRefundOptions) {
 
   let { amount, reason } = options;
 
+  // 获取订单信息以获得 payment_intent_id
+  const orderSpinner = ora('正在获取订单信息...').start();
+  let order;
+  try {
+    order = await commerceApi.orders.get(orderId);
+    orderSpinner.succeed('订单信息获取成功');
+  } catch (error: any) {
+    orderSpinner.fail('订单信息获取失败');
+    throw createApiError(error);
+  }
+
+  if (!order.stripe_payment_intent_id) {
+    throw new ValidationError('订单没有关联的支付信息，无法创建退款', 'payment_intent_id');
+  }
+
   if (!amount) {
     const answers = await inquirer.prompt([
       {
@@ -66,7 +81,7 @@ async function createRefund(orderId: string, options: CreateRefundOptions) {
 
   try {
     const refund = await commerceApi.refunds.create({
-      order_id: orderId,
+      payment_intent_id: order.stripe_payment_intent_id,
       amount: amountNum,
       reason,
     });

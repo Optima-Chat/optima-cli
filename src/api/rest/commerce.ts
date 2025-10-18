@@ -39,6 +39,7 @@ interface Order {
   shipping_address?: string;
   tracking_number?: string;
   carrier?: string;
+  stripe_payment_intent_id?: string;
   items?: OrderItem[];
   created_at?: string;
   updated_at?: string;
@@ -286,7 +287,7 @@ class CommerceApiClient {
      * 标记已送达
      */
     markDelivered: async (orderId: string): Promise<Order> => {
-      const response = await this.client.post<Order>(`/api/orders/merchant/${orderId}/mark-delivered`);
+      const response = await this.client.post<Order>(`/api/orders/merchant/${orderId}/mark-delivered`, {});
       return response.data;
     },
   };
@@ -747,7 +748,7 @@ class CommerceApiClient {
     /**
      * 创建退款
      */
-    create: async (data: { order_id: string; amount: number; reason?: string }): Promise<any> => {
+    create: async (data: { payment_intent_id: string; amount: number; reason?: string }): Promise<any> => {
       const response = await this.client.post<any>('/api/refunds/create', data);
       return response.data;
     },
