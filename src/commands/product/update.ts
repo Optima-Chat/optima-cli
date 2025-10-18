@@ -6,6 +6,7 @@ import { formatProduct } from '../../utils/format.js';
 
 interface UpdateProductOptions {
   title?: string;
+  handle?: string;
   price?: string;
   description?: string;
   stock?: string;
@@ -18,6 +19,7 @@ export const updateProductCommand = new Command('update')
   .description('更新商品')
   .argument('<product-id>', '商品 ID')
   .option('--title <title>', '商品名称')
+  .option('--handle <handle>', 'URL 友好标识符（用于产品链接）')
   .option('--price <price>', '商品价格')
   .option('--description <description>', '商品描述')
   .option('--stock <stock>', '库存数量')
@@ -41,6 +43,7 @@ async function updateProduct(productId: string, options: UpdateProductOptions) {
   // 检查是否提供了至少一个更新字段
   const hasUpdates = !!(
     options.title ||
+    options.handle ||
     options.price ||
     options.description !== undefined ||
     options.stock ||
@@ -58,6 +61,10 @@ async function updateProduct(productId: string, options: UpdateProductOptions) {
 
   if (options.title) {
     updateData.title = options.title;
+  }
+
+  if (options.handle) {
+    updateData.handle = options.handle;
   }
 
   if (options.price) {
