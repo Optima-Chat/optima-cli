@@ -151,8 +151,23 @@ class CommerceApiClient {
       category_id?: string;
       search?: string;
     }): Promise<{ products: Product[]; total: number }> => {
-      const response = await this.client.get<{ products: Product[]; total: number }>('/api/products', { params });
-      return response.data;
+      const response = await this.client.get<{ items?: Product[]; products?: Product[]; total?: number; pagination?: any }>('/api/products', { params });
+      const data = response.data;
+
+      // 处理不同的响应格式
+      if (data.items) {
+        // 新格式: { items: [...] }
+        return {
+          products: data.items,
+          total: data.total || data.items.length,
+        };
+      }
+
+      // 旧格式: { products: [...], total: number }
+      return {
+        products: data.products || [],
+        total: data.total || 0,
+      };
     },
 
     /**
@@ -427,10 +442,11 @@ class CommerceApiClient {
      * 计算订单运费
      */
     calculate: async (data: {
-      country: string;
+      destination_country: string;
       postal_code?: string;
       weight: number;
       items?: any[];
+      merchant_id?: string;
     }): Promise<{ shipping_cost: number; currency: string }> => {
       const response = await this.client.post<{ shipping_cost: number; currency: string }>(
         '/api/shipping/fixed/calculate',

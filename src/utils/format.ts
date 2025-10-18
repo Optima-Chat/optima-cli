@@ -108,7 +108,7 @@ export function formatProductList(products: any[]): string {
       truncateId(product.id || product.product_id),
       product.title || product.name || '-',
       formatPrice(product.price || 0, product.currency || 'USD'),
-      formatStockStatus(product.stock || product.quantity || 0),
+      formatStockStatus(product.stock_quantity || product.stock || product.quantity || 0),
       formatProductStatus(product.status || 'active'),
       formatDate(product.created_at),
     ]);
@@ -131,7 +131,7 @@ export function formatProduct(product: any): string {
   lines.push(`${chalk.gray('ID:')}          ${product.id || product.product_id}`);
   lines.push(`${chalk.gray('名称:')}        ${product.title || product.name || '-'}`);
   lines.push(`${chalk.gray('价格:')}        ${chalk.green(formatPrice(product.price || 0, product.currency || 'USD'))}`);
-  lines.push(`${chalk.gray('库存:')}        ${formatStockStatus(product.stock || product.quantity || 0)}`);
+  lines.push(`${chalk.gray('库存:')}        ${formatStockStatus(product.stock_quantity || product.stock || product.quantity || 0)}`);
   lines.push(`${chalk.gray('状态:')}        ${formatProductStatus(product.status || 'active')}`);
 
   if (product.description) {
@@ -267,11 +267,12 @@ export function formatInventoryList(items: any[]): string {
   });
 
   items.forEach((item) => {
+    const stock = item.stock_quantity || item.stock || item.quantity || 0;
     table.push([
       truncateId(item.product_id || item.id),
       item.product_name || item.name || '-',
-      formatStockStatus(item.stock || item.quantity || 0),
-      item.stock <= 0 ? chalk.red('缺货') : item.stock <= 5 ? chalk.yellow('低库存') : chalk.green('正常'),
+      formatStockStatus(stock),
+      stock <= 0 ? chalk.red('缺货') : stock <= 5 ? chalk.yellow('低库存') : chalk.green('正常'),
       formatDate(item.updated_at),
     ]);
   });
