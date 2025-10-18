@@ -99,7 +99,7 @@ export function formatProductList(products: any[]): string {
       chalk.cyan('状态'),
       chalk.cyan('创建时间'),
     ],
-    colWidths: [15, 30, 15, 12, 12, 18],
+    colWidths: [38, 30, 15, 12, 12, 18],
     wordWrap: true,
   });
 
@@ -276,7 +276,7 @@ export function formatInventoryList(items: any[]): string {
       chalk.cyan('状态'),
       chalk.cyan('更新时间'),
     ],
-    colWidths: [15, 30, 12, 15, 18],
+    colWidths: [38, 30, 12, 15, 18],
     wordWrap: true,
   });
 

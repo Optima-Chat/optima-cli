@@ -2,7 +2,7 @@
 
 电商店铺管理命令行工具 - 用自然语言管理商品、订单、库存和物流。
 
-**版本**: v0.2.7 | **安装**: `npm install -g @optima-chat/optima-cli@latest`
+**版本**: v0.2.8 | **安装**: `npm install -g @optima-chat/optima-cli@latest`
 
 ### 可用命令
 
@@ -41,5 +41,7 @@
 - `history <id>` - 物流历史
 - `update-status <id>` - 更新状态
 
-**提示**: 使用 `optima <命令> --help` 查看详细用法和选项。
+**提示**:
+- 使用 `optima <命令> --help` 查看详细用法和选项
+- 删除/取消等操作需要添加 `--yes` 或 `-y` 跳过交互式确认
 <!-- END_OPTIMA_CLI -->
