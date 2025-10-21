@@ -331,6 +331,51 @@ optima merchant setup         # 初始化商户资料（首次使用）
 optima merchant url [--open]  # 获取店铺链接（可在浏览器打开）
 ```
 
+**初始化商户资料示例**：
+
+```bash
+# 交互式模式（适合本地使用）
+optima merchant setup
+
+# 非交互式模式（适合容器/CI/CD，所有必填字段通过参数提供）
+optima merchant setup \
+  --name "我的店铺" \
+  --origin-country-alpha2 HK \
+  --origin-city Saikung \
+  --origin-state "New Territories" \
+  --origin-line-1 "G/F NO.93, TAI PO TSAI VILLAGE" \
+  --contact-name "XU, HAO" \
+  --contact-phone "53736279" \
+  --contact-email "merchant@example.com"
+
+# 带可选字段
+optima merchant setup \
+  --name "我的店铺" \
+  --description "高品质商品" \
+  --slug "my-store" \
+  --default-currency USD \
+  --origin-country-alpha2 CN \
+  --origin-city "深圳" \
+  --origin-state "广东省" \
+  --origin-line-1 "南山区科技园" \
+  --origin-line-2 "创业大厦10楼" \
+  --origin-postal-code "518000" \
+  --contact-name "张三" \
+  --contact-phone "13800138000" \
+  --contact-email "merchant@example.com" \
+  --company-name "深圳某某科技有限公司"
+```
+
+**必填字段**：
+- `--name`: 商户名称
+- `--origin-country-alpha2`: 发货国家代码（2位，如 CN, US, HK）
+- `--origin-city`: 发货城市
+- `--origin-state`: 发货省/州
+- `--origin-line-1`: 发货地址第一行
+- `--contact-name`: 联系人姓名
+- `--contact-phone`: 联系电话
+- `--contact-email`: 联系邮箱
+
 ### 🚚 物流管理
 
 ```bash
