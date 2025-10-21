@@ -929,41 +929,6 @@ class CommerceApiClient {
   };
 
   // ==========================================================================
-  // 客户地址管理 (addresses)
-  // ==========================================================================
-
-  addresses = {
-    list: async (): Promise<any[]> => {
-      const response = await this.client.get<any>('/api/customer/addresses');
-      return response.data.addresses || response.data || [];
-    },
-
-    get: async (addressId: string): Promise<any> => {
-      const response = await this.client.get<any>(`/api/customer/addresses/${addressId}`);
-      return response.data;
-    },
-
-    create: async (data: any): Promise<any> => {
-      const response = await this.client.post<any>('/api/customer/addresses', data);
-      return response.data;
-    },
-
-    update: async (addressId: string, data: any): Promise<any> => {
-      const response = await this.client.put<any>(`/api/customer/addresses/${addressId}`, data);
-      return response.data;
-    },
-
-    delete: async (addressId: string): Promise<void> => {
-      await this.client.delete(`/api/customer/addresses/${addressId}`);
-    },
-
-    setDefault: async (addressId: string): Promise<any> => {
-      const response = await this.client.put<any>(`/api/customer/addresses/${addressId}/default`);
-      return response.data;
-    },
-  };
-
-  // ==========================================================================
   // 财务管理 (transfers)
   // ==========================================================================
 

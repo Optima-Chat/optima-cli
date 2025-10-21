@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Optima CLI is a command-line tool for managing e-commerce stores through natural language, designed specifically for Claude Code. It provides 15 modules with 78 commands covering products, orders, inventory, shipping, and internationalization.
+Optima CLI is a command-line tool for managing e-commerce stores through natural language, designed specifically for Claude Code. It provides 14 modules with 72 commands covering products, orders, inventory, shipping, and internationalization.
 
 **Key technologies**: TypeScript ES Modules, Commander.js, Axios, Inquirer.js, OAuth 2.0
 
@@ -124,7 +124,7 @@ async function create(id: string, options: any) {
 
 **`src/api/rest/commerce.ts`** (987 lines)
 - Single source of truth for all Commerce API endpoints
-- 15 modules: products, orders, inventory, shipping, i18n, etc.
+- 14 modules: products, orders, inventory, shipping, i18n, etc.
 - When adding new features, add methods here first
 - Uses TypeScript interfaces for request/response types
 

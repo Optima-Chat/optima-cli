@@ -87,14 +87,6 @@
 - `send <id>` - 发送消息
 - `mark-read <id>` - 标记已读
 
-**地址** (`optima address`)
-- `list` - 地址列表
-- `get <id>` - 地址详情
-- `create` - 创建地址
-- `update <id>` - 更新地址
-- `delete <id>` - 删除地址
-- `set-default <id>` - 设为默认地址
-
 **财务** (`optima transfer`)
 - `list` - 转账列表
 - `summary` - 财务汇总
