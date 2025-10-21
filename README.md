@@ -168,6 +168,28 @@ optima product create --title "商品"
 
 **认证优先级**：`OPTIMA_TOKEN` 环境变量 > 配置文件（`~/.config/optima-cli`）
 
+**自定义 Backend 地址**（适用于开发/测试环境）：
+
+```bash
+# 自定义 Commerce API 地址
+export OPTIMA_API_URL=http://localhost:8000
+optima product list
+
+# 自定义 Auth API 地址
+export OPTIMA_AUTH_URL=http://localhost:3000
+optima auth login
+
+# Docker 开发环境
+docker run \
+  -e OPTIMA_TOKEN=<your_token> \
+  -e OPTIMA_API_URL=http://host.docker.internal:8000 \
+  optima-cli product list
+```
+
+**默认 Backend**：
+- Commerce API: `https://api.optima.chat`
+- Auth API: `https://auth.optima.chat`
+
 ### 📦 商品管理
 
 ```bash
