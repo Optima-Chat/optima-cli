@@ -133,8 +133,7 @@ async function createProduct(options: CreateProductOptions) {
       title: title, // 兼容性字段
       price: parseFloat(answers.price),
       description: answers.description?.trim() || undefined,
-      stock: stock,
-      quantity: stock, // 同时发送 quantity 字段以兼容不同的 API
+      stock_quantity: stock,
       sku: answers.sku?.trim() || undefined,
       currency: answers.currency,
       status: answers.status,
@@ -173,8 +172,7 @@ async function createProduct(options: CreateProductOptions) {
       title: options.title, // 兼容性字段
       price: parseFloat(options.price),
       description: options.description,
-      stock: stock,
-      quantity: stock, // 同时发送 quantity 字段以兼容不同的 API
+      stock_quantity: stock,
       sku: options.sku,
       currency: options.currency || 'USD',
       status: options.status || 'active',
