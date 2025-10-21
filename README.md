@@ -151,6 +151,23 @@ optima auth logout      # 登出并清除凭证
 optima auth whoami      # 查看当前用户
 ```
 
+**环境变量认证**（适用于容器/CI/CD）：
+
+```bash
+# 设置环境变量后直接使用，无需 optima auth login
+export OPTIMA_TOKEN=<your_access_token>
+optima product list
+
+# Docker 容器
+docker run -e OPTIMA_TOKEN=<your_token> optima-cli product list
+
+# CI/CD 流水线
+export OPTIMA_TOKEN=${{ secrets.OPTIMA_TOKEN }}
+optima product create --title "商品"
+```
+
+**认证优先级**：`OPTIMA_TOKEN` 环境变量 > 配置文件（`~/.config/optima-cli`）
+
 ### 📦 商品管理
 
 ```bash

@@ -8,6 +8,8 @@ Optima CLI is a command-line tool for managing e-commerce stores through natural
 
 **Key technologies**: TypeScript ES Modules, Commander.js, Axios, Inquirer.js, OAuth 2.0
 
+**Authentication**: Supports both OAuth login and environment variable (`OPTIMA_TOKEN`). Priority: env var > config file.
+
 ## Development Commands
 
 ```bash
@@ -200,15 +202,23 @@ git push --follow-tags
 **Auth API**: `https://auth.optima.chat`
 - OAuth 2.0 Device Flow
 - Client ID: `optima-cli-cwkbnadr`
+- Environment variable: `OPTIMA_TOKEN` (alternative to login)
 
 **Commerce API**: `https://api.optima.chat`
 - All product/order/inventory/shipping operations
 - Requires Bearer token authentication
-- Tokens auto-refresh every 15 minutes
+- Tokens auto-refresh every 15 minutes (config file only, env var tokens don't refresh)
 
 ## Common Issues
 
-**"未登录" error**: User needs to run `optima auth login` first
+**"未登录" error**:
+- User needs to run `optima auth login` first
+- OR set `OPTIMA_TOKEN` environment variable
+
+**Environment variable authentication**:
+- Set `OPTIMA_TOKEN=<access_token>` to bypass login (useful for containers/CI/CD)
+- Priority: `OPTIMA_TOKEN` env var > config file
+- Env var tokens don't auto-refresh (use long-lived tokens or manage refresh externally)
 
 **TypeScript import errors**: Check that imports use `.js` extension
 

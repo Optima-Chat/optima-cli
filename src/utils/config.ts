@@ -48,8 +48,15 @@ export function saveTokens(
 
 /**
  * 获取访问令牌（不刷新）
+ * 优先级：OPTIMA_TOKEN 环境变量 > 配置文件
  */
 export function getAccessToken(): string | null {
+  // 1. 优先从环境变量读取
+  if (process.env.OPTIMA_TOKEN) {
+    return process.env.OPTIMA_TOKEN;
+  }
+
+  // 2. 从配置文件读取
   const tokens = config.get('tokens');
   if (!tokens) return null;
   return tokens.access_token;
@@ -84,6 +91,7 @@ export function getRefreshToken(): string | null {
  * 检查是否已认证（不检查过期）
  */
 export function isAuthenticated(): boolean {
+  // 环境变量或配置文件中有 token
   const token = getAccessToken();
   return token !== null;
 }
@@ -93,6 +101,12 @@ export function isAuthenticated(): boolean {
  * @returns 有效的访问令牌，如果无法获取则返回 null
  */
 export async function ensureValidToken(): Promise<string | null> {
+  // 1. 如果使用环境变量 token，直接返回（不刷新）
+  if (process.env.OPTIMA_TOKEN) {
+    return process.env.OPTIMA_TOKEN;
+  }
+
+  // 2. 使用配置文件 token（支持自动刷新）
   const tokens = config.get('tokens');
   if (!tokens) return null;
 
