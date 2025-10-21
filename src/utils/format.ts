@@ -130,6 +130,11 @@ export function formatProduct(product: any): string {
 
   lines.push(`${chalk.gray('ID:')}          ${product.id || product.product_id}`);
   lines.push(`${chalk.gray('名称:')}        ${product.title || product.name || '-'}`);
+
+  if (product.handle) {
+    lines.push(`${chalk.gray('Handle:')}      ${product.handle}`);
+  }
+
   lines.push(`${chalk.gray('价格:')}        ${chalk.green(formatPrice(product.price || 0, product.currency || 'USD'))}`);
   lines.push(`${chalk.gray('库存:')}        ${formatStockStatus(product.stock_quantity || product.stock || product.quantity || 0)}`);
   lines.push(`${chalk.gray('状态:')}        ${formatProductStatus(product.status || 'active')}`);
