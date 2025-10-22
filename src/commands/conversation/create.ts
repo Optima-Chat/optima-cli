@@ -83,13 +83,13 @@ async function createConversation(options: CreateOptions) {
 
   try {
     const data: any = {
-      customer_id: customerId,
       participants: [
         {
           role: 'customer',
-          ...(email && { email }),
-          ...(phone && { phone }),
-          ...(name && { name }),
+          customer_id: customerId,
+          ...(email && { customer_email: email }),
+          ...(phone && { customer_phone: phone }),
+          ...(name && { customer_name: name }),
         },
       ],
     };

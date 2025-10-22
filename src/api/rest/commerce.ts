@@ -635,7 +635,17 @@ class CommerceApiClient {
     /**
      * 创建对话
      */
-    create: async (data: { customer_email?: string; customer_phone?: string; customer_name?: string; initial_message?: string }): Promise<any> => {
+    create: async (data: {
+      participants: Array<{
+        role: string;
+        customer_id?: string;
+        customer_email?: string;
+        customer_phone?: string;
+        customer_name?: string;
+        merchant_id?: string;
+      }>;
+      initial_message?: string;
+    }): Promise<any> => {
       const response = await this.client.post<any>('/api/conversations', data);
       return response.data;
     },
