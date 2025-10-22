@@ -57,16 +57,19 @@ program
   .description('显示版本信息')
   .action(() => {
     console.log(chalk.cyan(`Optima CLI v${VERSION}`));
-    console.log(chalk.gray('功能开发中，敬请期待...'));
+    console.log(chalk.gray('14 个模块，72 个命令，完整电商管理功能'));
   });
 
 program.action(() => {
   console.log(chalk.cyan.bold(`\n✨ Optima CLI v${VERSION}\n`));
-  console.log(chalk.white('用自然语言管理你的电商店铺\n'));
-  console.log(chalk.yellow('📦 当前版本为占位版本，核心功能正在开发中'));
-  console.log(chalk.gray('   预计 Phase 1 将于 2-3 周内完成\n'));
-  console.log(chalk.white('📖 使用帮助:'));
-  console.log(chalk.gray('   运行 ') + chalk.cyan('optima --help') + chalk.gray(' 查看可用命令\n'));
+  console.log(chalk.white('用自然语言管理你的电商店铺 - 专为 Claude Code 设计\n'));
+  console.log(chalk.green('✅ 已提供 14 个模块、72 个命令'));
+  console.log(chalk.gray('   覆盖商品、订单、库存、物流、国际化等完整功能\n'));
+  console.log(chalk.white('🚀 快速开始:'));
+  console.log(chalk.gray('   1. 登录: ') + chalk.cyan('optima auth login'));
+  console.log(chalk.gray('   2. 查看商户信息: ') + chalk.cyan('optima merchant info'));
+  console.log(chalk.gray('   3. 创建商品: ') + chalk.cyan('optima product create'));
+  console.log(chalk.gray('   4. 查看所有命令: ') + chalk.cyan('optima --help') + chalk.gray('\n'));
   console.log(chalk.white('🔗 了解更多:'));
   console.log(chalk.gray('   GitHub: https://github.com/Optima-Chat/optima-cli'));
   console.log(chalk.gray('   文档: https://optima.chat\n'));
