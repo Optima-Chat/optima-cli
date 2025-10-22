@@ -239,3 +239,7 @@ git push --follow-tags
 - User may need to re-login
 
 **Command not found after adding**: Must rebuild (`npm run build`) and re-register in `src/index.ts`
+
+**I18n language codes**:
+- Backend requires BCP 47 format (e.g., "en-US", "zh-CN") not short codes ("en", "zh")
+- Supported languages: en-US, es-ES, ja-JP, vi-VN, zh-CN
