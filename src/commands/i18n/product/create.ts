@@ -4,6 +4,7 @@ import ora from 'ora';
 import chalk from 'chalk';
 import { commerceApi } from '../../../api/rest/commerce.js';
 import { handleError, ValidationError } from '../../../utils/error.js';
+import { validateLanguageCode, SUPPORTED_LANGUAGES } from '../../../utils/validation.js';
 
 interface CreateOptions {
   productId?: string;
@@ -17,7 +18,7 @@ interface CreateOptions {
 export const createProductTranslationCommand = new Command('create')
   .description('创建商品翻译')
   .option('--product-id <id>', '商品 ID')
-  .option('-l, --lang <code>', '语言代码（如 zh-CN, en, es）')
+  .option('-l, --lang <code>', `语言代码（支持: ${SUPPORTED_LANGUAGES.join(', ')}）`)
   .option('-n, --name <name>', '翻译后的名称')
   .option('-d, --description <description>', '翻译后的描述')
   .option('--meta-title <title>', 'SEO 标题')
@@ -47,9 +48,15 @@ async function createProductTranslation(options: CreateOptions) {
       questions.push({
         type: 'input',
         name: 'lang',
-        message: '语言代码（如 zh-CN, en, es）:',
+        message: `语言代码（支持: ${SUPPORTED_LANGUAGES.join(', ')}）:`,
         validate: (input: string) => {
-          return input.trim().length > 0 ? true : '语言代码不能为空';
+          if (input.trim().length === 0) return '语言代码不能为空';
+          try {
+            validateLanguageCode(input);
+            return true;
+          } catch (error: any) {
+            return error.message;
+          }
         },
       });
     }
@@ -73,6 +80,9 @@ async function createProductTranslation(options: CreateOptions) {
   if (!lang || !name) {
     throw new ValidationError('语言代码和名称不能为空', 'lang/name');
   }
+
+  // Validate language code format
+  validateLanguageCode(lang);
 
   const data: any = {
     language_code: lang,

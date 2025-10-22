@@ -3,6 +3,7 @@ import ora from 'ora';
 import chalk from 'chalk';
 import { commerceApi } from '../../../api/rest/commerce.js';
 import { handleError, ValidationError } from '../../../utils/error.js';
+import { validateLanguageCode, SUPPORTED_LANGUAGES } from '../../../utils/validation.js';
 
 interface UpdateOptions {
   lang?: string;
@@ -12,7 +13,7 @@ interface UpdateOptions {
 
 export const updateMerchantTranslationCommand = new Command('update')
   .description('更新商户翻译')
-  .option('--lang <code>', '语言代码（如 zh-CN, en, es）')
+  .option('--lang <code>', `语言代码（支持: ${SUPPORTED_LANGUAGES.join(', ')}）`)
   .option('-n, --name <name>', '翻译后的名称')
   .option('-d, --description <description>', '翻译后的描述')
   .action(async (options: UpdateOptions) => {
@@ -20,6 +21,8 @@ export const updateMerchantTranslationCommand = new Command('update')
       if (!options.lang || options.lang.trim().length === 0) {
         throw new ValidationError('语言代码不能为空', 'lang');
       }
+
+      validateLanguageCode(options.lang);
 
       const languageCode = options.lang;
 

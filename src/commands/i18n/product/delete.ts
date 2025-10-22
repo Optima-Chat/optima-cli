@@ -4,11 +4,12 @@ import ora from 'ora';
 import chalk from 'chalk';
 import { commerceApi } from '../../../api/rest/commerce.js';
 import { handleError, ValidationError } from '../../../utils/error.js';
+import { validateLanguageCode, SUPPORTED_LANGUAGES } from '../../../utils/validation.js';
 
 export const deleteProductTranslationCommand = new Command('delete')
   .description('删除商品翻译')
   .option('--product-id <id>', '商品 ID')
-  .option('--lang <code>', '语言代码（如 zh-CN, en, es）')
+  .option('--lang <code>', `语言代码（支持: ${SUPPORTED_LANGUAGES.join(', ')}）`)
   .option('-y, --yes', '跳过确认')
   .action(async (options: { productId?: string; lang?: string; yes?: boolean }) => {
     try {
@@ -18,6 +19,9 @@ export const deleteProductTranslationCommand = new Command('delete')
       if (!options.lang || options.lang.trim().length === 0) {
         throw new ValidationError('语言代码不能为空', 'lang');
       }
+
+      // Validate language code format
+      validateLanguageCode(options.lang);
 
       const productId = options.productId;
       const languageCode = options.lang;

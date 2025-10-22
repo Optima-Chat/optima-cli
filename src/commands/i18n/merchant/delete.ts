@@ -4,16 +4,19 @@ import ora from 'ora';
 import chalk from 'chalk';
 import { commerceApi } from '../../../api/rest/commerce.js';
 import { handleError, ValidationError } from '../../../utils/error.js';
+import { validateLanguageCode, SUPPORTED_LANGUAGES } from '../../../utils/validation.js';
 
 export const deleteMerchantTranslationCommand = new Command('delete')
   .description('删除商户翻译')
-  .option('--lang <code>', '语言代码（如 zh-CN, en, es）')
+  .option('--lang <code>', `语言代码（支持: ${SUPPORTED_LANGUAGES.join(', ')}）`)
   .option('-y, --yes', '跳过确认')
   .action(async (options: { lang?: string; yes?: boolean }) => {
     try {
       if (!options.lang || options.lang.trim().length === 0) {
         throw new ValidationError('语言代码不能为空', 'lang');
       }
+
+      validateLanguageCode(options.lang);
 
       const languageCode = options.lang;
 

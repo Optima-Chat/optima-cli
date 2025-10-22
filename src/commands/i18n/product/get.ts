@@ -3,11 +3,12 @@ import ora from 'ora';
 import chalk from 'chalk';
 import { commerceApi } from '../../../api/rest/commerce.js';
 import { handleError, ValidationError } from '../../../utils/error.js';
+import { validateLanguageCode, SUPPORTED_LANGUAGES } from '../../../utils/validation.js';
 
 export const getProductTranslationCommand = new Command('get')
   .description('查看商品翻译详情')
   .option('--product-id <id>', '商品 ID')
-  .option('--lang <code>', '语言代码（如 zh-CN, en, es）')
+  .option('--lang <code>', `语言代码（支持: ${SUPPORTED_LANGUAGES.join(', ')}）`)
   .action(async (options: { productId?: string; lang?: string }) => {
     try {
       if (!options.productId || options.productId.trim().length === 0) {
@@ -16,6 +17,9 @@ export const getProductTranslationCommand = new Command('get')
       if (!options.lang || options.lang.trim().length === 0) {
         throw new ValidationError('语言代码不能为空', 'lang');
       }
+
+      // Validate language code format
+      validateLanguageCode(options.lang);
 
       const productId = options.productId;
       const languageCode = options.lang;
