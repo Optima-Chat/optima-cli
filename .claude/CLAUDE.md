@@ -32,7 +32,6 @@
 **变体** (`optima variant`) - SKU/规格管理
 - `list <product-id>` - 变体列表
 - `create <product-id>` - 创建变体
-- `get <product-id> <id>` - 变体详情
 - `update <product-id> <id>` - 更新变体
 - `delete <product-id> <id>` - 删除变体
 - `add-images <product-id> <id>` - 添加变体图片
@@ -104,7 +103,6 @@
 - `category update <category-id> <lang>` - 更新分类翻译
 - `category delete <category-id> <lang>` - 删除分类翻译
 - `merchant list` - 商户翻译列表
-- `merchant get <lang>` - 查看商户翻译详情
 - `merchant create` - 创建商户翻译
 - `merchant update <lang>` - 更新商户翻译
 - `merchant delete <lang>` - 删除商户翻译
