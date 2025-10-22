@@ -1,4 +1,7 @@
 import Conf from 'conf';
+import { readFileSync, existsSync } from 'fs';
+import { join } from 'path';
+import { homedir } from 'os';
 
 interface TokenData {
   access_token: string;
@@ -30,6 +33,23 @@ const config = new Conf<ConfigSchema>({
 });
 
 /**
+ * 从 ~/.optima/token 文件读取 token
+ */
+function getTokenFromFile(): string | null {
+  const tokenFile = join(homedir(), '.optima', 'token');
+  if (!existsSync(tokenFile)) {
+    return null;
+  }
+
+  try {
+    return readFileSync(tokenFile, 'utf-8').trim();
+  } catch (error) {
+    // 文件读取失败，返回 null
+    return null;
+  }
+}
+
+/**
  * 保存认证令牌
  */
 export function saveTokens(
@@ -48,7 +68,7 @@ export function saveTokens(
 
 /**
  * 获取访问令牌（不刷新）
- * 优先级：OPTIMA_TOKEN 环境变量 > 配置文件
+ * 优先级：OPTIMA_TOKEN 环境变量 > ~/.optima/token 文件 > 配置文件
  */
 export function getAccessToken(): string | null {
   // 1. 优先从环境变量读取
@@ -56,7 +76,13 @@ export function getAccessToken(): string | null {
     return process.env.OPTIMA_TOKEN;
   }
 
-  // 2. 从配置文件读取
+  // 2. 从 ~/.optima/token 文件读取
+  const tokenFromFile = getTokenFromFile();
+  if (tokenFromFile) {
+    return tokenFromFile;
+  }
+
+  // 3. 从配置文件读取
   const tokens = config.get('tokens');
   if (!tokens) return null;
   return tokens.access_token;
@@ -106,7 +132,13 @@ export async function ensureValidToken(): Promise<string | null> {
     return process.env.OPTIMA_TOKEN;
   }
 
-  // 2. 使用配置文件 token（支持自动刷新）
+  // 2. 如果使用 ~/.optima/token 文件，直接返回（不刷新）
+  const tokenFromFile = getTokenFromFile();
+  if (tokenFromFile) {
+    return tokenFromFile;
+  }
+
+  // 3. 使用配置文件 token（支持自动刷新）
   const tokens = config.get('tokens');
   if (!tokens) return null;
 
