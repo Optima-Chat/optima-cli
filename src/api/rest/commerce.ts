@@ -542,7 +542,16 @@ class CommerceApiClient {
     /**
      * 创建运费区域
      */
-    createZone: async (data: { name: string; countries: string[] }): Promise<ShippingZone> => {
+    createZone: async (data: {
+      name: string;
+      countries: Array<{ code: string }> | string[];
+      rates?: Array<{
+        min_weight: number;
+        max_weight?: number;
+        price: number;
+        currency?: string;
+      }>;
+    }): Promise<ShippingZone> => {
       const response = await this.client.post<ShippingZone>('/api/shipping/fixed/zones', data);
       return response.data;
     },
