@@ -26,22 +26,21 @@ export const listRatesCommand = new Command('list-rates')
       }
 
       const table = new Table({
-        head: [chalk.cyan('ID'), chalk.cyan('条件'), chalk.cyan('价格'), chalk.cyan('免运费阈值')],
-        colWidths: [38, 30, 15, 18],
+        head: [chalk.cyan('ID'), chalk.cyan('名称'), chalk.cyan('类型'), chalk.cyan('价格'), chalk.cyan('免运费阈值')],
+        colWidths: [38, 15, 15, 15, 18],
       });
 
       rates.forEach((rate: any) => {
-        const condition = rate.min_weight
-          ? `≥${rate.min_weight}kg`
-          : rate.min_order_amount
-          ? `≥${rate.currency} ${rate.min_order_amount}`
+        const price = rate.base_cost !== undefined && rate.base_cost !== null
+          ? `${rate.currency} ${rate.base_cost}`
           : '-';
-        const price = `${rate.currency} ${rate.price}`;
-        const freeThreshold = rate.free_shipping_threshold
-          ? `${rate.currency} ${rate.free_shipping_threshold}`
+        const freeThreshold = rate.min_order_amount
+          ? `≥${rate.currency} ${rate.min_order_amount}`
+          : rate.min_quantity
+          ? `≥${rate.min_quantity} 件`
           : '-';
 
-        table.push([rate.id, condition, price, freeThreshold]);
+        table.push([rate.id, rate.name || '-', rate.rate_type || '-', price, freeThreshold]);
       });
 
       console.log('\n' + table.toString() + '\n');
@@ -52,21 +51,23 @@ export const listRatesCommand = new Command('list-rates')
 
 // 添加费率
 interface CreateRateOptions {
+  name?: string;
+  rateType?: string;
   price?: string;
   currency?: string;
-  minWeight?: string;
   minAmount?: string;
-  freeThreshold?: string;
+  minQuantity?: string;
 }
 
 export const createRateCommand = new Command('add-rate')
   .description('添加运费费率')
   .argument('<zone-id>', '区域 ID')
+  .option('-n, --name <name>', '费率名称（如：标准快递）')
+  .option('-t, --rate-type <type>', '费率类型（flat_rate/free/weight_based）', 'flat_rate')
   .option('-p, --price <price>', '运费价格')
-  .option('-c, --currency <currency>', '货币代码（如 USD, CNY）', 'USD')
-  .option('--min-weight <weight>', '最小重量（kg）')
-  .option('--min-amount <amount>', '最小订单金额')
-  .option('--free-threshold <threshold>', '免运费阈值')
+  .option('-c, --currency <currency>', '货币代码（如 USD, HKD）', 'USD')
+  .option('--min-amount <amount>', '免运费的最低订单金额')
+  .option('--min-quantity <quantity>', '免运费的最低商品数量')
   .action(async (zoneId: string, options: CreateRateOptions) => {
     try {
       await createRate(zoneId, options);
@@ -80,14 +81,23 @@ async function createRate(zoneId: string, options: CreateRateOptions) {
     throw new ValidationError('区域 ID 不能为空', 'zone-id');
   }
 
-  let { price, currency, minWeight, minAmount, freeThreshold } = options;
+  let { name, rateType, price, currency, minAmount, minQuantity } = options;
 
-  if (!price) {
+  // 交互式输入缺失的必填字段
+  if (!name || !price) {
     const answers = await inquirer.prompt([
+      {
+        type: 'input',
+        name: 'name',
+        message: '费率名称:',
+        when: !name,
+        validate: (input) => input.trim().length > 0 || '名称不能为空',
+      },
       {
         type: 'input',
         name: 'price',
         message: '运费价格:',
+        when: !price,
         validate: (input) => {
           const num = parseFloat(input);
           return !isNaN(num) && num >= 0 ? true : '价格必须是非负数';
@@ -95,39 +105,39 @@ async function createRate(zoneId: string, options: CreateRateOptions) {
       },
       {
         type: 'input',
-        name: 'minWeight',
-        message: '最小重量（kg，可选）:',
-      },
-      {
-        type: 'input',
-        name: 'freeThreshold',
-        message: '免运费阈值（可选）:',
+        name: 'minAmount',
+        message: '免运费的最低订单金额（可选）:',
+        when: !minAmount,
       },
     ]);
 
-    price = answers.price;
-    minWeight = minWeight || answers.minWeight;
-    freeThreshold = freeThreshold || answers.freeThreshold;
+    name = name || answers.name;
+    price = price || answers.price;
+    minAmount = minAmount || answers.minAmount;
   }
 
   const spinner = ora('正在添加费率...').start();
 
   try {
     const data: any = {
-      price: parseFloat(price!),
+      name: name!,
+      rate_type: rateType || 'flat_rate',
       currency: currency || 'USD',
+      base_cost: parseFloat(price!),
     };
 
-    if (minWeight) data.min_weight = parseFloat(minWeight);
     if (minAmount) data.min_order_amount = parseFloat(minAmount);
-    if (freeThreshold) data.free_shipping_threshold = parseFloat(freeThreshold);
+    if (minQuantity) data.min_quantity = parseInt(minQuantity);
 
     const rate = await commerceApi.shippingFixed.createRate(zoneId, data);
     spinner.succeed('费率添加成功！');
 
     console.log();
     console.log(chalk.gray('费率 ID: ') + chalk.cyan(rate.id));
-    console.log(chalk.gray('价格: ') + `${data.currency} ${data.price}`);
+    console.log(chalk.gray('名称: ') + name);
+    console.log(chalk.gray('类型: ') + data.rate_type);
+    console.log(chalk.gray('价格: ') + `${data.currency} ${data.base_cost}`);
+    if (minAmount) console.log(chalk.gray('免运费阈值: ') + `${data.currency} ${data.min_order_amount}`);
     console.log();
   } catch (error: any) {
     spinner.fail('费率添加失败');

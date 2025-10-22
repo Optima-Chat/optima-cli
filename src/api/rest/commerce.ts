@@ -98,6 +98,7 @@ interface ShippingZone {
   zone_id?: string;
   name: string;
   countries: string[];
+  rates?: ShippingRate[];
   created_at?: string;
   updated_at?: string;
 }
@@ -534,8 +535,8 @@ class CommerceApiClient {
      * 获取运费区域列表
      */
     listZones: async (): Promise<ShippingZone[]> => {
-      const response = await this.client.get<ShippingZone[]>('/api/shipping/fixed/zones');
-      return response.data;
+      const response = await this.client.get<{ zones: ShippingZone[]; total: number }>('/api/shipping/fixed/zones');
+      return response.data.zones;
     },
 
     /**
@@ -573,30 +574,40 @@ class CommerceApiClient {
      * 获取区域运费费率
      */
     listRates: async (zoneId: string): Promise<ShippingRate[]> => {
-      const response = await this.client.get<ShippingRate[]>(`/api/shipping/fixed/zones/${zoneId}/rates`);
-      return response.data;
+      const response = await this.client.get<ShippingZone>(`/api/shipping/fixed/zones/${zoneId}`);
+      return response.data.rates || [];
     },
 
     /**
      * 创建运费费率
      */
     createRate: async (zoneId: string, data: Partial<ShippingRate>): Promise<ShippingRate> => {
-      const response = await this.client.post<ShippingRate>(
+      const response = await this.client.post<ShippingZone>(
         `/api/shipping/fixed/zones/${zoneId}/rates`,
         data
       );
-      return response.data;
+      // API returns full zone, extract the newly created rate (last in array)
+      const rates = response.data.rates || [];
+      if (rates.length === 0) {
+        throw new Error('Failed to create rate: no rates returned');
+      }
+      return rates[rates.length - 1];
     },
 
     /**
      * 更新运费费率
      */
     updateRate: async (zoneId: string, rateId: string, data: Partial<ShippingRate>): Promise<ShippingRate> => {
-      const response = await this.client.put<ShippingRate>(
+      const response = await this.client.put<ShippingZone>(
         `/api/shipping/fixed/zones/${zoneId}/rates/${rateId}`,
         data
       );
-      return response.data;
+      // API returns full zone, find the updated rate by ID
+      const rate = response.data.rates?.find(r => r.id === rateId);
+      if (!rate) {
+        throw new Error(`Failed to find updated rate: ${rateId}`);
+      }
+      return rate;
     },
 
     /**
