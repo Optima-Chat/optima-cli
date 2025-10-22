@@ -7,26 +7,29 @@ import { handleError, createApiError, ValidationError } from '../../utils/error.
 
 export const addVariantImagesCommand = new Command('add-images')
   .description('添加变体图片（支持本地文件或 Media ID）')
-  .argument('<product-id>', '商品 ID')
-  .argument('<variant-id>', '变体 ID')
+  .option('--product-id <id>', '商品 ID')
+  .option('--variant-id <id>', '变体 ID')
   .option('--path <paths...>', '本地图片文件路径（支持多个）')
   .option('--media-id <ids...>', 'Media ID（从 upload 命令获取，支持多个）')
-  .action(async (productId: string, variantId: string, options: { path?: string[]; mediaId?: string[] }) => {
+  .action(async (options: { productId?: string; variantId?: string; path?: string[]; mediaId?: string[] }) => {
     try {
-      await addVariantImages(productId, variantId, options);
+      await addVariantImages(options);
     } catch (error) {
       handleError(error);
     }
   });
 
-async function addVariantImages(productId: string, variantId: string, options: { path?: string[]; mediaId?: string[] }) {
+async function addVariantImages(options: { productId?: string; variantId?: string; path?: string[]; mediaId?: string[] }) {
   // 验证参数
-  if (!productId || productId.trim().length === 0) {
+  if (!options.productId || options.productId.trim().length === 0) {
     throw new ValidationError('商品 ID 不能为空', 'product-id');
   }
-  if (!variantId || variantId.trim().length === 0) {
+  if (!options.variantId || options.variantId.trim().length === 0) {
     throw new ValidationError('变体 ID 不能为空', 'variant-id');
   }
+
+  const productId = options.productId;
+  const variantId = options.variantId;
 
   const { path: imagePaths = [], mediaId: mediaIds = [] } = options;
 

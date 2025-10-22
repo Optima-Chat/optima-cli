@@ -6,25 +6,28 @@ import { handleError, createApiError, ValidationError } from '../../utils/error.
 import { formatDate } from '../../utils/format.js';
 
 interface MessagesOptions {
+  id?: string;
   limit?: number;
 }
 
 export const messagesCommand = new Command('messages')
   .description('查看对话消息')
-  .argument('<conversation-id>', '对话 ID')
+  .option('--id <id>', '对话 ID')
   .option('-l, --limit <number>', '消息数量', '50')
-  .action(async (conversationId: string, options: MessagesOptions) => {
+  .action(async (options: MessagesOptions) => {
     try {
-      await getMessages(conversationId, options);
+      await getMessages(options);
     } catch (error) {
       handleError(error);
     }
   });
 
-async function getMessages(conversationId: string, options: MessagesOptions) {
-  if (!conversationId || conversationId.trim().length === 0) {
-    throw new ValidationError('对话 ID 不能为空', 'conversation-id');
+async function getMessages(options: MessagesOptions) {
+  if (!options.id || options.id.trim().length === 0) {
+    throw new ValidationError('对话 ID 不能为空', 'id');
   }
+
+  const conversationId = options.id;
 
   const spinner = ora('正在获取消息...').start();
 

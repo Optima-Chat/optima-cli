@@ -7,21 +7,24 @@ import { handleError, createApiError, ValidationError } from '../../utils/error.
 
 export const urlCommand = new Command('url')
   .description('获取产品链接')
-  .argument('<product-id>', '商品 ID')
+  .option('--id <id>', '商品 ID')
   .option('--open', '在浏览器中打开产品页面')
-  .action(async (productId: string, options) => {
+  .action(async (options: { id?: string; open?: boolean }) => {
     try {
-      await getProductUrl(productId, options.open);
+      await getProductUrl(options);
     } catch (error) {
       handleError(error);
     }
   });
 
-async function getProductUrl(productId: string, shouldOpen: boolean) {
+async function getProductUrl(options: { id?: string; open?: boolean }) {
   // 验证参数
-  if (!productId || productId.trim().length === 0) {
-    throw new ValidationError('商品 ID 不能为空', 'product-id');
+  if (!options.id || options.id.trim().length === 0) {
+    throw new ValidationError('商品 ID 不能为空', 'id');
   }
+
+  const productId = options.id;
+  const shouldOpen = options.open || false;
 
   const spinner = ora('正在获取产品信息...').start();
 

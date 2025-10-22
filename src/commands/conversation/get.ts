@@ -7,19 +7,21 @@ import { formatDate } from '../../utils/format.js';
 
 export const getConversationCommand = new Command('get')
   .description('对话详情')
-  .argument('<conversation-id>', '对话 ID')
-  .action(async (conversationId: string) => {
+  .option('--id <id>', '对话 ID')
+  .action(async (options: { id?: string }) => {
     try {
-      await getConversation(conversationId);
+      await getConversation(options);
     } catch (error) {
       handleError(error);
     }
   });
 
-async function getConversation(conversationId: string) {
-  if (!conversationId || conversationId.trim().length === 0) {
-    throw new ValidationError('对话 ID 不能为空', 'conversation-id');
+async function getConversation(options: { id?: string }) {
+  if (!options.id || options.id.trim().length === 0) {
+    throw new ValidationError('对话 ID 不能为空', 'id');
   }
+
+  const conversationId = options.id;
 
   const spinner = ora('正在获取对话详情...').start();
 

@@ -6,20 +6,22 @@ import { formatCategory } from '../../utils/format.js';
 
 export const getCategoryCommand = new Command('get')
   .description('分类详情')
-  .argument('<category-id>', '分类 ID')
-  .action(async (categoryId: string) => {
+  .option('--id <id>', '分类 ID')
+  .action(async (options: { id?: string }) => {
     try {
-      await getCategory(categoryId);
+      await getCategory(options);
     } catch (error) {
       handleError(error);
     }
   });
 
-async function getCategory(categoryId: string) {
+async function getCategory(options: { id?: string }) {
   // 验证参数
-  if (!categoryId || categoryId.trim().length === 0) {
-    throw new ValidationError('分类 ID 不能为空', 'category-id');
+  if (!options.id || options.id.trim().length === 0) {
+    throw new ValidationError('分类 ID 不能为空', 'id');
   }
+
+  const categoryId = options.id;
 
   const spinner = ora('正在获取分类详情...').start();
 

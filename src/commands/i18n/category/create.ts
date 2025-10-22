@@ -6,6 +6,7 @@ import { commerceApi } from '../../../api/rest/commerce.js';
 import { handleError, ValidationError } from '../../../utils/error.js';
 
 interface CreateOptions {
+  categoryId?: string;
   lang?: string;
   name?: string;
   description?: string;
@@ -13,22 +14,24 @@ interface CreateOptions {
 
 export const createCategoryTranslationCommand = new Command('create')
   .description('创建分类翻译')
-  .argument('<category-id>', '分类 ID')
+  .option('--category-id <id>', '分类 ID')
   .option('-l, --lang <code>', '语言代码（如 zh-CN, en, es）')
   .option('-n, --name <name>', '翻译后的名称')
   .option('-d, --description <description>', '翻译后的描述')
-  .action(async (categoryId: string, options: CreateOptions) => {
+  .action(async (options: CreateOptions) => {
     try {
-      await createCategoryTranslation(categoryId, options);
+      await createCategoryTranslation(options);
     } catch (error) {
       handleError(error);
     }
   });
 
-async function createCategoryTranslation(categoryId: string, options: CreateOptions) {
-  if (!categoryId || categoryId.trim().length === 0) {
+async function createCategoryTranslation(options: CreateOptions) {
+  if (!options.categoryId || options.categoryId.trim().length === 0) {
     throw new ValidationError('分类 ID 不能为空', 'category-id');
   }
+
+  const categoryId = options.categoryId;
 
   let { lang, name, description } = options;
 

@@ -7,28 +7,31 @@ import { handleError, createApiError, ValidationError } from '../../utils/error.
 import { formatOrder } from '../../utils/format.js';
 
 interface ShipOrderOptions {
+  id?: string;
   tracking?: string;
   carrier?: string;
 }
 
 export const shipOrderCommand = new Command('ship')
   .description('订单发货')
-  .argument('<order-id>', '订单 ID')
+  .option('--id <id>', '订单 ID')
   .option('-t, --tracking <number>', '物流单号')
   .option('-c, --carrier <name>', '快递公司')
-  .action(async (orderId: string, options: ShipOrderOptions) => {
+  .action(async (options: ShipOrderOptions) => {
     try {
-      await shipOrder(orderId, options);
+      await shipOrder(options);
     } catch (error) {
       handleError(error);
     }
   });
 
-async function shipOrder(orderId: string, options: ShipOrderOptions) {
+async function shipOrder(options: ShipOrderOptions) {
   // 验证参数
-  if (!orderId || orderId.trim().length === 0) {
-    throw new ValidationError('订单 ID 不能为空', 'order-id');
+  if (!options.id || options.id.trim().length === 0) {
+    throw new ValidationError('订单 ID 不能为空', 'id');
   }
+
+  const orderId = options.id;
 
   let trackingNumber = options.tracking;
   let carrier = options.carrier;

@@ -7,19 +7,21 @@ import { handleError, createApiError, ValidationError } from '../../utils/error.
 
 export const uploadVideoCommand = new Command('video')
   .description('上传视频')
-  .argument('<video-path>', '视频文件路径')
-  .action(async (videoPath: string) => {
+  .option('--path <path>', '视频文件路径')
+  .action(async (options: { path?: string }) => {
     try {
-      await uploadVideo(videoPath);
+      await uploadVideo(options);
     } catch (error) {
       handleError(error);
     }
   });
 
-async function uploadVideo(videoPath: string) {
-  if (!videoPath || videoPath.trim().length === 0) {
-    throw new ValidationError('视频路径不能为空', 'video-path');
+async function uploadVideo(options: { path?: string }) {
+  if (!options.path || options.path.trim().length === 0) {
+    throw new ValidationError('视频路径不能为空', 'path');
   }
+
+  const videoPath = options.path;
 
   if (!existsSync(videoPath)) {
     throw new ValidationError(`视频文件不存在: ${videoPath}`, 'video-path');

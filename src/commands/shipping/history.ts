@@ -8,20 +8,22 @@ import { formatDate } from '../../utils/format.js';
 
 export const historyCommand = new Command('history')
   .description('查看物流历史')
-  .argument('<order-id>', '订单 ID')
-  .action(async (orderId: string) => {
+  .option('--id <id>', '订单 ID')
+  .action(async (options: { id?: string }) => {
     try {
-      await getShippingHistory(orderId);
+      await getShippingHistory(options);
     } catch (error) {
       handleError(error);
     }
   });
 
-async function getShippingHistory(orderId: string) {
+async function getShippingHistory(options: { id?: string }) {
   // 验证参数
-  if (!orderId || orderId.trim().length === 0) {
-    throw new ValidationError('订单 ID 不能为空', 'order-id');
+  if (!options.id || options.id.trim().length === 0) {
+    throw new ValidationError('订单 ID 不能为空', 'id');
   }
+
+  const orderId = options.id;
 
   const spinner = ora('正在获取物流历史...').start();
 

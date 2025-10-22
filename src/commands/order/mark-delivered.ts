@@ -6,19 +6,21 @@ import { formatOrder } from '../../utils/format.js';
 
 export const markDeliveredCommand = new Command('mark-delivered')
   .description('标记订单已送达')
-  .argument('<order-id>', '订单 ID')
-  .action(async (orderId: string) => {
+  .option('--id <id>', '订单 ID')
+  .action(async (options: { id?: string }) => {
     try {
-      await markDelivered(orderId);
+      await markDelivered(options);
     } catch (error) {
       handleError(error);
     }
   });
 
-async function markDelivered(orderId: string) {
-  if (!orderId || orderId.trim().length === 0) {
-    throw new ValidationError('订单 ID 不能为空', 'order-id');
+async function markDelivered(options: { id?: string }) {
+  if (!options.id || options.id.trim().length === 0) {
+    throw new ValidationError('订单 ID 不能为空', 'id');
   }
+
+  const orderId = options.id;
 
   const spinner = ora('正在标记订单已送达...').start();
 

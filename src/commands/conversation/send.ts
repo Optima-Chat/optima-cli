@@ -6,25 +6,28 @@ import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 
 interface SendOptions {
+  id?: string;
   content?: string;
 }
 
 export const sendMessageCommand = new Command('send')
   .description('发送消息')
-  .argument('<conversation-id>', '对话 ID')
+  .option('--id <id>', '对话 ID')
   .option('-c, --content <content>', '消息内容')
-  .action(async (conversationId: string, options: SendOptions) => {
+  .action(async (options: SendOptions) => {
     try {
-      await sendMessage(conversationId, options);
+      await sendMessage(options);
     } catch (error) {
       handleError(error);
     }
   });
 
-async function sendMessage(conversationId: string, options: SendOptions) {
-  if (!conversationId || conversationId.trim().length === 0) {
-    throw new ValidationError('对话 ID 不能为空', 'conversation-id');
+async function sendMessage(options: SendOptions) {
+  if (!options.id || options.id.trim().length === 0) {
+    throw new ValidationError('对话 ID 不能为空', 'id');
   }
+
+  const conversationId = options.id;
 
   let { content } = options;
 

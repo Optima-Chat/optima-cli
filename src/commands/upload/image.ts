@@ -7,19 +7,21 @@ import { handleError, createApiError, ValidationError } from '../../utils/error.
 
 export const uploadImageCommand = new Command('image')
   .description('上传图片')
-  .argument('<image-path>', '图片文件路径')
-  .action(async (imagePath: string) => {
+  .option('--path <path>', '图片文件路径')
+  .action(async (options: { path?: string }) => {
     try {
-      await uploadImage(imagePath);
+      await uploadImage(options);
     } catch (error) {
       handleError(error);
     }
   });
 
-async function uploadImage(imagePath: string) {
-  if (!imagePath || imagePath.trim().length === 0) {
-    throw new ValidationError('图片路径不能为空', 'image-path');
+async function uploadImage(options: { path?: string }) {
+  if (!options.path || options.path.trim().length === 0) {
+    throw new ValidationError('图片路径不能为空', 'path');
   }
+
+  const imagePath = options.path;
 
   if (!existsSync(imagePath)) {
     throw new ValidationError(`图片文件不存在: ${imagePath}`, 'image-path');

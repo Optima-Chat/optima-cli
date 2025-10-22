@@ -6,19 +6,21 @@ import { handleError, createApiError, ValidationError } from '../../utils/error.
 
 export const getRefundCommand = new Command('get')
   .description('退款详情')
-  .argument('<refund-id>', '退款 ID')
-  .action(async (refundId: string) => {
+  .option('--id <id>', '退款 ID')
+  .action(async (options: { id?: string }) => {
     try {
-      await getRefund(refundId);
+      await getRefund(options);
     } catch (error) {
       handleError(error);
     }
   });
 
-async function getRefund(refundId: string) {
-  if (!refundId || refundId.trim().length === 0) {
-    throw new ValidationError('退款 ID 不能为空', 'refund-id');
+async function getRefund(options: { id?: string }) {
+  if (!options.id || options.id.trim().length === 0) {
+    throw new ValidationError('退款 ID 不能为空', 'id');
   }
+
+  const refundId = options.id;
 
   const spinner = ora('正在获取退款详情...').start();
 

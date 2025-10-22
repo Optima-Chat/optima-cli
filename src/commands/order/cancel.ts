@@ -6,28 +6,31 @@ import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 
 interface CancelOrderOptions {
+  id?: string;
   reason?: string;
   yes?: boolean;
 }
 
 export const cancelOrderCommand = new Command('cancel')
   .description('取消订单')
-  .argument('<order-id>', '订单 ID')
+  .option('--id <id>', '订单 ID')
   .option('-r, --reason <reason>', '取消原因')
   .option('-y, --yes', '跳过确认提示')
-  .action(async (orderId: string, options: CancelOrderOptions) => {
+  .action(async (options: CancelOrderOptions) => {
     try {
-      await cancelOrder(orderId, options);
+      await cancelOrder(options);
     } catch (error) {
       handleError(error);
     }
   });
 
-async function cancelOrder(orderId: string, options: CancelOrderOptions) {
+async function cancelOrder(options: CancelOrderOptions) {
   // 验证参数
-  if (!orderId || orderId.trim().length === 0) {
-    throw new ValidationError('订单 ID 不能为空', 'order-id');
+  if (!options.id || options.id.trim().length === 0) {
+    throw new ValidationError('订单 ID 不能为空', 'id');
   }
+
+  const orderId = options.id;
 
   let reason = options.reason;
 

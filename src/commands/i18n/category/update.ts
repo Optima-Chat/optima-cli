@@ -5,24 +5,29 @@ import { commerceApi } from '../../../api/rest/commerce.js';
 import { handleError, ValidationError } from '../../../utils/error.js';
 
 interface UpdateOptions {
+  categoryId?: string;
+  lang?: string;
   name?: string;
   description?: string;
 }
 
 export const updateCategoryTranslationCommand = new Command('update')
   .description('更新分类翻译')
-  .argument('<category-id>', '分类 ID')
-  .argument('<language-code>', '语言代码（如 zh-CN, en, es）')
+  .option('--category-id <id>', '分类 ID')
+  .option('--lang <code>', '语言代码（如 zh-CN, en, es）')
   .option('-n, --name <name>', '翻译后的名称')
   .option('-d, --description <description>', '翻译后的描述')
-  .action(async (categoryId: string, languageCode: string, options: UpdateOptions) => {
+  .action(async (options: UpdateOptions) => {
     try {
-      if (!categoryId || categoryId.trim().length === 0) {
+      if (!options.categoryId || options.categoryId.trim().length === 0) {
         throw new ValidationError('分类 ID 不能为空', 'category-id');
       }
-      if (!languageCode || languageCode.trim().length === 0) {
-        throw new ValidationError('语言代码不能为空', 'language-code');
+      if (!options.lang || options.lang.trim().length === 0) {
+        throw new ValidationError('语言代码不能为空', 'lang');
       }
+
+      const categoryId = options.categoryId;
+      const languageCode = options.lang;
 
       const { name, description } = options;
 

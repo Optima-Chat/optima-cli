@@ -6,16 +6,20 @@ import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 
 interface DeleteProductOptions {
+  id?: string;
   yes?: boolean;
 }
 
 export const deleteProductCommand = new Command('delete')
   .description('删除商品')
-  .argument('<product-id>', '商品 ID')
+  .option('--id <id>', '商品 ID')
   .option('-y, --yes', '跳过确认提示')
-  .action(async (productId: string, options: DeleteProductOptions) => {
+  .action(async (options: DeleteProductOptions) => {
     try {
-      await deleteProduct(productId, options);
+      if (!options.id) {
+        throw new ValidationError('请提供商品 ID (--id)', 'id');
+      }
+      await deleteProduct(options.id, options);
     } catch (error) {
       handleError(error);
     }

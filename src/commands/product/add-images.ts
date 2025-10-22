@@ -8,23 +8,25 @@ import { existsSync, statSync } from 'fs';
 
 export const addImagesCommand = new Command('add-images')
   .description('添加商品图片（支持本地文件、URL 或 Media ID）')
-  .argument('<product-id>', '商品 ID')
+  .option('--id <id>', '商品 ID')
   .option('--path <paths...>', '本地图片文件路径（支持多个）')
   .option('--url <urls...>', '图片 URL（支持多个）')
   .option('--media-id <ids...>', 'Media ID（从 upload 命令获取，支持多个）')
-  .action(async (productId: string, options: { path?: string[]; url?: string[]; mediaId?: string[] }) => {
+  .action(async (options: { id?: string; path?: string[]; url?: string[]; mediaId?: string[] }) => {
     try {
-      await addImages(productId, options);
+      await addImages(options);
     } catch (error) {
       handleError(error);
     }
   });
 
-async function addImages(productId: string, options: { path?: string[]; url?: string[]; mediaId?: string[] }) {
+async function addImages(options: { id?: string; path?: string[]; url?: string[]; mediaId?: string[] }) {
   // 验证参数
-  if (!productId || productId.trim().length === 0) {
-    throw new ValidationError('商品 ID 不能为空', 'product-id');
+  if (!options.id || options.id.trim().length === 0) {
+    throw new ValidationError('商品 ID 不能为空', 'id');
   }
+
+  const productId = options.id;
 
   const { path: localPaths = [], url: imageUrls = [], mediaId: mediaIds = [] } = options;
 

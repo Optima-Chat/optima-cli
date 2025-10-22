@@ -15,9 +15,13 @@ interface UpdateProductOptions {
   categoryId?: string;
 }
 
+interface UpdateProductOptionsWithId extends UpdateProductOptions {
+  id?: string;
+}
+
 export const updateProductCommand = new Command('update')
   .description('更新商品')
-  .argument('<product-id>', '商品 ID')
+  .option('--id <id>', '商品 ID')
   .option('--title <title>', '商品名称')
   .option('--handle <handle>', 'URL 友好标识符（用于产品链接）')
   .option('--price <price>', '商品价格')
@@ -26,9 +30,12 @@ export const updateProductCommand = new Command('update')
   .option('--sku <sku>', 'SKU 编码')
   .option('--status <status>', '商品状态 (active/inactive/draft/archived)')
   .option('--category-id <categoryId>', '分类 ID')
-  .action(async (productId: string, options: UpdateProductOptions) => {
+  .action(async (options: UpdateProductOptionsWithId) => {
     try {
-      await updateProduct(productId, options);
+      if (!options.id) {
+        throw new ValidationError('请提供商品 ID (--id)', 'id');
+      }
+      await updateProduct(options.id, options);
     } catch (error) {
       handleError(error);
     }

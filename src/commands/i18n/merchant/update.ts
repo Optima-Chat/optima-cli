@@ -5,20 +5,23 @@ import { commerceApi } from '../../../api/rest/commerce.js';
 import { handleError, ValidationError } from '../../../utils/error.js';
 
 interface UpdateOptions {
+  lang?: string;
   name?: string;
   description?: string;
 }
 
 export const updateMerchantTranslationCommand = new Command('update')
   .description('更新商户翻译')
-  .argument('<language-code>', '语言代码（如 zh-CN, en, es）')
+  .option('--lang <code>', '语言代码（如 zh-CN, en, es）')
   .option('-n, --name <name>', '翻译后的名称')
   .option('-d, --description <description>', '翻译后的描述')
-  .action(async (languageCode: string, options: UpdateOptions) => {
+  .action(async (options: UpdateOptions) => {
     try {
-      if (!languageCode || languageCode.trim().length === 0) {
-        throw new ValidationError('语言代码不能为空', 'language-code');
+      if (!options.lang || options.lang.trim().length === 0) {
+        throw new ValidationError('语言代码不能为空', 'lang');
       }
+
+      const languageCode = options.lang;
 
       const { name, description } = options;
 

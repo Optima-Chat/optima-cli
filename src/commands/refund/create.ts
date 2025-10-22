@@ -6,6 +6,7 @@ import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 
 interface CreateRefundOptions {
+  id?: string;
   amount?: string;
   reason?: string;
 }
@@ -20,21 +21,23 @@ type RefundReasonKey = keyof typeof REFUND_REASONS;
 
 export const createRefundCommand = new Command('create')
   .description('创建退款')
-  .argument('<order-id>', '订单 ID')
+  .option('--id <id>', '订单 ID')
   .option('-a, --amount <amount>', '退款金额')
   .option('-r, --reason <reason>', '退款原因 (requested_by_customer/duplicate/fraudulent)')
-  .action(async (orderId: string, options: CreateRefundOptions) => {
+  .action(async (options: CreateRefundOptions) => {
     try {
-      await createRefund(orderId, options);
+      await createRefund(options);
     } catch (error) {
       handleError(error);
     }
   });
 
-async function createRefund(orderId: string, options: CreateRefundOptions) {
-  if (!orderId || orderId.trim().length === 0) {
-    throw new ValidationError('订单 ID 不能为空', 'order-id');
+async function createRefund(options: CreateRefundOptions) {
+  if (!options.id || options.id.trim().length === 0) {
+    throw new ValidationError('订单 ID 不能为空', 'id');
   }
+
+  const orderId = options.id;
 
   let { amount, reason } = options;
 

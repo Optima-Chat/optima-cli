@@ -6,12 +6,14 @@ import { handleError, ValidationError } from '../../../utils/error.js';
 
 export const getMerchantTranslationCommand = new Command('get')
   .description('查看商户翻译详情')
-  .argument('<language-code>', '语言代码（如 zh-CN, en, es）')
-  .action(async (languageCode: string) => {
+  .option('--lang <code>', '语言代码（如 zh-CN, en, es）')
+  .action(async (options: { lang?: string }) => {
     try {
-      if (!languageCode || languageCode.trim().length === 0) {
-        throw new ValidationError('语言代码不能为空', 'language-code');
+      if (!options.lang || options.lang.trim().length === 0) {
+        throw new ValidationError('语言代码不能为空', 'lang');
       }
+
+      const languageCode = options.lang;
 
       const spinner = ora('正在获取翻译详情...').start();
       const translation = await commerceApi.i18n.merchantTranslations.get(languageCode);

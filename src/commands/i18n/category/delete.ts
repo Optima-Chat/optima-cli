@@ -7,17 +7,20 @@ import { handleError, ValidationError } from '../../../utils/error.js';
 
 export const deleteCategoryTranslationCommand = new Command('delete')
   .description('删除分类翻译')
-  .argument('<category-id>', '分类 ID')
-  .argument('<language-code>', '语言代码（如 zh-CN, en, es）')
+  .option('--category-id <id>', '分类 ID')
+  .option('--lang <code>', '语言代码（如 zh-CN, en, es）')
   .option('-y, --yes', '跳过确认')
-  .action(async (categoryId: string, languageCode: string, options: { yes?: boolean }) => {
+  .action(async (options: { categoryId?: string; lang?: string; yes?: boolean }) => {
     try {
-      if (!categoryId || categoryId.trim().length === 0) {
+      if (!options.categoryId || options.categoryId.trim().length === 0) {
         throw new ValidationError('分类 ID 不能为空', 'category-id');
       }
-      if (!languageCode || languageCode.trim().length === 0) {
-        throw new ValidationError('语言代码不能为空', 'language-code');
+      if (!options.lang || options.lang.trim().length === 0) {
+        throw new ValidationError('语言代码不能为空', 'lang');
       }
+
+      const categoryId = options.categoryId;
+      const languageCode = options.lang;
 
       if (!options.yes) {
         const { confirm } = await inquirer.prompt([

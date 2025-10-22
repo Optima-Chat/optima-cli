@@ -6,26 +6,29 @@ import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 
 interface CompleteOrderOptions {
+  id?: string;
   yes?: boolean;
 }
 
 export const completeOrderCommand = new Command('complete')
   .description('完成订单')
-  .argument('<order-id>', '订单 ID')
+  .option('--id <id>', '订单 ID')
   .option('-y, --yes', '跳过确认提示')
-  .action(async (orderId: string, options: CompleteOrderOptions) => {
+  .action(async (options: CompleteOrderOptions) => {
     try {
-      await completeOrder(orderId, options);
+      await completeOrder(options);
     } catch (error) {
       handleError(error);
     }
   });
 
-async function completeOrder(orderId: string, options: CompleteOrderOptions) {
+async function completeOrder(options: CompleteOrderOptions) {
   // 验证参数
-  if (!orderId || orderId.trim().length === 0) {
-    throw new ValidationError('订单 ID 不能为空', 'order-id');
+  if (!options.id || options.id.trim().length === 0) {
+    throw new ValidationError('订单 ID 不能为空', 'id');
   }
+
+  const orderId = options.id;
 
   // 确认完成（除非使用 --yes）
   if (!options.yes) {

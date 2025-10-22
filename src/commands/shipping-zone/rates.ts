@@ -9,12 +9,14 @@ import { handleError, createApiError, ValidationError } from '../../utils/error.
 // 列出费率
 export const listRatesCommand = new Command('list-rates')
   .description('查看区域运费费率')
-  .argument('<zone-id>', '区域 ID')
-  .action(async (zoneId: string) => {
+  .option('--zone-id <id>', '区域 ID')
+  .action(async (options: { zoneId?: string }) => {
     try {
-      if (!zoneId || zoneId.trim().length === 0) {
+      if (!options.zoneId || options.zoneId.trim().length === 0) {
         throw new ValidationError('区域 ID 不能为空', 'zone-id');
       }
+
+      const zoneId = options.zoneId;
 
       const spinner = ora('正在获取费率...').start();
       const rates = await commerceApi.shippingFixed.listRates(zoneId);
@@ -51,6 +53,7 @@ export const listRatesCommand = new Command('list-rates')
 
 // 添加费率
 interface CreateRateOptions {
+  zoneId?: string;
   name?: string;
   rateType?: string;
   price?: string;
@@ -61,25 +64,27 @@ interface CreateRateOptions {
 
 export const createRateCommand = new Command('add-rate')
   .description('添加运费费率')
-  .argument('<zone-id>', '区域 ID')
+  .option('--zone-id <id>', '区域 ID')
   .option('-n, --name <name>', '费率名称（如：标准快递）')
   .option('-t, --rate-type <type>', '费率类型（flat_rate/free/weight_based）', 'flat_rate')
   .option('-p, --price <price>', '运费价格')
   .option('-c, --currency <currency>', '货币代码（如 USD, HKD）', 'USD')
   .option('--min-amount <amount>', '免运费的最低订单金额')
   .option('--min-quantity <quantity>', '免运费的最低商品数量')
-  .action(async (zoneId: string, options: CreateRateOptions) => {
+  .action(async (options: CreateRateOptions) => {
     try {
-      await createRate(zoneId, options);
+      await createRate(options);
     } catch (error) {
       handleError(error);
     }
   });
 
-async function createRate(zoneId: string, options: CreateRateOptions) {
-  if (!zoneId || zoneId.trim().length === 0) {
+async function createRate(options: CreateRateOptions) {
+  if (!options.zoneId || options.zoneId.trim().length === 0) {
     throw new ValidationError('区域 ID 不能为空', 'zone-id');
   }
+
+  const zoneId = options.zoneId;
 
   let { name, rateType, price, currency, minAmount, minQuantity } = options;
 

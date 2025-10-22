@@ -6,28 +6,31 @@ import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 
 interface UpdateStatusOptions {
+  id?: string;
   status?: string;
   note?: string;
 }
 
 export const updateStatusCommand = new Command('update-status')
   .description('更新物流状态')
-  .argument('<order-id>', '订单 ID')
+  .option('--id <id>', '订单 ID')
   .option('-s, --status <status>', '物流状态')
   .option('-n, --note <note>', '备注')
-  .action(async (orderId: string, options: UpdateStatusOptions) => {
+  .action(async (options: UpdateStatusOptions) => {
     try {
-      await updateShippingStatus(orderId, options);
+      await updateShippingStatus(options);
     } catch (error) {
       handleError(error);
     }
   });
 
-async function updateShippingStatus(orderId: string, options: UpdateStatusOptions) {
+async function updateShippingStatus(options: UpdateStatusOptions) {
   // 验证参数
-  if (!orderId || orderId.trim().length === 0) {
-    throw new ValidationError('订单 ID 不能为空', 'order-id');
+  if (!options.id || options.id.trim().length === 0) {
+    throw new ValidationError('订单 ID 不能为空', 'id');
   }
+
+  const orderId = options.id;
 
   let statusData: any = {};
 

@@ -6,25 +6,28 @@ import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 
 interface DeleteOptions {
+  id?: string;
   yes?: boolean;
 }
 
 export const deleteZoneCommand = new Command('delete')
   .description('删除运费区域')
-  .argument('<zone-id>', '区域 ID')
+  .option('--id <id>', '区域 ID')
   .option('-y, --yes', '跳过确认')
-  .action(async (zoneId: string, options: DeleteOptions) => {
+  .action(async (options: DeleteOptions) => {
     try {
-      await deleteZone(zoneId, options);
+      await deleteZone(options);
     } catch (error) {
       handleError(error);
     }
   });
 
-async function deleteZone(zoneId: string, options: DeleteOptions) {
-  if (!zoneId || zoneId.trim().length === 0) {
-    throw new ValidationError('区域 ID 不能为空', 'zone-id');
+async function deleteZone(options: DeleteOptions) {
+  if (!options.id || options.id.trim().length === 0) {
+    throw new ValidationError('区域 ID 不能为空', 'id');
   }
+
+  const zoneId = options.id;
 
   if (!options.yes) {
     const answers = await inquirer.prompt([

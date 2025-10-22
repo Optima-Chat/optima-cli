@@ -112,7 +112,7 @@
 **提示**:
 - 使用 `optima <命令> --help` 查看详细用法和选项
 - 删除/取消等操作需要添加 `--yes` 或 `-y` 跳过交互式确认
-- 打开商品/店铺网页：使用 `optima product url <id> --open` 或 `optima merchant url --open`
+- 打开商品/店铺网页：使用 `optima product url --id <id> --open` 或 `optima merchant url --open`
 - **图片最佳实践**：先 `upload image` 获取 media_id，再用 `--media-id` 参数关联（避免重复上传，最可靠）
 - 其他方式：`--path` 本地文件（需上传），`--url` 图片链接（后端下载，可能失败）
 <!-- END_OPTIMA_CLI -->

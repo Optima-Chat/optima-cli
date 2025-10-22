@@ -6,26 +6,29 @@ import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 
 interface UpdateStockOptions {
+  id?: string;
   quantity?: string;
 }
 
 export const updateStockCommand = new Command('update')
   .description('更新商品库存')
-  .argument('<product-id>', '商品 ID')
+  .option('--id <id>', '商品 ID')
   .option('-q, --quantity <number>', '库存数量')
-  .action(async (productId: string, options: UpdateStockOptions) => {
+  .action(async (options: UpdateStockOptions) => {
     try {
-      await updateStock(productId, options);
+      await updateStock(options);
     } catch (error) {
       handleError(error);
     }
   });
 
-async function updateStock(productId: string, options: UpdateStockOptions) {
+async function updateStock(options: UpdateStockOptions) {
   // 验证参数
-  if (!productId || productId.trim().length === 0) {
-    throw new ValidationError('商品 ID 不能为空', 'product-id');
+  if (!options.id || options.id.trim().length === 0) {
+    throw new ValidationError('商品 ID 不能为空', 'id');
   }
+
+  const productId = options.id;
 
   let quantity: number;
 

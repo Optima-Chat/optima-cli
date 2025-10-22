@@ -5,6 +5,7 @@ import { handleError, createApiError, ValidationError } from '../../utils/error.
 import { formatCategory } from '../../utils/format.js';
 
 interface UpdateCategoryOptions {
+  id?: string;
   name?: string;
   description?: string;
   parent?: string;
@@ -12,23 +13,25 @@ interface UpdateCategoryOptions {
 
 export const updateCategoryCommand = new Command('update')
   .description('更新分类')
-  .argument('<category-id>', '分类 ID')
+  .option('--id <id>', '分类 ID')
   .option('-n, --name <name>', '分类名称')
   .option('-d, --description <description>', '分类描述')
   .option('-p, --parent <parent-id>', '父分类 ID')
-  .action(async (categoryId: string, options: UpdateCategoryOptions) => {
+  .action(async (options: UpdateCategoryOptions) => {
     try {
-      await updateCategory(categoryId, options);
+      await updateCategory(options);
     } catch (error) {
       handleError(error);
     }
   });
 
-async function updateCategory(categoryId: string, options: UpdateCategoryOptions) {
+async function updateCategory(options: UpdateCategoryOptions) {
   // 验证参数
-  if (!categoryId || categoryId.trim().length === 0) {
-    throw new ValidationError('分类 ID 不能为空', 'category-id');
+  if (!options.id || options.id.trim().length === 0) {
+    throw new ValidationError('分类 ID 不能为空', 'id');
   }
+
+  const categoryId = options.id;
 
   // 构建更新数据
   const updateData: any = {};

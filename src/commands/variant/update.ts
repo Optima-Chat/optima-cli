@@ -5,6 +5,8 @@ import { handleError, createApiError, ValidationError } from '../../utils/error.
 import { formatVariant } from '../../utils/format.js';
 
 interface UpdateVariantOptions {
+  productId?: string;
+  variantId?: string;
   sku?: string;
   price?: string;
   stock?: string;
@@ -13,28 +15,31 @@ interface UpdateVariantOptions {
 
 export const updateVariantCommand = new Command('update')
   .description('更新变体')
-  .argument('<product-id>', '商品 ID')
-  .argument('<variant-id>', '变体 ID')
+  .option('--product-id <id>', '商品 ID')
+  .option('--variant-id <id>', '变体 ID')
   .option('-s, --sku <sku>', 'SKU 编码')
   .option('-p, --price <price>', '价格')
   .option('--stock <quantity>', '库存数量')
   .option('-a, --attributes <json>', '属性（JSON 格式）')
-  .action(async (productId: string, variantId: string, options: UpdateVariantOptions) => {
+  .action(async (options: UpdateVariantOptions) => {
     try {
-      await updateVariant(productId, variantId, options);
+      await updateVariant(options);
     } catch (error) {
       handleError(error);
     }
   });
 
-async function updateVariant(productId: string, variantId: string, options: UpdateVariantOptions) {
+async function updateVariant(options: UpdateVariantOptions) {
   // 验证参数
-  if (!productId || productId.trim().length === 0) {
+  if (!options.productId || options.productId.trim().length === 0) {
     throw new ValidationError('商品 ID 不能为空', 'product-id');
   }
-  if (!variantId || variantId.trim().length === 0) {
+  if (!options.variantId || options.variantId.trim().length === 0) {
     throw new ValidationError('变体 ID 不能为空', 'variant-id');
   }
+
+  const productId = options.productId;
+  const variantId = options.variantId;
 
   // 构建更新数据
   const updateData: any = {};

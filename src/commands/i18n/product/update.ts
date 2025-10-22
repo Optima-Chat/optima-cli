@@ -5,6 +5,8 @@ import { commerceApi } from '../../../api/rest/commerce.js';
 import { handleError, ValidationError } from '../../../utils/error.js';
 
 interface UpdateOptions {
+  productId?: string;
+  lang?: string;
   name?: string;
   description?: string;
   metaTitle?: string;
@@ -13,20 +15,23 @@ interface UpdateOptions {
 
 export const updateProductTranslationCommand = new Command('update')
   .description('更新商品翻译')
-  .argument('<product-id>', '商品 ID')
-  .argument('<language-code>', '语言代码（如 zh-CN, en, es）')
+  .option('--product-id <id>', '商品 ID')
+  .option('--lang <code>', '语言代码（如 zh-CN, en, es）')
   .option('-n, --name <name>', '翻译后的名称')
   .option('-d, --description <description>', '翻译后的描述')
   .option('--meta-title <title>', 'SEO 标题')
   .option('--meta-description <description>', 'SEO 描述')
-  .action(async (productId: string, languageCode: string, options: UpdateOptions) => {
+  .action(async (options: UpdateOptions) => {
     try {
-      if (!productId || productId.trim().length === 0) {
+      if (!options.productId || options.productId.trim().length === 0) {
         throw new ValidationError('商品 ID 不能为空', 'product-id');
       }
-      if (!languageCode || languageCode.trim().length === 0) {
-        throw new ValidationError('语言代码不能为空', 'language-code');
+      if (!options.lang || options.lang.trim().length === 0) {
+        throw new ValidationError('语言代码不能为空', 'lang');
       }
+
+      const productId = options.productId;
+      const languageCode = options.lang;
 
       const { name, description, metaTitle, metaDescription } = options;
 

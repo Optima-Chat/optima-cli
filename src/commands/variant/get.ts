@@ -6,24 +6,27 @@ import { formatVariant } from '../../utils/format.js';
 
 export const getVariantCommand = new Command('get')
   .description('变体详情')
-  .argument('<product-id>', '商品 ID')
-  .argument('<variant-id>', '变体 ID')
-  .action(async (productId: string, variantId: string) => {
+  .option('--product-id <id>', '商品 ID')
+  .option('--variant-id <id>', '变体 ID')
+  .action(async (options: { productId?: string; variantId?: string }) => {
     try {
-      await getVariant(productId, variantId);
+      await getVariant(options);
     } catch (error) {
       handleError(error);
     }
   });
 
-async function getVariant(productId: string, variantId: string) {
+async function getVariant(options: { productId?: string; variantId?: string }) {
   // 验证参数
-  if (!productId || productId.trim().length === 0) {
+  if (!options.productId || options.productId.trim().length === 0) {
     throw new ValidationError('商品 ID 不能为空', 'product-id');
   }
-  if (!variantId || variantId.trim().length === 0) {
+  if (!options.variantId || options.variantId.trim().length === 0) {
     throw new ValidationError('变体 ID 不能为空', 'variant-id');
   }
+
+  const productId = options.productId;
+  const variantId = options.variantId;
 
   const spinner = ora('正在获取变体详情...').start();
 

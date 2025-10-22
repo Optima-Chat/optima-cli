@@ -6,16 +6,19 @@ import { handleError, ValidationError } from '../../../utils/error.js';
 
 export const getProductTranslationCommand = new Command('get')
   .description('查看商品翻译详情')
-  .argument('<product-id>', '商品 ID')
-  .argument('<language-code>', '语言代码（如 zh-CN, en, es）')
-  .action(async (productId: string, languageCode: string) => {
+  .option('--product-id <id>', '商品 ID')
+  .option('--lang <code>', '语言代码（如 zh-CN, en, es）')
+  .action(async (options: { productId?: string; lang?: string }) => {
     try {
-      if (!productId || productId.trim().length === 0) {
+      if (!options.productId || options.productId.trim().length === 0) {
         throw new ValidationError('商品 ID 不能为空', 'product-id');
       }
-      if (!languageCode || languageCode.trim().length === 0) {
-        throw new ValidationError('语言代码不能为空', 'language-code');
+      if (!options.lang || options.lang.trim().length === 0) {
+        throw new ValidationError('语言代码不能为空', 'lang');
       }
+
+      const productId = options.productId;
+      const languageCode = options.lang;
 
       const spinner = ora('正在获取翻译详情...').start();
       const translation = await commerceApi.i18n.productTranslations.get(productId, languageCode);

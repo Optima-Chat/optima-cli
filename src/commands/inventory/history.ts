@@ -8,20 +8,22 @@ import { formatDate } from '../../utils/format.js';
 
 export const historyCommand = new Command('history')
   .description('查看库存变更历史')
-  .argument('<product-id>', '商品 ID')
-  .action(async (productId: string) => {
+  .option('--id <id>', '商品 ID')
+  .action(async (options: { id?: string }) => {
     try {
-      await getHistory(productId);
+      await getHistory(options);
     } catch (error) {
       handleError(error);
     }
   });
 
-async function getHistory(productId: string) {
+async function getHistory(options: { id?: string }) {
   // 验证参数
-  if (!productId || productId.trim().length === 0) {
-    throw new ValidationError('商品 ID 不能为空', 'product-id');
+  if (!options.id || options.id.trim().length === 0) {
+    throw new ValidationError('商品 ID 不能为空', 'id');
   }
+
+  const productId = options.id;
 
   const spinner = ora('正在获取库存历史...').start();
 

@@ -7,12 +7,14 @@ import { handleError, ValidationError } from '../../../utils/error.js';
 
 export const listProductTranslationsCommand = new Command('list')
   .description('查看商品翻译列表')
-  .argument('<product-id>', '商品 ID')
-  .action(async (productId: string) => {
+  .option('--product-id <id>', '商品 ID')
+  .action(async (options: { productId?: string }) => {
     try {
-      if (!productId || productId.trim().length === 0) {
+      if (!options.productId || options.productId.trim().length === 0) {
         throw new ValidationError('商品 ID 不能为空', 'product-id');
       }
+
+      const productId = options.productId;
 
       const spinner = ora('正在获取商品翻译...').start();
       const translations = await commerceApi.i18n.productTranslations.list(productId);

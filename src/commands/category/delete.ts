@@ -6,26 +6,29 @@ import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 
 interface DeleteCategoryOptions {
+  id?: string;
   yes?: boolean;
 }
 
 export const deleteCategoryCommand = new Command('delete')
   .description('删除分类')
-  .argument('<category-id>', '分类 ID')
+  .option('--id <id>', '分类 ID')
   .option('-y, --yes', '跳过确认提示')
-  .action(async (categoryId: string, options: DeleteCategoryOptions) => {
+  .action(async (options: DeleteCategoryOptions) => {
     try {
-      await deleteCategory(categoryId, options);
+      await deleteCategory(options);
     } catch (error) {
       handleError(error);
     }
   });
 
-async function deleteCategory(categoryId: string, options: DeleteCategoryOptions) {
+async function deleteCategory(options: DeleteCategoryOptions) {
   // 验证参数
-  if (!categoryId || categoryId.trim().length === 0) {
-    throw new ValidationError('分类 ID 不能为空', 'category-id');
+  if (!options.id || options.id.trim().length === 0) {
+    throw new ValidationError('分类 ID 不能为空', 'id');
   }
+
+  const categoryId = options.id;
 
   // 确认删除（除非使用 --yes）
   if (!options.yes) {

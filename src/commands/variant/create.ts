@@ -6,6 +6,7 @@ import { handleError, createApiError, ValidationError } from '../../utils/error.
 import { formatVariant } from '../../utils/format.js';
 
 interface CreateVariantOptions {
+  productId?: string;
   sku?: string;
   price?: string;
   stock?: string;
@@ -14,24 +15,26 @@ interface CreateVariantOptions {
 
 export const createVariantCommand = new Command('create')
   .description('创建商品变体')
-  .argument('<product-id>', '商品 ID')
+  .option('--product-id <id>', '商品 ID')
   .option('-s, --sku <sku>', 'SKU 编码')
   .option('-p, --price <price>', '价格')
   .option('--stock <quantity>', '库存数量')
   .option('-a, --attributes <json>', '属性（JSON 格式，如 \'{"size":"S","color":"White"}\'）')
-  .action(async (productId: string, options: CreateVariantOptions) => {
+  .action(async (options: CreateVariantOptions) => {
     try {
-      await createVariant(productId, options);
+      await createVariant(options);
     } catch (error) {
       handleError(error);
     }
   });
 
-async function createVariant(productId: string, options: CreateVariantOptions) {
+async function createVariant(options: CreateVariantOptions) {
   // 验证商品 ID
-  if (!productId || productId.trim().length === 0) {
+  if (!options.productId || options.productId.trim().length === 0) {
     throw new ValidationError('商品 ID 不能为空', 'product-id');
   }
+
+  const productId = options.productId;
 
   let { sku, price, stock, attributes } = options;
 

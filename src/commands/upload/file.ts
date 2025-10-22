@@ -7,19 +7,21 @@ import { handleError, createApiError, ValidationError } from '../../utils/error.
 
 export const uploadFileCommand = new Command('file')
   .description('上传文件')
-  .argument('<file-path>', '文件路径')
-  .action(async (filePath: string) => {
+  .option('--path <path>', '文件路径')
+  .action(async (options: { path?: string }) => {
     try {
-      await uploadFile(filePath);
+      await uploadFile(options);
     } catch (error) {
       handleError(error);
     }
   });
 
-async function uploadFile(filePath: string) {
-  if (!filePath || filePath.trim().length === 0) {
-    throw new ValidationError('文件路径不能为空', 'file-path');
+async function uploadFile(options: { path?: string }) {
+  if (!options.path || options.path.trim().length === 0) {
+    throw new ValidationError('文件路径不能为空', 'path');
   }
+
+  const filePath = options.path;
 
   if (!existsSync(filePath)) {
     throw new ValidationError(`文件不存在: ${filePath}`, 'file-path');

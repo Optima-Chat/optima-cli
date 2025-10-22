@@ -6,6 +6,7 @@ import { commerceApi } from '../../../api/rest/commerce.js';
 import { handleError, ValidationError } from '../../../utils/error.js';
 
 interface CreateOptions {
+  productId?: string;
   lang?: string;
   name?: string;
   description?: string;
@@ -15,24 +16,26 @@ interface CreateOptions {
 
 export const createProductTranslationCommand = new Command('create')
   .description('创建商品翻译')
-  .argument('<product-id>', '商品 ID')
+  .option('--product-id <id>', '商品 ID')
   .option('-l, --lang <code>', '语言代码（如 zh-CN, en, es）')
   .option('-n, --name <name>', '翻译后的名称')
   .option('-d, --description <description>', '翻译后的描述')
   .option('--meta-title <title>', 'SEO 标题')
   .option('--meta-description <description>', 'SEO 描述')
-  .action(async (productId: string, options: CreateOptions) => {
+  .action(async (options: CreateOptions) => {
     try {
-      await createProductTranslation(productId, options);
+      await createProductTranslation(options);
     } catch (error) {
       handleError(error);
     }
   });
 
-async function createProductTranslation(productId: string, options: CreateOptions) {
-  if (!productId || productId.trim().length === 0) {
+async function createProductTranslation(options: CreateOptions) {
+  if (!options.productId || options.productId.trim().length === 0) {
     throw new ValidationError('商品 ID 不能为空', 'product-id');
   }
+
+  const productId = options.productId;
 
   let { lang, name, description, metaTitle, metaDescription } = options;
 

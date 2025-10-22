@@ -6,20 +6,22 @@ import { formatVariantList } from '../../utils/format.js';
 
 export const listVariantsCommand = new Command('list')
   .description('商品变体列表')
-  .argument('<product-id>', '商品 ID')
-  .action(async (productId: string) => {
+  .option('--product-id <id>', '商品 ID')
+  .action(async (options: { productId?: string }) => {
     try {
-      await listVariants(productId);
+      await listVariants(options);
     } catch (error) {
       handleError(error);
     }
   });
 
-async function listVariants(productId: string) {
+async function listVariants(options: { productId?: string }) {
   // 验证参数
-  if (!productId || productId.trim().length === 0) {
+  if (!options.productId || options.productId.trim().length === 0) {
     throw new ValidationError('商品 ID 不能为空', 'product-id');
   }
+
+  const productId = options.productId;
 
   const spinner = ora('正在获取变体列表...').start();
 

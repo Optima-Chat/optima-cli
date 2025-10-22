@@ -6,25 +6,28 @@ import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 
 interface ReserveOptions {
+  id?: string;
   quantity?: string;
 }
 
 export const reserveStockCommand = new Command('reserve')
   .description('预留库存')
-  .argument('<product-id>', '商品 ID')
+  .option('--id <id>', '商品 ID')
   .option('-q, --quantity <quantity>', '预留数量')
-  .action(async (productId: string, options: ReserveOptions) => {
+  .action(async (options: ReserveOptions) => {
     try {
-      await reserveStock(productId, options);
+      await reserveStock(options);
     } catch (error) {
       handleError(error);
     }
   });
 
-async function reserveStock(productId: string, options: ReserveOptions) {
-  if (!productId || productId.trim().length === 0) {
-    throw new ValidationError('商品 ID 不能为空', 'product-id');
+async function reserveStock(options: ReserveOptions) {
+  if (!options.id || options.id.trim().length === 0) {
+    throw new ValidationError('商品 ID 不能为空', 'id');
   }
+
+  const productId = options.id;
 
   let { quantity } = options;
 
