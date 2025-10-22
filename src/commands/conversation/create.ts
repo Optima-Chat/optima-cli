@@ -6,6 +6,7 @@ import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 
 interface CreateOptions {
+  customerId?: string;
   email?: string;
   phone?: string;
   name?: string;
@@ -14,10 +15,11 @@ interface CreateOptions {
 
 export const createConversationCommand = new Command('create')
   .description('创建对话')
-  .option('-e, --email <email>', '客户邮箱')
-  .option('-p, --phone <phone>', '客户电话')
-  .option('-n, --name <name>', '客户姓名')
-  .option('-m, --message <message>', '初始消息')
+  .option('--customer-id <id>', '客户 ID（从订单中获取，必填）')
+  .option('-e, --email <email>', '客户邮箱（可选）')
+  .option('-p, --phone <phone>', '客户电话（可选）')
+  .option('-n, --name <name>', '客户姓名（可选）')
+  .option('-m, --message <message>', '初始消息（可选）')
   .action(async (options: CreateOptions) => {
     try {
       await createConversation(options);
@@ -27,30 +29,47 @@ export const createConversationCommand = new Command('create')
   });
 
 async function createConversation(options: CreateOptions) {
-  let { email, phone, name, message } = options;
+  let { customerId, email, phone, name, message } = options;
 
-  // 如果没有提供任何客户信息，交互式输入
-  if (!email && !phone && !name) {
+  // 交互式输入客户 ID（如果未提供）
+  if (!customerId) {
+    const answers = await inquirer.prompt([
+      {
+        type: 'input',
+        name: 'customerId',
+        message: '客户 ID（从订单详情中获取）:',
+        validate: (input) => input.trim().length > 0 || '客户 ID 不能为空',
+      },
+    ]);
+    customerId = answers.customerId;
+  }
+
+  if (!customerId || customerId.trim().length === 0) {
+    throw new ValidationError('客户 ID 不能为空，请从订单详情中获取 customer_user_id', 'customer-id');
+  }
+
+  // 交互式输入可选字段
+  if (!email && !phone && !name && !message) {
     const answers = await inquirer.prompt([
       {
         type: 'input',
         name: 'email',
-        message: '客户邮箱（可选）:',
+        message: '客户邮箱（可选，按回车跳过）:',
       },
       {
         type: 'input',
         name: 'phone',
-        message: '客户电话（可选）:',
+        message: '客户电话（可选，按回车跳过）:',
       },
       {
         type: 'input',
         name: 'name',
-        message: '客户姓名（可选）:',
+        message: '客户姓名（可选，按回车跳过）:',
       },
       {
         type: 'input',
         name: 'message',
-        message: '初始消息（可选）:',
+        message: '初始消息（可选，按回车跳过）:',
       },
     ]);
 
@@ -60,24 +79,31 @@ async function createConversation(options: CreateOptions) {
     message = answers.message || undefined;
   }
 
-  if (!email && !phone && !name) {
-    throw new ValidationError('至少需要提供客户邮箱、电话或姓名之一', 'customer');
-  }
-
   const spinner = ora('正在创建对话...').start();
 
   try {
-    const data: any = {};
-    if (email) data.customer_email = email;
-    if (phone) data.customer_phone = phone;
-    if (name) data.customer_name = name;
-    if (message) data.initial_message = message;
+    const data: any = {
+      customer_id: customerId,
+      participants: [
+        {
+          role: 'customer',
+          ...(email && { email }),
+          ...(phone && { phone }),
+          ...(name && { name }),
+        },
+      ],
+    };
+
+    if (message) {
+      data.initial_message = message;
+    }
 
     const conversation = await commerceApi.conversations.create(data);
     spinner.succeed('对话创建成功！');
 
     console.log();
     console.log(chalk.gray('对话 ID: ') + chalk.cyan(conversation.id));
+    console.log(chalk.gray('客户 ID: ') + chalk.cyan(customerId));
     if (email) console.log(chalk.gray('客户邮箱: ') + email);
     if (phone) console.log(chalk.gray('客户电话: ') + phone);
     if (name) console.log(chalk.gray('客户姓名: ') + name);

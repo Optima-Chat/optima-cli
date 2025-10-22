@@ -213,6 +213,9 @@ export function formatOrder(order: any): string {
   lines.push(`${chalk.gray('状态:')}        ${formatOrderStatus(order.status || 'pending')}`);
   lines.push(`${chalk.gray('金额:')}        ${chalk.green(formatPrice(order.total_amount || order.total || order.amount || 0, order.currency || 'USD'))}`);
 
+  if (order.customer_user_id) {
+    lines.push(`${chalk.gray('客户 ID:')}     ${chalk.cyan(order.customer_user_id)}`);
+  }
   if (order.customer_name) {
     lines.push(`${chalk.gray('客户姓名:')}    ${order.customer_name}`);
   }
