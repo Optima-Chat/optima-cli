@@ -89,6 +89,7 @@ interface Merchant {
   description?: string;
   logo_url?: string;
   banner_url?: string;
+  default_currency?: string;
   created_at?: string;
   updated_at?: string;
 }

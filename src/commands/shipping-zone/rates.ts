@@ -68,7 +68,7 @@ export const createRateCommand = new Command('add-rate')
   .option('-n, --name <name>', '费率名称（如：标准快递）')
   .option('-t, --rate-type <type>', '费率类型（flat_rate/free/weight_based）', 'flat_rate')
   .option('-p, --price <price>', '运费价格')
-  .option('-c, --currency <currency>', '货币代码（如 USD, HKD）', 'USD')
+  .option('-c, --currency <currency>', '货币代码（如 USD, CNY, HKD，默认使用商户货币）')
   .option('--min-amount <amount>', '免运费的最低订单金额')
   .option('--min-quantity <quantity>', '免运费的最低商品数量')
   .action(async (options: CreateRateOptions) => {
@@ -87,6 +87,22 @@ async function createRate(options: CreateRateOptions) {
   const zoneId = options.zoneId;
 
   let { name, rateType, price, currency, minAmount, minQuantity } = options;
+
+  // 获取商户信息以确定默认货币
+  let merchantCurrency = 'USD';
+  try {
+    const merchant = await commerceApi.merchant.getProfile();
+    if (merchant.default_currency) {
+      merchantCurrency = merchant.default_currency;
+    }
+  } catch (error) {
+    // 如果获取失败，使用默认值 USD
+  }
+
+  // 如果用户没有指定货币，使用商户货币
+  if (!currency) {
+    currency = merchantCurrency;
+  }
 
   // 交互式输入缺失的必填字段
   if (!name || !price) {
@@ -127,7 +143,7 @@ async function createRate(options: CreateRateOptions) {
     const data: any = {
       name: name!,
       rate_type: rateType || 'flat_rate',
-      currency: currency || 'USD',
+      currency: currency!,
       base_cost: parseFloat(price!),
     };
 
@@ -146,6 +162,19 @@ async function createRate(options: CreateRateOptions) {
     console.log();
   } catch (error: any) {
     spinner.fail('费率添加失败');
+
+    // 特殊处理货币不匹配错误
+    if (error.response?.data?.error_code === 'SHIPPING_CURRENCY_MISMATCH') {
+      const details = error.response.data.details;
+      console.log();
+      console.log(chalk.yellow('💡 提示: 运费货币必须与商户货币一致'));
+      if (details?.merchant_currency) {
+        console.log(chalk.yellow(`   商户货币: ${details.merchant_currency}`));
+        console.log(chalk.yellow(`   请使用: --currency ${details.merchant_currency}`));
+      }
+      console.log();
+    }
+
     throw createApiError(error);
   }
 }
