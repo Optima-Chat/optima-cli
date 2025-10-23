@@ -4,9 +4,7 @@ import FormData from 'form-data';
 import { createReadStream } from 'fs';
 import path from 'path';
 import { createHash } from 'crypto';
-
-// 支持环境变量配置 Commerce API 地址
-const COMMERCE_API_BASE_URL = process.env.OPTIMA_API_URL || 'https://api.optima.shop';
+import { getApiUrl } from '../../utils/config.js';
 
 // 辅助函数：清理文件名，移除非ASCII字符
 function sanitizeFilename(filename: string): string {
@@ -147,7 +145,8 @@ class CommerceApiClient {
   private client: AxiosInstance;
 
   constructor() {
-    this.client = createAuthenticatedClient(COMMERCE_API_BASE_URL);
+    // 优先级：环境变量 > 配置文件 > 默认值
+    this.client = createAuthenticatedClient(getApiUrl());
   }
 
   // ==========================================================================

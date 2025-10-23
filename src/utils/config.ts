@@ -20,6 +20,8 @@ interface UserData {
 interface ConfigSchema {
   tokens: TokenData | null;
   user: UserData | null;
+  api_url?: string;      // Commerce API URL
+  auth_url?: string;     // Auth API URL
 }
 
 // 创建配置实例
@@ -195,4 +197,34 @@ export function clearConfig(): void {
  */
 export function getConfigPath(): string {
   return config.path;
+}
+
+/**
+ * 获取 Commerce API URL
+ * 优先级：环境变量 > 配置文件 > 默认值
+ */
+export function getApiUrl(): string {
+  return process.env.OPTIMA_API_URL || config.get('api_url') || 'https://api.optima.shop';
+}
+
+/**
+ * 获取 Auth API URL
+ * 优先级：环境变量 > 配置文件 > 默认值
+ */
+export function getAuthUrl(): string {
+  return process.env.OPTIMA_AUTH_URL || config.get('auth_url') || 'https://auth.optima.shop';
+}
+
+/**
+ * 设置 Commerce API URL
+ */
+export function setApiUrl(url: string): void {
+  config.set('api_url', url);
+}
+
+/**
+ * 设置 Auth API URL
+ */
+export function setAuthUrl(url: string): void {
+  config.set('auth_url', url);
 }

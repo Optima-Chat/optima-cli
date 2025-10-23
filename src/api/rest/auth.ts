@@ -1,8 +1,7 @@
 import { createAuthenticatedClient } from './base.js';
 import { AxiosInstance } from 'axios';
+import { getAuthUrl } from '../../utils/config.js';
 
-// 支持环境变量配置 Auth API 地址
-const AUTH_API_BASE_URL = process.env.OPTIMA_AUTH_URL || 'https://auth.optima.shop';
 const OAUTH_CLIENT_ID = 'optima-cli-cwkbnadr';
 
 interface DeviceAuthResponse {
@@ -36,7 +35,8 @@ class AuthApiClient {
 
   constructor() {
     // 使用带自动 token 刷新的客户端
-    this.client = createAuthenticatedClient(AUTH_API_BASE_URL);
+    // 优先级：环境变量 > 配置文件 > 默认值
+    this.client = createAuthenticatedClient(getAuthUrl());
   }
 
   /**
