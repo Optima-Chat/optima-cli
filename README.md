@@ -186,8 +186,8 @@ docker run \
 ```
 
 **默认 Backend**：
-- Commerce API: `https://api.optima.chat`
-- Auth API: `https://auth.optima.chat`
+- Commerce API: `https://api.optima.shop`
+- Auth API: `https://auth.optima.shop`
 
 ### 📦 商品管理
 

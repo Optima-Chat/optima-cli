@@ -6,7 +6,7 @@ import path from 'path';
 import { createHash } from 'crypto';
 
 // 支持环境变量配置 Commerce API 地址
-const COMMERCE_API_BASE_URL = process.env.OPTIMA_API_URL || 'https://api.optima.chat';
+const COMMERCE_API_BASE_URL = process.env.OPTIMA_API_URL || 'https://api.optima.shop';
 
 // 辅助函数：清理文件名，移除非ASCII字符
 function sanitizeFilename(filename: string): string {

@@ -2,7 +2,7 @@ import { createAuthenticatedClient } from './base.js';
 import { AxiosInstance } from 'axios';
 
 // 支持环境变量配置 Auth API 地址
-const AUTH_API_BASE_URL = process.env.OPTIMA_AUTH_URL || 'https://auth.optima.chat';
+const AUTH_API_BASE_URL = process.env.OPTIMA_AUTH_URL || 'https://auth.optima.shop';
 const OAUTH_CLIENT_ID = 'optima-cli-cwkbnadr';
 
 interface DeviceAuthResponse {

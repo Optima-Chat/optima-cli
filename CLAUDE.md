@@ -11,8 +11,8 @@ Optima CLI is a command-line tool for managing e-commerce stores through natural
 **Authentication**: Supports both OAuth login and environment variable (`OPTIMA_TOKEN`). Priority: env var > config file.
 
 **Backend Configuration**: Supports environment variables for custom backend URLs:
-- `OPTIMA_API_URL` - Commerce API URL (default: https://api.optima.chat)
-- `OPTIMA_AUTH_URL` - Auth API URL (default: https://auth.optima.chat)
+- `OPTIMA_API_URL` - Commerce API URL (default: https://api.optima.shop)
+- `OPTIMA_AUTH_URL` - Auth API URL (default: https://auth.optima.shop)
 
 ## Development Commands
 
@@ -203,13 +203,13 @@ git push --follow-tags
 
 ## API Endpoints
 
-**Auth API**: `https://auth.optima.chat`
+**Auth API**: `https://auth.optima.shop`
 - OAuth 2.0 Device Flow
 - Client ID: `optima-cli-cwkbnadr`
 - Environment variable: `OPTIMA_TOKEN` (alternative to login)
 - Custom URL: `OPTIMA_AUTH_URL` env var (for development/testing)
 
-**Commerce API**: `https://api.optima.chat`
+**Commerce API**: `https://api.optima.shop`
 - All product/order/inventory/shipping operations
 - Requires Bearer token authentication
 - Tokens auto-refresh every 15 minutes (config file only, env var tokens don't refresh)
