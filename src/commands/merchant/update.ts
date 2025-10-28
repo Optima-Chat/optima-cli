@@ -3,6 +3,7 @@ import chalk from 'chalk';
 import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 import { output } from '../../utils/output.js';
+import { addEnhancedHelp } from '../../utils/helpText.js';
 
 interface UpdateMerchantOptions {
   name?: string;
@@ -24,15 +25,15 @@ interface UpdateMerchantOptions {
   companyName?: string;
 }
 
-export const updateCommand = new Command('update')
-  .description('更新商户资料')
-  .option('-n, --name <name>', '商户名称')
-  .option('-s, --slug <slug>', '店铺 URL 标识符（用于 https://<slug>.optima.shop）')
-  .option('-d, --description <description>', '商户描述')
-  .option('-e, --email <email>', '邮箱')
-  .option('--logo-url <url>', 'Logo URL')
-  .option('--banner-url <url>', 'Banner URL')
-  .option('--default-currency <currency>', '默认货币')
+const cmd = new Command('update')
+  .description('Update merchant account information and settings')
+  .option('-n, --name <string>', 'Merchant name')
+  .option('-s, --slug <string>', 'Store URL slug (used in https://<slug>.optima.shop)')
+  .option('-d, --description <string>', 'Store description')
+  .option('-e, --email <string>', 'Contact email')
+  .option('--logo-url <url>', 'Logo image URL')
+  .option('--banner-url <url>', 'Banner image URL')
+  .option('--default-currency <string>', 'Default currency code')
   .option('--origin-country-alpha2 <code>', '发货国家代码（如: CN, US, HK）')
   .option('--origin-city <city>', '发货城市')
   .option('--origin-postal-code <code>', '发货邮政编码')
@@ -50,6 +51,48 @@ export const updateCommand = new Command('update')
       handleError(error);
     }
   });
+
+addEnhancedHelp(cmd, {
+  examples: [
+    '# Update store name',
+    '$ optima merchant update --name "My Awesome Store"',
+    '',
+    '# Update store URL slug',
+    '$ optima merchant update --slug my-store',
+    '',
+    '# Update multiple fields',
+    '$ optima merchant update \\',
+    '  --name "Premium Store" \\',
+    '  --description "High-quality products" \\',
+    '  --default-currency USD',
+  ],
+  output: {
+    example: JSON.stringify({
+      success: true,
+      data: {
+        merchant_id: 'uuid',
+        updated_fields: ['name', 'description'],
+        merchant: {
+          id: 'uuid',
+          name: 'Updated name',
+          slug: 'store-slug',
+          description: 'New description'
+        }
+      }
+    }, null, 2)
+  },
+  relatedCommands: [
+    { command: 'merchant info', description: 'View current merchant info' },
+    { command: 'merchant url', description: 'Get store frontend URL' },
+  ],
+  notes: [
+    'At least one field must be specified for update',
+    'slug must be unique and URL-safe (lowercase, hyphens)',
+    'Changing slug will change your store URL: https://{slug}.optima.shop',
+  ]
+});
+
+export const updateCommand = cmd;
 
 async function updateMerchant(options: UpdateMerchantOptions) {
   // 检查是否提供了至少一个更新字段

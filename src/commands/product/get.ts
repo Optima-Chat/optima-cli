@@ -4,10 +4,11 @@ import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 import { formatProduct } from '../../utils/format.js';
 import { output } from '../../utils/output.js';
+import { addEnhancedHelp } from '../../utils/helpText.js';
 
-export const getProductCommand = new Command('get')
-  .description('商品详情')
-  .option('--id <id>', '商品 ID')
+const cmd = new Command('get')
+  .description('Get detailed information for a specific product by ID')
+  .option('--id <uuid>', 'Product ID (required)')
   .action(async (options: { id?: string }) => {
     try {
       await getProduct(options);
@@ -15,6 +16,60 @@ export const getProductCommand = new Command('get')
       handleError(error);
     }
   });
+
+addEnhancedHelp(cmd, {
+  examples: [
+    '# Get product details',
+    '$ optima product get --id abc-123-def',
+    '',
+    '# Get product details in JSON format',
+    '$ optima product get --id abc-123-def --json',
+    '',
+    '# Get product ID from list, then fetch details',
+    '$ optima product list --limit 1',
+    '$ optima product get --id <product_id_from_list>',
+  ],
+  output: {
+    example: JSON.stringify(
+      {
+        success: true,
+        data: {
+          product: {
+            product_id: 'uuid',
+            name: 'Product name',
+            handle: 'url-slug',
+            description: 'Product description',
+            price: '29.99',
+            currency: 'USD',
+            status: 'active',
+            stock_quantity: 100,
+            sku: 'SKU-001',
+            category_id: 'uuid',
+            images: ['https://...'],
+            created_at: 'timestamp',
+            updated_at: 'timestamp',
+          },
+          product_url: 'https://{slug}.optima.shop/products/{handle}',
+        },
+      },
+      null,
+      2
+    ),
+  },
+  relatedCommands: [
+    { command: 'product list', description: 'Get product IDs to query' },
+    { command: 'product update', description: 'Update product details' },
+    { command: 'product url', description: 'Get product frontend URL' },
+    { command: 'variant list', description: 'List product variants' },
+  ],
+  notes: [
+    'Product ID is required (use \'optima product list\' to find IDs)',
+    'Returns full product details including images and metadata',
+    'product_url is automatically generated from merchant slug and product handle',
+  ],
+});
+
+export const getProductCommand = cmd;
 
 async function getProduct(options: { id?: string }) {
   // 验证参数

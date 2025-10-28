@@ -3,6 +3,7 @@ import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 import { formatProduct } from '../../utils/format.js';
 import { output } from '../../utils/output.js';
+import { addEnhancedHelp } from '../../utils/helpText.js';
 
 interface UpdateProductOptions {
   title?: string;
@@ -19,17 +20,17 @@ interface UpdateProductOptionsWithId extends UpdateProductOptions {
   id?: string;
 }
 
-export const updateProductCommand = new Command('update')
-  .description('更新商品')
-  .option('--id <id>', '商品 ID')
-  .option('--title <title>', '商品名称')
-  .option('--handle <handle>', 'URL 友好标识符（用于产品链接）')
-  .option('--price <price>', '商品价格')
-  .option('--description <description>', '商品描述')
-  .option('--stock <stock>', '库存数量')
-  .option('--sku <sku>', 'SKU 编码')
-  .option('--status <status>', '商品状态 (active/inactive/draft/archived)')
-  .option('--category-id <categoryId>', '分类 ID')
+const cmd = new Command('update')
+  .description('Update product details by ID')
+  .option('--id <uuid>', 'Product ID (required)')
+  .option('--title <string>', 'Product name')
+  .option('--handle <string>', 'URL-friendly slug for product page')
+  .option('--price <number>', 'Product price')
+  .option('--description <string>', 'Product description')
+  .option('--stock <number>', 'Stock quantity')
+  .option('--sku <string>', 'SKU code')
+  .option('--status <string>', 'Status: active|inactive|draft|archived')
+  .option('--category-id <uuid>', 'Category ID')
   .action(async (options: UpdateProductOptionsWithId) => {
     try {
       if (!options.id) {
@@ -40,6 +41,58 @@ export const updateProductCommand = new Command('update')
       handleError(error);
     }
   });
+
+addEnhancedHelp(cmd, {
+  examples: [
+    '# Update product price',
+    '$ optima product update --id abc-123-def --price 39.99',
+    '',
+    '# Update multiple fields',
+    '$ optima product update \\',
+    '  --id abc-123-def \\',
+    '  --title "Premium Ceramic Mug" \\',
+    '  --price 39.99 \\',
+    '  --stock 150',
+    '',
+    '# Change product status',
+    '$ optima product update --id abc-123-def --status inactive',
+    '',
+    '# Update with JSON output',
+    '$ optima product update --id abc-123-def --price 39.99 --json',
+  ],
+  output: {
+    example: JSON.stringify(
+      {
+        success: true,
+        data: {
+          product: {
+            product_id: 'uuid',
+            name: 'Updated name',
+            price: '39.99',
+            status: 'active',
+            updated_at: 'timestamp',
+          },
+        },
+        message: 'Product updated successfully',
+      },
+      null,
+      2
+    ),
+  },
+  relatedCommands: [
+    { command: 'product get', description: 'View current product details' },
+    { command: 'product list', description: 'Find product IDs' },
+    { command: 'inventory update', description: 'Update stock separately' },
+  ],
+  notes: [
+    'Product ID is required, use \'optima product list\' to find IDs',
+    'Only specified fields will be updated, others remain unchanged',
+    'Status values: active (live), inactive (hidden), draft (unpublished), archived',
+    'handle must be unique and URL-safe (lowercase, hyphens only)',
+  ],
+});
+
+export const updateProductCommand = cmd;
 
 async function updateProduct(productId: string, options: UpdateProductOptions) {
   // 验证参数

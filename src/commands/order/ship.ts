@@ -5,6 +5,7 @@ import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 import { formatOrder } from '../../utils/format.js';
 import { output } from '../../utils/output.js';
+import { addEnhancedHelp } from '../../utils/helpText.js';
 
 interface ShipOrderOptions {
   id?: string;
@@ -12,11 +13,11 @@ interface ShipOrderOptions {
   carrier?: string;
 }
 
-export const shipOrderCommand = new Command('ship')
-  .description('订单发货')
-  .option('--id <id>', '订单 ID')
-  .option('-t, --tracking <number>', '物流单号')
-  .option('-c, --carrier <name>', '快递公司')
+const cmd = new Command('ship')
+  .description('Mark an order as shipped and add tracking information')
+  .option('--id <uuid>', 'Order ID (required)')
+  .option('-t, --tracking <string>', 'Tracking number (required)')
+  .option('-c, --carrier <string>', 'Carrier name (required)')
   .action(async (options: ShipOrderOptions) => {
     try {
       await shipOrder(options);
@@ -24,6 +25,45 @@ export const shipOrderCommand = new Command('ship')
       handleError(error);
     }
   });
+
+addEnhancedHelp(cmd, {
+  examples: [
+    '# Ship an order with tracking',
+    '$ optima order ship \\',
+    '  --id abc-123-def \\',
+    '  --tracking DHL1234567890 \\',
+    '  --carrier DHL',
+    '',
+    '# Find orders to ship, then ship',
+    '$ optima order list --status paid',
+    '$ optima order ship --id <order_id> --tracking UPS123 --carrier UPS',
+  ],
+  output: {
+    example: JSON.stringify({
+      success: true,
+      data: {
+        order_id: 'uuid',
+        status: 'shipped',
+        tracking_number: 'DHL1234567890',
+        carrier: 'DHL',
+        shipped_at: 'timestamp'
+      },
+      message: 'Order shipped successfully'
+    }, null, 2)
+  },
+  relatedCommands: [
+    { command: 'order list', description: 'Find orders to ship (--status paid)' },
+    { command: 'order mark-delivered', description: 'Mark order as delivered' },
+    { command: 'shipping history', description: 'View shipping history' },
+  ],
+  notes: [
+    'Order must be in \'paid\' or \'processing\' status to ship',
+    'Tracking number will be sent to customer via email',
+    'Common carriers: DHL, UPS, FedEx, USPS, China Post',
+  ]
+});
+
+export const shipOrderCommand = cmd;
 
 async function shipOrder(options: ShipOrderOptions) {
   // 验证参数
