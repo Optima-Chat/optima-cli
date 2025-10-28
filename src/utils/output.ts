@@ -62,9 +62,9 @@ export class OutputManager {
       this._format = OutputFormat.PRETTY;
     } else {
       const envFormat = process.env.OPTIMA_CLI_FORMAT?.toLowerCase();
-      this._format = envFormat === 'json'
-        ? OutputFormat.JSON
-        : OutputFormat.PRETTY;
+      this._format = envFormat === 'pretty'
+        ? OutputFormat.PRETTY
+        : OutputFormat.JSON;
     }
   }
 

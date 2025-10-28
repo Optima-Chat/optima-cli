@@ -143,21 +143,12 @@ Optima CLI 提供 **14 个功能模块**，**72 个命令**，覆盖电商全流
 
 Optima CLI 支持两种输出格式，适用于不同场景：
 
-### Pretty 模式（默认）
-
-适合人类阅读，提供彩色终端输出和表格化数据：
-
-```bash
-optima product list --limit 2
-# 输出彩色表格，包含商品名称、价格、库存等
-```
-
-### JSON 模式（AI 友好）
+### JSON 模式（默认，AI 友好）
 
 适合 AI Agent 和程序化处理，返回结构化 JSON 数据：
 
 ```bash
-optima product list --limit 2 --json
+optima product list --limit 2
 # 输出标准 JSON 格式
 {
   "success": true,
@@ -171,39 +162,39 @@ optima product list --limit 2 --json
 ```
 
 **JSON 输出特性**：
-- ✅ 所有 90 个命令都支持 `--json` 标志
+- ✅ 所有 72 个命令默认输出 JSON 格式
 - ✅ 统一的响应格式：`{ success, data, message?, error? }`
 - ✅ 完整的数据结构，无信息丢失
 - ✅ 适合 AI Agent 解析和自动化脚本
-- ✅ 向后兼容：不加 `--json` 时使用默认 Pretty 模式
+- ✅ 向后兼容：可使用 `--pretty` 切换到表格模式
+
+### Pretty 模式（人类可读）
+
+适合人类阅读，提供彩色终端输出和表格化数据：
+
+```bash
+optima product list --limit 2 --pretty
+# 输出彩色表格，包含商品名称、价格、库存等
+```
 
 **使用场景**：
 
-**Pretty 模式**（默认）：
-- 在终端手动执行命令
-- 快速查看数据和调试
-- 人类可读性优先
-
-**JSON 模式**：
+**JSON 模式**（默认）：
 - AI Agent 调用（如 Claude Code）
 - 自动化脚本和 CI/CD 流程
 - 需要解析数据的程序
 - 数据导出和集成
 
+**Pretty 模式**：
+- 在终端手动执行命令
+- 快速查看数据和调试
+- 人类可读性优先
+
 **示例对比**：
 
 ```bash
-# Pretty 模式（人类友好）
+# JSON 模式（AI 友好，默认）
 $ optima merchant info
-✔ 商户信息获取成功
-
-店铺名称: 徐昊的全球小店
-店铺 Slug: xuhao-global-store
-默认货币: USD
-...
-
-# JSON 模式（AI 友好）
-$ optima merchant info --json
 {
   "success": true,
   "data": {
@@ -216,6 +207,15 @@ $ optima merchant info --json
     }
   }
 }
+
+# Pretty 模式（人类友好）
+$ optima merchant info --pretty
+✔ 商户信息获取成功
+
+店铺名称: 徐昊的全球小店
+店铺 Slug: xuhao-global-store
+默认货币: USD
+...
 ```
 
 > **提示**：在 Claude Code 中，Claude 会根据需要自动选择合适的输出格式。
