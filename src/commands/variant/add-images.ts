@@ -1,9 +1,9 @@
 import { Command } from 'commander';
-import ora from 'ora';
 import chalk from 'chalk';
 import { existsSync } from 'fs';
 import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
+import { output } from '../../utils/output.js';
 
 export const addVariantImagesCommand = new Command('add-images')
   .description('添加变体图片（支持本地文件或 Media ID）')
@@ -39,21 +39,30 @@ async function addVariantImages(options: { productId?: string; variantId?: strin
 
   // 如果有 Media IDs，直接关联
   if (mediaIds.length > 0) {
-    const spinner = ora(`正在关联 ${mediaIds.length} 张图片...`).start();
+    const spinner = output.spinner(`正在关联 ${mediaIds.length} 张图片...`);
 
     try {
       const result = await commerceApi.variants.addImagesByMediaIds(productId, variantId, mediaIds);
       spinner.succeed(`图片关联成功！(${mediaIds.length} 张)`);
 
-      console.log();
-      if (result.images && result.images.length > 0) {
-        console.log(chalk.gray('已关联图片数量: ') + chalk.green(result.images.length.toString()));
-        console.log(chalk.gray('图片 URL:'));
-        result.images.forEach((url: string, index: number) => {
-          console.log(chalk.cyan(`  ${index + 1}. ${url}`));
+      if (output.isJson()) {
+        output.success({
+          product_id: productId,
+          variant_id: variantId,
+          images: result.images || [],
+          count: (result.images || []).length
         });
+      } else {
+        console.log();
+        if (result.images && result.images.length > 0) {
+          console.log(chalk.gray('已关联图片数量: ') + chalk.green(result.images.length.toString()));
+          console.log(chalk.gray('图片 URL:'));
+          result.images.forEach((url: string, index: number) => {
+            console.log(chalk.cyan(`  ${index + 1}. ${url}`));
+          });
+        }
+        console.log();
       }
-      console.log();
     } catch (error: any) {
       spinner.fail('图片关联失败');
       throw createApiError(error);
@@ -68,21 +77,30 @@ async function addVariantImages(options: { productId?: string; variantId?: strin
     }
   }
 
-  const spinner = ora('正在上传图片...').start();
+  const spinner = output.spinner('正在上传图片...');
 
   try {
     const result = await commerceApi.variants.addImages(productId, variantId, imagePaths);
     spinner.succeed('图片上传成功！');
 
-    console.log();
-    if (result.images && result.images.length > 0) {
-      console.log(chalk.gray('已上传图片数量: ') + chalk.green(result.images.length.toString()));
-      console.log(chalk.gray('图片 URL:'));
-      result.images.forEach((url: string, index: number) => {
-        console.log(chalk.cyan(`  ${index + 1}. ${url}`));
+    if (output.isJson()) {
+      output.success({
+        product_id: productId,
+        variant_id: variantId,
+        images: result.images || [],
+        count: (result.images || []).length
       });
+    } else {
+      console.log();
+      if (result.images && result.images.length > 0) {
+        console.log(chalk.gray('已上传图片数量: ') + chalk.green(result.images.length.toString()));
+        console.log(chalk.gray('图片 URL:'));
+        result.images.forEach((url: string, index: number) => {
+          console.log(chalk.cyan(`  ${index + 1}. ${url}`));
+        });
+      }
+      console.log();
     }
-    console.log();
   } catch (error: any) {
     spinner.fail('图片上传失败');
     throw createApiError(error);

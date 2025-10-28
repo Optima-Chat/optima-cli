@@ -1,9 +1,9 @@
 import { Command } from 'commander';
 import inquirer from 'inquirer';
-import ora from 'ora';
 import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 import { formatCategory } from '../../utils/format.js';
+import { output } from '../../utils/output.js';
 
 interface CreateCategoryOptions {
   name?: string;
@@ -60,7 +60,7 @@ async function createCategory(options: CreateCategoryOptions) {
     throw new ValidationError('分类名称不能为空', 'name');
   }
 
-  const spinner = ora('正在创建分类...').start();
+  const spinner = output.spinner('正在创建分类...');
 
   try {
     const categoryData: any = {
@@ -78,9 +78,18 @@ async function createCategory(options: CreateCategoryOptions) {
     const category = await commerceApi.categories.create(categoryData);
     spinner.succeed('分类创建成功！');
 
-    // 显示分类详情
-    console.log();
-    console.log(formatCategory(category));
+    if (output.isJson()) {
+      output.success({
+        category_id: category.id || category.category_id,
+        name: category.name,
+        description: category.description,
+        parent_id: category.parent_id
+      });
+    } else {
+      // 显示分类详情
+      console.log();
+      console.log(formatCategory(category));
+    }
   } catch (error: any) {
     spinner.fail('分类创建失败');
     throw createApiError(error);

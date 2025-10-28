@@ -1,8 +1,8 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
-import ora from 'ora';
 import { clearConfig, isAuthenticated, getUser, getAccessToken } from '../../utils/config.js';
 import { authApi } from '../../api/rest/auth.js';
+import { output } from '../../utils/output.js';
 
 export const logoutCommand = new Command('logout')
   .description('登出并清除本地凭证')
@@ -17,11 +17,13 @@ export const logoutCommand = new Command('logout')
       const token = getAccessToken();
 
       // 尝试撤销 token
+      let tokenRevoked = false;
       if (token) {
-        const spinner = ora('正在登出...').start();
+        const spinner = output.spinner('正在登出...');
         try {
           await authApi.logout(token);
           spinner.succeed(chalk.green('Token 已撤销'));
+          tokenRevoked = true;
         } catch (error: any) {
           // 即使撤销失败，也继续清除本地配置
           spinner.warn(chalk.yellow('无法撤销 token，但本地凭证已清除'));
@@ -30,9 +32,17 @@ export const logoutCommand = new Command('logout')
 
       clearConfig();
 
-      console.log(chalk.green('\n✓ 已登出'));
-      console.log(chalk.gray(`   账号: ${user?.email}`));
-      console.log(chalk.gray('\n   使用 ') + chalk.cyan('optima auth login') + chalk.gray(' 重新登录\n'));
+      if (output.isJson()) {
+        output.success({
+          logged_out: true,
+          token_revoked: tokenRevoked,
+          email: user?.email
+        });
+      } else {
+        console.log(chalk.green('\n✓ 已登出'));
+        console.log(chalk.gray(`   账号: ${user?.email}`));
+        console.log(chalk.gray('\n   使用 ') + chalk.cyan('optima auth login') + chalk.gray(' 重新登录\n'));
+      }
     } catch (error: any) {
       console.log(chalk.red(`\n❌ 登出失败: ${error.message}\n`));
     }

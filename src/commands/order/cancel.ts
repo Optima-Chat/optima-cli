@@ -1,9 +1,9 @@
 import { Command } from 'commander';
 import inquirer from 'inquirer';
-import ora from 'ora';
 import chalk from 'chalk';
 import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
+import { output } from '../../utils/output.js';
 
 interface CancelOrderOptions {
   id?: string;
@@ -79,17 +79,24 @@ async function cancelOrder(options: CancelOrderOptions) {
     }
   }
 
-  const spinner = ora('正在取消订单...').start();
+  const spinner = output.spinner('正在取消订单...');
 
   try {
     await commerceApi.orders.cancel(orderId, reason);
     spinner.succeed('订单已取消！');
 
-    if (reason) {
-      console.log(chalk.gray('\n取消原因: ') + reason);
+    if (output.isJson()) {
+      output.success({
+        order_id: orderId,
+        status: 'cancelled',
+        reason: reason
+      });
+    } else {
+      if (reason) {
+        console.log(chalk.gray('\n取消原因: ') + reason);
+      }
+      console.log();
     }
-
-    console.log();
   } catch (error: any) {
     spinner.fail('订单取消失败');
     throw createApiError(error);

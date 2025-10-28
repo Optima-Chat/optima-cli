@@ -1,8 +1,8 @@
 import { Command } from 'commander';
-import ora from 'ora';
 import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 import { formatProduct } from '../../utils/format.js';
+import { output } from '../../utils/output.js';
 
 interface UpdateProductOptions {
   title?: string;
@@ -109,16 +109,24 @@ async function updateProduct(productId: string, options: UpdateProductOptions) {
     updateData.category_id = options.categoryId;
   }
 
-  const spinner = ora('正在更新商品...').start();
+  const spinner = output.spinner('正在更新商品...');
 
   try {
     const product = await commerceApi.products.update(productId, updateData);
     spinner.succeed('商品更新成功！');
 
-    // 显示更新后的商品详情
-    console.log();
-    console.log(formatProduct(product));
-    console.log();
+    if (output.isJson()) {
+      output.success({
+        product_id: product.id || product.product_id,
+        updated_fields: Object.keys(updateData),
+        product: product
+      });
+    } else {
+      // 显示更新后的商品详情
+      console.log();
+      console.log(formatProduct(product));
+      console.log();
+    }
   } catch (error: any) {
     spinner.fail('商品更新失败');
     throw createApiError(error);

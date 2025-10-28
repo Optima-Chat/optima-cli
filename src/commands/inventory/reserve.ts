@@ -1,9 +1,9 @@
 import { Command } from 'commander';
 import inquirer from 'inquirer';
-import ora from 'ora';
 import chalk from 'chalk';
 import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
+import { output } from '../../utils/output.js';
 
 interface ReserveOptions {
   id?: string;
@@ -55,16 +55,23 @@ async function reserveStock(options: ReserveOptions) {
     throw new ValidationError('预留数量必须是正整数', 'quantity');
   }
 
-  const spinner = ora('正在预留库存...').start();
+  const spinner = output.spinner('正在预留库存...');
 
   try {
     await commerceApi.inventory.reserveStock(productId.toString(), quantityNum);
     spinner.succeed('库存预留成功！');
 
-    console.log();
-    console.log(chalk.gray('商品 ID: ') + chalk.cyan(productId));
-    console.log(chalk.gray('预留数量: ') + chalk.green(quantityNum.toString()));
-    console.log();
+    if (output.isJson()) {
+      output.success({
+        product_id: productId,
+        reserved_quantity: quantityNum
+      });
+    } else {
+      console.log();
+      console.log(chalk.gray('商品 ID: ') + chalk.cyan(productId));
+      console.log(chalk.gray('预留数量: ') + chalk.green(quantityNum.toString()));
+      console.log();
+    }
   } catch (error: any) {
     spinner.fail('库存预留失败');
     throw createApiError(error);

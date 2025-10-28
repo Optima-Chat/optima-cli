@@ -1,9 +1,9 @@
 import { Command } from 'commander';
-import ora from 'ora';
 import chalk from 'chalk';
 import open from 'open';
 import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError } from '../../utils/error.js';
+import { output } from '../../utils/output.js';
 
 export const urlCommand = new Command('url')
   .description('获取店铺链接')
@@ -17,29 +17,44 @@ export const urlCommand = new Command('url')
   });
 
 async function getStoreUrl(shouldOpen: boolean) {
-  const spinner = ora('正在获取店铺信息...').start();
+  const spinner = output.spinner('正在获取店铺信息...');
 
   try {
     const merchant = await commerceApi.merchant.getProfile();
-    spinner.stop();
+    spinner.succeed('店铺信息获取成功');
 
     if (!merchant.slug) {
-      console.log(chalk.yellow('\n⚠️  店铺 slug 未设置\n'));
+      if (output.isJson()) {
+        output.error(new Error('店铺 slug 未设置'), 'SLUG_NOT_SET');
+      } else {
+        console.log(chalk.yellow('\n⚠️  店铺 slug 未设置\n'));
+      }
       return;
     }
 
     const storeUrl = `https://${merchant.slug}.optima.shop`;
 
-    // 只输出链接（方便脚本使用）
-    console.log(storeUrl);
-
     // 如果指定了 --open，在浏览器中打开
     if (shouldOpen) {
       try {
         await open(storeUrl);
-        console.log(chalk.gray('\n已在浏览器中打开店铺\n'));
       } catch (error) {
-        console.log(chalk.yellow(`\n⚠️  无法自动打开浏览器，请手动访问: ${storeUrl}\n`));
+        // 静默失败
+      }
+    }
+
+    if (output.isJson()) {
+      output.success({
+        url: storeUrl,
+        slug: merchant.slug,
+        opened: shouldOpen
+      });
+    } else {
+      // 只输出链接（方便脚本使用）
+      console.log(storeUrl);
+
+      if (shouldOpen) {
+        console.log(chalk.gray('\n已在浏览器中打开店铺\n'));
       }
     }
   } catch (error: any) {

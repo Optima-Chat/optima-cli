@@ -1,10 +1,10 @@
 import { Command } from 'commander';
 import inquirer from 'inquirer';
-import ora from 'ora';
 import chalk from 'chalk';
 import Table from 'cli-table3';
 import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
+import { output } from '../../utils/output.js';
 
 // 列出费率
 export const listRatesCommand = new Command('list-rates')
@@ -18,34 +18,50 @@ export const listRatesCommand = new Command('list-rates')
 
       const zoneId = options.zoneId;
 
-      const spinner = ora('正在获取费率...').start();
+      const spinner = output.spinner('正在获取费率...');
       const rates = await commerceApi.shippingFixed.listRates(zoneId);
       spinner.succeed('费率获取成功');
 
       if (rates.length === 0) {
-        console.log(chalk.yellow('\n该区域暂无费率配置\n'));
+        if (output.isJson()) {
+          output.success({
+            zone_id: zoneId,
+            rates: [],
+            total: 0
+          }, '该区域暂无费率配置');
+        } else {
+          console.log(chalk.yellow('\n该区域暂无费率配置\n'));
+        }
         return;
       }
 
-      const table = new Table({
-        head: [chalk.cyan('ID'), chalk.cyan('名称'), chalk.cyan('类型'), chalk.cyan('价格'), chalk.cyan('免运费阈值')],
-        colWidths: [38, 15, 15, 15, 18],
-      });
+      if (output.isJson()) {
+        output.success({
+          zone_id: zoneId,
+          rates: rates,
+          total: rates.length
+        });
+      } else {
+        const table = new Table({
+          head: [chalk.cyan('ID'), chalk.cyan('名称'), chalk.cyan('类型'), chalk.cyan('价格'), chalk.cyan('免运费阈值')],
+          colWidths: [38, 15, 15, 15, 18],
+        });
 
-      rates.forEach((rate: any) => {
-        const price = rate.base_cost !== undefined && rate.base_cost !== null
-          ? `${rate.currency} ${rate.base_cost}`
-          : '-';
-        const freeThreshold = rate.min_order_amount
-          ? `≥${rate.currency} ${rate.min_order_amount}`
-          : rate.min_quantity
-          ? `≥${rate.min_quantity} 件`
-          : '-';
+        rates.forEach((rate: any) => {
+          const price = rate.base_cost !== undefined && rate.base_cost !== null
+            ? `${rate.currency} ${rate.base_cost}`
+            : '-';
+          const freeThreshold = rate.min_order_amount
+            ? `≥${rate.currency} ${rate.min_order_amount}`
+            : rate.min_quantity
+            ? `≥${rate.min_quantity} 件`
+            : '-';
 
-        table.push([rate.id, rate.name || '-', rate.rate_type || '-', price, freeThreshold]);
-      });
+          table.push([rate.id, rate.name || '-', rate.rate_type || '-', price, freeThreshold]);
+        });
 
-      console.log('\n' + table.toString() + '\n');
+        console.log('\n' + table.toString() + '\n');
+      }
     } catch (error) {
       handleError(error);
     }
@@ -137,7 +153,7 @@ async function createRate(options: CreateRateOptions) {
     minAmount = minAmount || answers.minAmount;
   }
 
-  const spinner = ora('正在添加费率...').start();
+  const spinner = output.spinner('正在添加费率...');
 
   try {
     const data: any = {
@@ -153,13 +169,21 @@ async function createRate(options: CreateRateOptions) {
     const rate = await commerceApi.shippingFixed.createRate(zoneId, data);
     spinner.succeed('费率添加成功！');
 
-    console.log();
-    console.log(chalk.gray('费率 ID: ') + chalk.cyan(rate.id));
-    console.log(chalk.gray('名称: ') + name);
-    console.log(chalk.gray('类型: ') + data.rate_type);
-    console.log(chalk.gray('价格: ') + `${data.currency} ${data.base_cost}`);
-    if (minAmount) console.log(chalk.gray('免运费阈值: ') + `${data.currency} ${data.min_order_amount}`);
-    console.log();
+    if (output.isJson()) {
+      output.success({
+        zone_id: zoneId,
+        rate_id: rate.id,
+        rate: data
+      });
+    } else {
+      console.log();
+      console.log(chalk.gray('费率 ID: ') + chalk.cyan(rate.id));
+      console.log(chalk.gray('名称: ') + name);
+      console.log(chalk.gray('类型: ') + data.rate_type);
+      console.log(chalk.gray('价格: ') + `${data.currency} ${data.base_cost}`);
+      if (minAmount) console.log(chalk.gray('免运费阈值: ') + `${data.currency} ${data.min_order_amount}`);
+      console.log();
+    }
   } catch (error: any) {
     spinner.fail('费率添加失败');
 

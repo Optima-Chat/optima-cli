@@ -1,10 +1,10 @@
 import { Command } from 'commander';
 import inquirer from 'inquirer';
-import ora from 'ora';
 import chalk from 'chalk';
 import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 import { formatPrice } from '../../utils/format.js';
+import { output } from '../../utils/output.js';
 
 interface CalculateShippingOptions {
   country?: string;
@@ -123,22 +123,32 @@ async function calculateShipping(options: CalculateShippingOptions) {
     };
   }
 
-  const spinner = ora('正在计算运费...').start();
+  const spinner = output.spinner('正在计算运费...');
 
   try {
     const result = await commerceApi.shippingFixed.calculate(shippingData);
     spinner.succeed('运费计算成功！');
 
-    console.log();
-    console.log(chalk.gray('目的地: ') + chalk.cyan(shippingData.destination_country));
-    console.log(chalk.gray('重量: ') + chalk.cyan(`${shippingData.weight} kg`));
-
-    if (result.shipping_cost !== undefined && result.currency) {
-      console.log(chalk.gray('运费: ') + chalk.green(formatPrice(result.shipping_cost, result.currency)));
+    if (output.isJson()) {
+      output.success({
+        destination_country: shippingData.destination_country,
+        postal_code: shippingData.postal_code,
+        weight: shippingData.weight,
+        shipping_cost: result.shipping_cost,
+        currency: result.currency
+      });
     } else {
-      console.log(chalk.yellow('运费信息不可用'));
+      console.log();
+      console.log(chalk.gray('目的地: ') + chalk.cyan(shippingData.destination_country));
+      console.log(chalk.gray('重量: ') + chalk.cyan(`${shippingData.weight} kg`));
+
+      if (result.shipping_cost !== undefined && result.currency) {
+        console.log(chalk.gray('运费: ') + chalk.green(formatPrice(result.shipping_cost, result.currency)));
+      } else {
+        console.log(chalk.yellow('运费信息不可用'));
+      }
+      console.log();
     }
-    console.log();
   } catch (error: any) {
     spinner.fail('运费计算失败');
     throw createApiError(error);

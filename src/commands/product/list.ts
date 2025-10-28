@@ -1,9 +1,9 @@
 import { Command } from 'commander';
-import ora from 'ora';
 import chalk from 'chalk';
 import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError } from '../../utils/error.js';
 import { formatProductList } from '../../utils/format.js';
+import { output } from '../../utils/output.js';
 
 interface ListProductsOptions {
   limit?: string;
@@ -29,7 +29,7 @@ export const listProductsCommand = new Command('list')
   });
 
 async function listProducts(options: ListProductsOptions) {
-  const spinner = ora('正在获取商品列表...').start();
+  const spinner = output.spinner('正在获取商品列表...');
 
   try {
     const params: any = {
@@ -50,34 +50,56 @@ async function listProducts(options: ListProductsOptions) {
     }
 
     const result = await commerceApi.products.list(params);
-    spinner.stop();
+    spinner.succeed('商品列表获取成功');
 
     if (!result.products || result.products.length === 0) {
-      console.log(chalk.yellow('\n暂无商品\n'));
+      if (output.isJson()) {
+        output.success({
+          products: [],
+          total: 0,
+          page: Math.floor(params.offset / params.limit) + 1,
+          per_page: params.limit,
+          has_next: false
+        }, '暂无商品');
+      } else {
+        console.log(chalk.yellow('\n暂无商品\n'));
+      }
       return;
     }
 
-    // 显示商品列表
-    console.log();
-    console.log(formatProductList(result.products));
+    if (output.isJson()) {
+      // JSON 模式：输出结构化数据
+      output.success({
+        products: result.products,
+        total: result.total,
+        page: Math.floor(params.offset / params.limit) + 1,
+        per_page: params.limit,
+        offset: params.offset,
+        has_next: result.total > (params.offset + params.limit)
+      });
+    } else {
+      // Pretty 模式：保持原有表格输出
+      console.log();
+      console.log(formatProductList(result.products));
 
-    // 显示分页信息
-    console.log(
-      chalk.gray(
-        `\n显示 ${params.offset + 1}-${Math.min(params.offset + params.limit, result.total)} / 共 ${result.total} 件商品`
-      )
-    );
-
-    // 提示翻页
-    if (result.total > params.offset + params.limit) {
-      const nextOffset = params.offset + params.limit;
+      // 显示分页信息
       console.log(
-        chalk.gray(`下一页: `) +
-          chalk.cyan(`optima product list --limit ${params.limit} --offset ${nextOffset}`)
+        chalk.gray(
+          `\n显示 ${params.offset + 1}-${Math.min(params.offset + params.limit, result.total)} / 共 ${result.total} 件商品`
+        )
       );
-    }
 
-    console.log();
+      // 提示翻页
+      if (result.total > params.offset + params.limit) {
+        const nextOffset = params.offset + params.limit;
+        console.log(
+          chalk.gray(`下一页: `) +
+            chalk.cyan(`optima product list --limit ${params.limit} --offset ${nextOffset}`)
+        );
+      }
+
+      console.log();
+    }
   } catch (error: any) {
     spinner.fail('获取商品列表失败');
     throw createApiError(error);

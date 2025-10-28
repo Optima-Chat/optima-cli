@@ -1,6 +1,7 @@
 import { Command } from 'commander';
-import ora from 'ora';
+
 import chalk from 'chalk';
+import { output } from '../../../utils/output.js';
 import { commerceApi } from '../../../api/rest/commerce.js';
 import { handleError, ValidationError } from '../../../utils/error.js';
 import { validateLanguageCode, SUPPORTED_LANGUAGES } from '../../../utils/validation.js';
@@ -42,17 +43,26 @@ export const updateCategoryTranslationCommand = new Command('update')
       if (name) data.name = name;
       if (description) data.description = description;
 
-      const spinner = ora('正在更新翻译...').start();
+      const spinner = output.spinner('正在更新翻译...');
       const translation = await commerceApi.i18n.categoryTranslations.update(categoryId, languageCode, data);
       spinner.succeed('翻译更新成功！');
 
-      console.log();
-      console.log(chalk.gray('语言代码: ') + chalk.cyan(translation.language_code));
-      console.log(chalk.gray('名称: ') + chalk.white(translation.name));
-      if (translation.description) {
-        console.log(chalk.gray('描述: ') + chalk.white(translation.description));
+      if (output.isJson()) {
+        output.success({
+          category_id: categoryId,
+          language_code: languageCode,
+          updated_fields: Object.keys(data),
+          translation: translation
+        });
+      } else {
+        console.log();
+        console.log(chalk.gray('语言代码: ') + chalk.cyan(translation.language_code));
+        console.log(chalk.gray('名称: ') + chalk.white(translation.name));
+        if (translation.description) {
+          console.log(chalk.gray('描述: ') + chalk.white(translation.description));
+        }
+        console.log();
       }
-      console.log();
     } catch (error) {
       handleError(error);
     }

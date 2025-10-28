@@ -1,8 +1,8 @@
 import { Command } from 'commander';
-import ora from 'ora';
 import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 import { formatVariant } from '../../utils/format.js';
+import { output } from '../../utils/output.js';
 
 interface UpdateVariantOptions {
   productId?: string;
@@ -77,15 +77,24 @@ async function updateVariant(options: UpdateVariantOptions) {
     throw new ValidationError('请至少提供一个要更新的字段', 'options');
   }
 
-  const spinner = ora('正在更新变体...').start();
+  const spinner = output.spinner('正在更新变体...');
 
   try {
     const variant = await commerceApi.variants.update(productId, variantId, updateData);
     spinner.succeed('变体更新成功！');
 
-    // 显示变体详情
-    console.log();
-    console.log(formatVariant(variant));
+    if (output.isJson()) {
+      output.success({
+        product_id: productId,
+        variant_id: variantId,
+        updated_fields: Object.keys(updateData),
+        variant
+      });
+    } else {
+      // 显示变体详情
+      console.log();
+      console.log(formatVariant(variant));
+    }
   } catch (error: any) {
     spinner.fail('变体更新失败');
     throw createApiError(error);

@@ -1,8 +1,8 @@
 import { Command } from 'commander';
-import ora from 'ora';
 import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 import { formatCategory } from '../../utils/format.js';
+import { output } from '../../utils/output.js';
 
 interface UpdateCategoryOptions {
   id?: string;
@@ -53,15 +53,23 @@ async function updateCategory(options: UpdateCategoryOptions) {
     throw new ValidationError('请至少提供一个要更新的字段', 'options');
   }
 
-  const spinner = ora('正在更新分类...').start();
+  const spinner = output.spinner('正在更新分类...');
 
   try {
     const category = await commerceApi.categories.update(categoryId, updateData);
     spinner.succeed('分类更新成功！');
 
-    // 显示分类详情
-    console.log();
-    console.log(formatCategory(category));
+    if (output.isJson()) {
+      output.success({
+        category_id: category.id || category.category_id,
+        updated_fields: Object.keys(updateData),
+        category: category
+      });
+    } else {
+      // 显示分类详情
+      console.log();
+      console.log(formatCategory(category));
+    }
   } catch (error: any) {
     spinner.fail('分类更新失败');
     throw createApiError(error);

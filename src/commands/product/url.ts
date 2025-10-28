@@ -1,9 +1,9 @@
 import { Command } from 'commander';
-import ora from 'ora';
 import chalk from 'chalk';
 import open from 'open';
 import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
+import { output } from '../../utils/output.js';
 
 export const urlCommand = new Command('url')
   .description('获取产品链接')
@@ -26,7 +26,7 @@ async function getProductUrl(options: { id?: string; open?: boolean }) {
   const productId = options.id;
   const shouldOpen = options.open || false;
 
-  const spinner = ora('正在获取产品信息...').start();
+  const spinner = output.spinner('正在获取产品信息...');
 
   try {
     // 并行获取商品信息和商户信息
@@ -35,31 +35,52 @@ async function getProductUrl(options: { id?: string; open?: boolean }) {
       commerceApi.merchant.getProfile(),
     ]);
 
-    spinner.stop();
+    spinner.succeed('产品信息获取成功');
 
     // 检查是否有必要的字段
     if (!product.handle) {
-      console.log(chalk.yellow('\n⚠️  产品 handle 未设置\n'));
+      if (output.isJson()) {
+        output.error(new Error('产品 handle 未设置'), 'HANDLE_NOT_SET');
+      } else {
+        console.log(chalk.yellow('\n⚠️  产品 handle 未设置\n'));
+      }
       return;
     }
 
     if (!merchant.slug) {
-      console.log(chalk.yellow('\n⚠️  店铺 slug 未设置\n'));
+      if (output.isJson()) {
+        output.error(new Error('店铺 slug 未设置'), 'SLUG_NOT_SET');
+      } else {
+        console.log(chalk.yellow('\n⚠️  店铺 slug 未设置\n'));
+      }
       return;
     }
 
     const productUrl = `https://${merchant.slug}.optima.shop/products/${product.handle}`;
 
-    // 只输出链接（方便脚本使用）
-    console.log(productUrl);
-
     // 如果指定了 --open，在浏览器中打开
     if (shouldOpen) {
       try {
         await open(productUrl);
-        console.log(chalk.gray('\n已在浏览器中打开产品页面\n'));
       } catch (error) {
-        console.log(chalk.yellow(`\n⚠️  无法自动打开浏览器，请手动访问: ${productUrl}\n`));
+        // 静默失败
+      }
+    }
+
+    if (output.isJson()) {
+      output.success({
+        url: productUrl,
+        product_id: product.id || product.product_id,
+        handle: product.handle,
+        slug: merchant.slug,
+        opened: shouldOpen
+      });
+    } else {
+      // 只输出链接（方便脚本使用）
+      console.log(productUrl);
+
+      if (shouldOpen) {
+        console.log(chalk.gray('\n已在浏览器中打开产品页面\n'));
       }
     }
   } catch (error: any) {

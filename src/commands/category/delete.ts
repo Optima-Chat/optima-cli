@@ -1,9 +1,9 @@
 import { Command } from 'commander';
 import inquirer from 'inquirer';
-import ora from 'ora';
 import chalk from 'chalk';
 import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
+import { output } from '../../utils/output.js';
 
 interface DeleteCategoryOptions {
   id?: string;
@@ -49,12 +49,20 @@ async function deleteCategory(options: DeleteCategoryOptions) {
     }
   }
 
-  const spinner = ora('正在删除分类...').start();
+  const spinner = output.spinner('正在删除分类...');
 
   try {
     await commerceApi.categories.delete(categoryId);
     spinner.succeed('分类删除成功！');
-    console.log();
+
+    if (output.isJson()) {
+      output.success({
+        category_id: categoryId,
+        deleted: true
+      });
+    } else {
+      console.log();
+    }
   } catch (error: any) {
     spinner.fail('分类删除失败');
     throw createApiError(error);

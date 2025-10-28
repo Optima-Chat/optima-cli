@@ -1,9 +1,9 @@
 import { Command } from 'commander';
-import ora from 'ora';
 import chalk from 'chalk';
 import { existsSync } from 'fs';
 import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
+import { output } from '../../utils/output.js';
 
 export const uploadVideoCommand = new Command('video')
   .description('上传视频')
@@ -27,15 +27,22 @@ async function uploadVideo(options: { path?: string }) {
     throw new ValidationError(`视频文件不存在: ${videoPath}`, 'video-path');
   }
 
-  const spinner = ora('正在上传视频...').start();
+  const spinner = output.spinner('正在上传视频...');
 
   try {
     const result = await commerceApi.upload.uploadVideo(videoPath);
     spinner.succeed('视频上传成功！');
 
-    console.log();
-    console.log(chalk.gray('视频 URL: ') + chalk.cyan(result.url));
-    console.log();
+    if (output.isJson()) {
+      output.success({
+        url: result.url,
+        video_path: videoPath
+      });
+    } else {
+      console.log();
+      console.log(chalk.gray('视频 URL: ') + chalk.cyan(result.url));
+      console.log();
+    }
   } catch (error: any) {
     spinner.fail('视频上传失败');
     throw createApiError(error);

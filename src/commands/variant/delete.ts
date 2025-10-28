@@ -1,9 +1,9 @@
 import { Command } from 'commander';
 import inquirer from 'inquirer';
-import ora from 'ora';
 import chalk from 'chalk';
 import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
+import { output } from '../../utils/output.js';
 
 interface DeleteVariantOptions {
   productId?: string;
@@ -55,12 +55,21 @@ async function deleteVariant(options: DeleteVariantOptions) {
     }
   }
 
-  const spinner = ora('正在删除变体...').start();
+  const spinner = output.spinner('正在删除变体...');
 
   try {
     await commerceApi.variants.delete(productId, variantId);
     spinner.succeed('变体删除成功！');
-    console.log();
+
+    if (output.isJson()) {
+      output.success({
+        product_id: productId,
+        variant_id: variantId,
+        deleted: true
+      });
+    } else {
+      console.log();
+    }
   } catch (error: any) {
     spinner.fail('变体删除失败');
     throw createApiError(error);

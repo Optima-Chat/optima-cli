@@ -1,11 +1,11 @@
 import { Command } from 'commander';
 import inquirer from 'inquirer';
-import ora from 'ora';
 import chalk from 'chalk';
 import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, ValidationError, createApiError } from '../../utils/error.js';
 import { formatProduct } from '../../utils/format.js';
 import { existsSync } from 'fs';
+import { output } from '../../utils/output.js';
 
 interface CreateProductOptions {
   title?: string;
@@ -191,22 +191,25 @@ async function createProduct(options: CreateProductOptions) {
   }
 
   // 调用 API 创建商品
-  const spinner = ora('正在创建商品...').start();
+  const spinner = output.spinner('正在创建商品...');
 
   try {
     const product = await commerceApi.products.create(productData);
     spinner.succeed('商品创建成功！');
+
+    let imageCount = 0;
 
     // 如果有 media IDs，直接关联
     if (options.mediaIds) {
       const mediaIds = options.mediaIds.split(',').map((id) => id.trim());
 
       if (mediaIds.length > 0) {
-        const linkSpinner = ora(`正在关联 ${mediaIds.length} 张图片...`).start();
+        const linkSpinner = output.spinner(`正在关联 ${mediaIds.length} 张图片...`);
 
         try {
           await commerceApi.products.addImagesByMediaIds(product.id || product.product_id!, mediaIds);
           linkSpinner.succeed(`图片关联成功！(${mediaIds.length} 张)`);
+          imageCount = mediaIds.length;
         } catch (error: any) {
           linkSpinner.fail('图片关联失败');
           throw createApiError(error);
@@ -229,11 +232,12 @@ async function createProduct(options: CreateProductOptions) {
       const validPaths = imagePaths.filter((p) => existsSync(p));
 
       if (validPaths.length > 0) {
-        const uploadSpinner = ora(`正在上传 ${validPaths.length} 张图片...`).start();
+        const uploadSpinner = output.spinner(`正在上传 ${validPaths.length} 张图片...`);
 
         try {
           await commerceApi.products.addImages(product.id || product.product_id!, validPaths);
           uploadSpinner.succeed(`图片上传成功！(${validPaths.length} 张)`);
+          imageCount += validPaths.length;
         } catch (error: any) {
           uploadSpinner.fail('图片上传失败');
           throw createApiError(error);
@@ -241,20 +245,16 @@ async function createProduct(options: CreateProductOptions) {
       }
     }
 
-    // 显示商品详情
-    console.log();
-    console.log(formatProduct(product));
-
-    // 显示商品链接
+    // 获取商品URL
+    let productUrl: string | undefined;
     if (product.handle) {
-      const merchantSpinner = ora('获取店铺链接...').start();
+      const merchantSpinner = output.spinner('获取店铺链接...');
       try {
         const merchant = await commerceApi.merchant.getProfile();
         merchantSpinner.stop();
 
         if (merchant.slug) {
-          const productUrl = `https://${merchant.slug}.optima.shop/products/${product.handle}`;
-          console.log(chalk.gray('产品链接: ') + chalk.cyan.underline(productUrl));
+          productUrl = `https://${merchant.slug}.optima.shop/products/${product.handle}`;
         }
       } catch (err) {
         merchantSpinner.stop();
@@ -262,7 +262,33 @@ async function createProduct(options: CreateProductOptions) {
       }
     }
 
-    console.log();
+    if (output.isJson()) {
+      // JSON 模式：输出结构化数据
+      output.success({
+        product_id: product.id || product.product_id,
+        name: product.name,
+        handle: product.handle,
+        price: product.price,
+        currency: product.currency,
+        stock: product.stock,
+        sku: product.sku,
+        status: product.status,
+        images_uploaded: imageCount,
+        product_url: productUrl,
+        created_at: product.created_at
+      });
+    } else {
+      // Pretty 模式：保持原有格式化输出
+      console.log();
+      console.log(formatProduct(product));
+
+      // 显示商品链接
+      if (productUrl) {
+        console.log(chalk.gray('产品链接: ') + chalk.cyan.underline(productUrl));
+      }
+
+      console.log();
+    }
   } catch (error: any) {
     spinner.fail('商品创建失败');
     throw createApiError(error);

@@ -1,9 +1,9 @@
 import { Command } from 'commander';
 import inquirer from 'inquirer';
-import ora from 'ora';
 import chalk from 'chalk';
 import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
+import { output } from '../../utils/output.js';
 
 interface DeleteOptions {
   id?: string;
@@ -45,15 +45,22 @@ async function deleteZone(options: DeleteOptions) {
     }
   }
 
-  const spinner = ora('正在删除运费区域...').start();
+  const spinner = output.spinner('正在删除运费区域...');
 
   try {
     await commerceApi.shippingFixed.deleteZone(zoneId);
     spinner.succeed('运费区域删除成功！');
 
-    console.log();
-    console.log(chalk.gray('已删除区域: ') + chalk.cyan(zoneId));
-    console.log();
+    if (output.isJson()) {
+      output.success({
+        zone_id: zoneId,
+        deleted: true
+      });
+    } else {
+      console.log();
+      console.log(chalk.gray('已删除区域: ') + chalk.cyan(zoneId));
+      console.log();
+    }
   } catch (error: any) {
     spinner.fail('运费区域删除失败');
     throw createApiError(error);

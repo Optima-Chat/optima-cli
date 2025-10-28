@@ -1,9 +1,9 @@
 import { Command } from 'commander';
 import inquirer from 'inquirer';
-import ora from 'ora';
 import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 import { formatVariant } from '../../utils/format.js';
+import { output } from '../../utils/output.js';
 
 interface CreateVariantOptions {
   productId?: string;
@@ -82,7 +82,7 @@ async function createVariant(options: CreateVariantOptions) {
     attributes = answers.attributes || attributes;
   }
 
-  const spinner = ora('正在创建变体...').start();
+  const spinner = output.spinner('正在创建变体...');
 
   try {
     const variantData: any = {};
@@ -118,9 +118,16 @@ async function createVariant(options: CreateVariantOptions) {
     const variant = await commerceApi.variants.create(productId, variantData);
     spinner.succeed('变体创建成功！');
 
-    // 显示变体详情
-    console.log();
-    console.log(formatVariant(variant));
+    if (output.isJson()) {
+      output.success({
+        product_id: productId,
+        variant
+      });
+    } else {
+      // 显示变体详情
+      console.log();
+      console.log(formatVariant(variant));
+    }
   } catch (error: any) {
     spinner.fail('变体创建失败');
     throw createApiError(error);

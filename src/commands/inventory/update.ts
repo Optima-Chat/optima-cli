@@ -1,9 +1,9 @@
 import { Command } from 'commander';
 import inquirer from 'inquirer';
-import ora from 'ora';
 import chalk from 'chalk';
 import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
+import { output } from '../../utils/output.js';
 
 interface UpdateStockOptions {
   id?: string;
@@ -61,16 +61,26 @@ async function updateStock(options: UpdateStockOptions) {
     }
   }
 
-  const spinner = ora('正在更新库存...').start();
+  const spinner = output.spinner('正在更新库存...');
 
   try {
     await commerceApi.inventory.updateStock(productId, quantity, 'Manual adjustment via CLI');
     spinner.succeed('库存更新成功！');
 
-    console.log();
-    console.log(chalk.gray('商品 ID: ') + chalk.cyan(productId));
-    console.log(chalk.gray('新库存数量: ') + chalk.green(quantity.toString()));
-    console.log();
+    if (output.isJson()) {
+      // JSON 模式：输出结构化数据
+      output.success({
+        product_id: productId,
+        quantity,
+        note: 'Manual adjustment via CLI'
+      });
+    } else {
+      // Pretty 模式：保持原有格式化输出
+      console.log();
+      console.log(chalk.gray('商品 ID: ') + chalk.cyan(productId));
+      console.log(chalk.gray('新库存数量: ') + chalk.green(quantity.toString()));
+      console.log();
+    }
   } catch (error: any) {
     spinner.fail('库存更新失败');
     throw createApiError(error);
