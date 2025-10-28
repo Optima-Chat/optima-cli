@@ -3,9 +3,10 @@ import chalk from 'chalk';
 import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError } from '../../utils/error.js';
 import { output } from '../../utils/output.js';
+import { addEnhancedHelp } from '../../utils/helpText.js';
 
-export const infoCommand = new Command('info')
-  .description('获取商户信息')
+const cmd = new Command('info')
+  .description('Get current merchant account information and settings')
   .action(async () => {
     try {
       await getMerchantInfo();
@@ -13,6 +14,53 @@ export const infoCommand = new Command('info')
       handleError(error);
     }
   });
+
+addEnhancedHelp(cmd, {
+  examples: [
+    '# Get merchant info (default JSON format)',
+    '$ optima merchant info',
+    '',
+    '# Get merchant info in human-readable format',
+    '$ optima merchant info --pretty',
+  ],
+  output: {
+    example: JSON.stringify(
+      {
+        success: true,
+        data: {
+          merchant: {
+            id: 'uuid',
+            name: 'Store name',
+            slug: 'store-slug',
+            email: 'contact@example.com',
+            default_currency: 'USD',
+            description: 'Store description',
+            logo_url: 'https://...',
+            banner_url: 'https://...',
+            origin_country_alpha2: 'US',
+            origin_city: 'New York',
+            created_at: 'timestamp',
+            updated_at: 'timestamp',
+          },
+        },
+      },
+      null,
+      2
+    ),
+  },
+  relatedCommands: [
+    { command: 'merchant update', description: 'Update merchant information' },
+    { command: 'merchant url', description: 'Get store frontend URL' },
+    { command: 'auth whoami', description: 'View authentication status' },
+  ],
+  notes: [
+    'Requires authentication (run \'optima auth login\' first)',
+    'Returns information for currently logged-in merchant',
+    'slug field is used to construct store URL: https://{slug}.optima.shop',
+  ],
+});
+
+export const infoCommand = cmd;
 
 async function getMerchantInfo() {
   const spinner = output.spinner('正在获取商户信息...');

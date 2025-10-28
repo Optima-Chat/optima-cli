@@ -4,6 +4,7 @@ import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError } from '../../utils/error.js';
 import { formatProductList } from '../../utils/format.js';
 import { output } from '../../utils/output.js';
+import { addEnhancedHelp } from '../../utils/helpText.js';
 
 interface ListProductsOptions {
   limit?: string;
@@ -13,13 +14,13 @@ interface ListProductsOptions {
   search?: string;
 }
 
-export const listProductsCommand = new Command('list')
-  .description('商品列表')
-  .option('-l, --limit <limit>', '每页数量', '20')
-  .option('-o, --offset <offset>', '偏移量', '0')
-  .option('-s, --status <status>', '商品状态 (active/inactive/draft/archived)')
-  .option('-c, --category-id <categoryId>', '分类 ID')
-  .option('--search <keyword>', '搜索关键词')
+const cmd = new Command('list')
+  .description('List products with pagination and filtering options')
+  .option('-l, --limit <number>', 'Products per page (default: 20)', '20')
+  .option('-o, --offset <number>', 'Offset for pagination (default: 0)', '0')
+  .option('-s, --status <string>', 'Filter by status: active|inactive|draft|archived')
+  .option('-c, --category-id <uuid>', 'Filter by category ID')
+  .option('--search <keyword>', 'Search by keyword in title/description')
   .action(async (options: ListProductsOptions) => {
     try {
       await listProducts(options);
@@ -27,6 +28,71 @@ export const listProductsCommand = new Command('list')
       handleError(error);
     }
   });
+
+addEnhancedHelp(cmd, {
+  examples: [
+    '# List first 20 products (default)',
+    '$ optima product list',
+    '',
+    '# List with custom limit',
+    '$ optima product list --limit 50',
+    '',
+    '# List second page (offset pagination)',
+    '$ optima product list --limit 20 --offset 20',
+    '',
+    '# Filter by status',
+    '$ optima product list --status active',
+    '',
+    '# Filter by category',
+    '$ optima product list --category-id abc-123-def',
+    '',
+    '# Search products',
+    '$ optima product list --search "ceramic"',
+    '',
+    '# Combine filters with JSON output',
+    '$ optima product list --status active --limit 10 --json',
+  ],
+  output: {
+    example: JSON.stringify(
+      {
+        success: true,
+        data: {
+          products: [
+            {
+              product_id: 'uuid',
+              name: 'Product name',
+              price: '29.99',
+              currency: 'USD',
+              status: 'active',
+              stock_quantity: 100,
+            },
+          ],
+          total: 42,
+          page: 1,
+          per_page: 20,
+          offset: 0,
+          has_next: true,
+        },
+      },
+      null,
+      2
+    ),
+  },
+  relatedCommands: [
+    { command: 'product get', description: 'View single product details' },
+    { command: 'product create', description: 'Create a new product' },
+    { command: 'product update', description: 'Update existing product' },
+    { command: 'category list', description: 'List categories for filtering' },
+  ],
+  notes: [
+    'Default pagination: limit=20, offset=0',
+    'Use offset for page navigation: page 2 = offset 20, page 3 = offset 40',
+    'Status values: active (live), inactive (hidden), draft (unpublished), archived',
+    'Search looks in both title and description fields',
+  ],
+});
+
+export const listProductsCommand = cmd;
 
 async function listProducts(options: ListProductsOptions) {
   const spinner = output.spinner('正在获取商品列表...');

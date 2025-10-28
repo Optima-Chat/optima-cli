@@ -6,6 +6,7 @@ import { handleError, ValidationError, createApiError } from '../../utils/error.
 import { formatProduct } from '../../utils/format.js';
 import { existsSync } from 'fs';
 import { output } from '../../utils/output.js';
+import { addEnhancedHelp } from '../../utils/helpText.js';
 
 interface CreateProductOptions {
   title?: string;
@@ -20,18 +21,18 @@ interface CreateProductOptions {
   mediaIds?: string;
 }
 
-export const createProductCommand = new Command('create')
-  .description('创建商品')
-  .option('--title <title>', '商品名称')
-  .option('--price <price>', '商品价格')
-  .option('--description <description>', '商品描述')
-  .option('--stock <stock>', '库存数量', '0')
-  .option('--sku <sku>', 'SKU 编码')
-  .option('--currency <currency>', '货币单位', 'USD')
-  .option('--status <status>', '商品状态 (active/inactive/draft)', 'active')
-  .option('--category-id <categoryId>', '分类 ID')
-  .option('--images <paths>', '图片路径（逗号分隔，本地文件）')
-  .option('--media-ids <ids>', 'Media ID（逗号分隔，从 upload 命令获取）')
+const cmd = new Command('create')
+  .description('Create a new product with title, price, and optional details')
+  .option('--title <string>', 'Product name (required)')
+  .option('--price <number>', 'Product price (required)')
+  .option('--description <string>', 'Product description')
+  .option('--stock <number>', 'Stock quantity (default: 0)', '0')
+  .option('--sku <string>', 'SKU code')
+  .option('--currency <string>', 'Currency code (default: USD)', 'USD')
+  .option('--status <string>', 'Status: active|inactive|draft (default: active)', 'active')
+  .option('--category-id <uuid>', 'Category ID')
+  .option('--images <paths>', 'Local image paths (comma-separated)')
+  .option('--media-ids <uuids>', 'Media IDs from upload command (comma-separated)')
   .action(async (options: CreateProductOptions) => {
     try {
       await createProduct(options);
@@ -39,6 +40,64 @@ export const createProductCommand = new Command('create')
       handleError(error);
     }
   });
+
+addEnhancedHelp(cmd, {
+  examples: [
+    '# Create a basic product',
+    '$ optima product create --title "Ceramic Mug" --price 29.99',
+    '',
+    '# Create with full details',
+    '$ optima product create \\',
+    '  --title "Ceramic Mug" \\',
+    '  --price 29.99 \\',
+    '  --description "Handmade ceramic mug" \\',
+    '  --stock 100 \\',
+    '  --sku MUG-001',
+    '',
+    '# Create with images (recommended workflow)',
+    '$ optima upload image --path mug.jpg  # Get media_id first',
+    '$ optima product create \\',
+    '  --title "Ceramic Mug" \\',
+    '  --price 29.99 \\',
+    '  --media-ids "abc-123-def"',
+    '',
+    '# Create with JSON output for scripting',
+    '$ optima product create --title "Mug" --price 29.99 --json',
+  ],
+  output: {
+    example: JSON.stringify(
+      {
+        success: true,
+        data: {
+          product_id: 'uuid',
+          name: 'Product name',
+          handle: 'url-slug',
+          price: '29.99',
+          currency: 'USD',
+          status: 'active',
+          product_url: 'https://...',
+          created_at: 'timestamp',
+        },
+      },
+      null,
+      2
+    ),
+  },
+  relatedCommands: [
+    { command: 'upload image', description: 'Upload product images first' },
+    { command: 'product list', description: 'View created products' },
+    { command: 'product update', description: 'Modify product details' },
+    { command: 'category create', description: 'Create category before assigning' },
+  ],
+  notes: [
+    'title and price are required (interactive prompt if not provided)',
+    'Upload images first with \'optima upload image\' to get media IDs',
+    'Use --media-ids for uploaded images, not --images for local paths',
+    'Default output is JSON, use --pretty for human-readable format',
+  ],
+});
+
+export const createProductCommand = cmd;
 
 async function createProduct(options: CreateProductOptions) {
   let productData: any = {};
