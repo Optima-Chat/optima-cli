@@ -422,9 +422,9 @@ optima shipping-zone add-rate --zone-id zone_123 \
 ### 📤 文件上传
 
 ```bash
-optima upload image <path>    # 上传图片
-optima upload video <path>    # 上传视频
-optima upload file <path>     # 上传文件
+optima upload image --path <path>    # 上传图片
+optima upload video --path <path>    # 上传视频
+optima upload file --path <path>     # 上传文件
 ```
 
 ### 💬 对话管理

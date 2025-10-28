@@ -31,7 +31,7 @@
 - 不确定时先用 `--help` 检查可用参数
 
 **图片上传最佳实践**
-1. 先上传图片：`optima upload image ./photo.jpg`
+1. 先上传图片：`optima upload image --path ./photo.jpg`
 2. 从响应获取 media_id
 3. 关联到商品：`optima product add-images --id <product-id> --media-id <media-id>`
 4. 这样避免重复上传，最可靠
@@ -63,7 +63,7 @@ optima product delete --id prod_123 -y
 optima product url --id prod_123 --open
 
 # 图片上传（推荐流程）
-optima upload image ./photo.jpg
+optima upload image --path ./photo.jpg
 optima product add-images --id prod_123 --media-id media_456
 optima product add-images --id prod_123 --path ./photo1.jpg ./photo2.jpg
 optima product add-images --id prod_123 --url https://example.com/image.jpg
@@ -112,15 +112,15 @@ optima shipping-zone add-rate --zone-id zone_123 --price 20 --currency USD
 optima shipping-zone delete --id zone_456 -y
 
 # 文件上传
-optima upload image ./product.jpg
-optima upload video ./demo.mp4
-optima upload file ./catalog.pdf
+optima upload image --path ./product.jpg
+optima upload video --path ./demo.mp4
+optima upload file --path ./catalog.pdf
 
 # 对话管理
 optima conversation list
 optima conversation get --id conv_123
 optima conversation create --customer-id cust_456 --email "customer@example.com" --name "客户"
-optima conversation send --id conv_123 --message "您好，有什么可以帮您？"
+optima conversation send --id conv_123 --content "您好，有什么可以帮您？"
 optima conversation close --id conv_123
 optima conversation mark-read --id conv_123
 
