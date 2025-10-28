@@ -192,13 +192,13 @@ docker run \
 ### 📦 商品管理
 
 ```bash
-optima product create                           # 创建商品
-optima product list [--limit 20]                # 商品列表
-optima product get <id>                         # 商品详情
-optima product update <id>                      # 更新商品
-optima product delete <id> [-y]                 # 删除商品
-optima product add-images <id> --path <...>     # 添加本地图片
-optima product add-images <id> --url <...>      # 添加图片URL
+optima product create                                 # 创建商品
+optima product list [--limit 20]                      # 商品列表
+optima product get --id <id>                          # 商品详情
+optima product update --id <id>                       # 更新商品
+optima product delete --id <id> [-y]                  # 删除商品
+optima product add-images --id <id> --path <...>     # 添加本地图片
+optima product add-images --id <id> --url <...>      # 添加图片URL
 ```
 
 **示例**：
@@ -213,18 +213,18 @@ optima product create \
   --description "精美手工制作"
 
 # 更新商品
-optima product update prod_123 \
+optima product update --id prod_123 \
   --price 99 \
   --stock 50
 
 # 添加本地图片
-optima product add-images prod_123 --path ./img1.jpg ./img2.jpg
+optima product add-images --id prod_123 --path ./img1.jpg ./img2.jpg
 
 # 添加图片 URL（避免重复上传）
-optima product add-images prod_123 --url https://example.com/image.jpg
+optima product add-images --id prod_123 --url https://example.com/image.jpg
 
 # 混合使用
-optima product add-images prod_123 --path ./local.jpg --url https://example.com/remote.jpg
+optima product add-images --id prod_123 --path ./local.jpg --url https://example.com/remote.jpg
 ```
 
 ### 🏷 分类管理
@@ -232,27 +232,27 @@ optima product add-images prod_123 --path ./local.jpg --url https://example.com/
 ```bash
 optima category list                    # 分类列表
 optima category create                  # 创建分类
-optima category get <id>                # 分类详情
-optima category update <id>             # 更新分类
-optima category delete <id> [-y]        # 删除分类
+optima category get --id <id>           # 分类详情
+optima category update --id <id>        # 更新分类
+optima category delete --id <id> [-y]   # 删除分类
 ```
 
 ### 🎨 商品变体（SKU/规格）
 
 ```bash
-optima variant list <product-id>                       # 变体列表
-optima variant create <product-id>                     # 创建变体
-optima variant get <product-id> <id>                   # 变体详情
-optima variant update <product-id> <id>                # 更新变体
-optima variant delete <product-id> <id> [-y]           # 删除变体
-optima variant add-images <product-id> <id> --path <...>  # 添加变体图片
+optima variant list --product-id <product-id>                              # 变体列表
+optima variant create --product-id <product-id>                            # 创建变体
+optima variant get --product-id <product-id> --id <id>                     # 变体详情
+optima variant update --product-id <product-id> --id <id>                  # 更新变体
+optima variant delete --product-id <product-id> --id <id> [-y]             # 删除变体
+optima variant add-images --product-id <product-id> --id <id> --path <...> # 添加变体图片
 ```
 
 **示例**：
 
 ```bash
 # 创建变体
-optima variant create prod_123 \
+optima variant create --product-id prod_123 \
   --sku "CUP-S-WHITE" \
   --price 89 \
   --stock 10 \
@@ -263,23 +263,23 @@ optima variant create prod_123 \
 
 ```bash
 optima order list [--status pending]        # 订单列表
-optima order get <id>                        # 订单详情
-optima order ship <id>                       # 订单发货
-optima order complete <id>                   # 完成订单
-optima order cancel <id>                     # 取消订单
-optima order mark-delivered <id>             # 标记已送达
+optima order get --id <id>                   # 订单详情
+optima order ship --id <id>                  # 订单发货
+optima order complete --id <id>              # 完成订单
+optima order cancel --id <id>                # 取消订单
+optima order mark-delivered --id <id>        # 标记已送达
 ```
 
 **示例**：
 
 ```bash
 # 发货
-optima order ship order_123 \
+optima order ship --id order_123 \
   --tracking DHL123456 \
   --carrier DHL
 
 # 取消订单
-optima order cancel order_456 \
+optima order cancel --id order_456 \
   --reason "客户要求取消" \
   --yes
 ```
@@ -287,15 +287,15 @@ optima order cancel order_456 \
 ### 💰 退款管理
 
 ```bash
-optima refund create <order-id>    # 创建退款
-optima refund get <id>             # 退款详情
+optima refund create --order-id <order-id>    # 创建退款
+optima refund get --id <id>                   # 退款详情
 ```
 
 **示例**：
 
 ```bash
 # 创建退款
-optima refund create order_123 \
+optima refund create --order-id order_123 \
   --amount 50 \
   --reason requested_by_customer
 ```
@@ -304,9 +304,9 @@ optima refund create order_123 \
 
 ```bash
 optima inventory low-stock [--threshold 5]    # 低库存商品
-optima inventory update <id>                  # 更新库存
-optima inventory history <id>                 # 库存历史
-optima inventory reserve <id>                 # 预留库存
+optima inventory update --id <id>             # 更新库存
+optima inventory history --id <id>            # 库存历史
+optima inventory reserve --id <id>            # 预留库存
 ```
 
 **示例**：
@@ -316,7 +316,7 @@ optima inventory reserve <id>                 # 预留库存
 optima inventory low-stock --threshold 10
 
 # 更新库存
-optima inventory update prod_123 \
+optima inventory update --id prod_123 \
   --quantity 50 \
   --reason "补货"
 ```
@@ -378,9 +378,9 @@ optima merchant setup \
 ### 🚚 物流管理
 
 ```bash
-optima shipping calculate              # 计算运费
-optima shipping history <order-id>     # 物流历史
-optima shipping update-status <id>     # 更新物流状态
+optima shipping calculate                     # 计算运费
+optima shipping history --order-id <order-id> # 物流历史
+optima shipping update-status --id <id>       # 更新物流状态
 ```
 
 **示例**：
@@ -396,11 +396,11 @@ optima shipping calculate \
 ### 🌍 运费区域管理
 
 ```bash
-optima shipping-zone list                   # 运费区域列表
-optima shipping-zone create                 # 创建运费区域
-optima shipping-zone delete <id> [-y]       # 删除运费区域
-optima shipping-zone list-rates <zone-id>   # 查看区域费率
-optima shipping-zone add-rate <zone-id>     # 添加运费费率
+optima shipping-zone list                            # 运费区域列表
+optima shipping-zone create                          # 创建运费区域
+optima shipping-zone delete --id <id> [-y]           # 删除运费区域
+optima shipping-zone list-rates --zone-id <zone-id>  # 查看区域费率
+optima shipping-zone add-rate --zone-id <zone-id>    # 添加运费费率
 ```
 
 **示例**：
@@ -412,7 +412,7 @@ optima shipping-zone create \
   --countries US,CA,MX
 
 # 添加费率
-optima shipping-zone add-rate zone_123 \
+optima shipping-zone add-rate --zone-id zone_123 \
   --price 15 \
   --currency USD \
   --min-weight 0 \
@@ -431,12 +431,12 @@ optima upload file <path>     # 上传文件
 
 ```bash
 optima conversation list                       # 对话列表
-optima conversation get <id>                   # 对话详情
+optima conversation get --id <id>              # 对话详情
 optima conversation create                     # 创建对话
-optima conversation close <id>                 # 关闭对话
-optima conversation messages <id>              # 查看消息
-optima conversation send <id>                  # 发送消息
-optima conversation mark-read <id>             # 标记已读
+optima conversation close --id <id>            # 关闭对话
+optima conversation messages --id <id>         # 查看消息
+optima conversation send --id <id>             # 发送消息
+optima conversation mark-read --id <id>        # 标记已读
 ```
 
 ### 💳 财务管理
@@ -455,25 +455,25 @@ Optima CLI 内置完整的多语言翻译管理系统：
 optima i18n languages [--all]    # 查看支持的语言
 
 # 商品翻译
-optima i18n product list <product-id>
-optima i18n product get <product-id> <lang>
-optima i18n product create <product-id>
-optima i18n product update <product-id> <lang>
-optima i18n product delete <product-id> <lang> [-y]
+optima i18n product list --product-id <product-id>
+optima i18n product get --product-id <product-id> --lang <lang>
+optima i18n product create --product-id <product-id>
+optima i18n product update --product-id <product-id> --lang <lang>
+optima i18n product delete --product-id <product-id> --lang <lang> [-y]
 
 # 分类翻译
-optima i18n category list <category-id>
-optima i18n category get <category-id> <lang>
-optima i18n category create <category-id>
-optima i18n category update <category-id> <lang>
-optima i18n category delete <category-id> <lang> [-y]
+optima i18n category list --category-id <category-id>
+optima i18n category get --category-id <category-id> --lang <lang>
+optima i18n category create --category-id <category-id>
+optima i18n category update --category-id <category-id> --lang <lang>
+optima i18n category delete --category-id <category-id> --lang <lang> [-y]
 
 # 商户翻译
 optima i18n merchant list
-optima i18n merchant get <lang>
+optima i18n merchant get --lang <lang>
 optima i18n merchant create
-optima i18n merchant update <lang>
-optima i18n merchant delete <lang> [-y]
+optima i18n merchant update --lang <lang>
+optima i18n merchant delete --lang <lang> [-y]
 ```
 
 **示例**：
@@ -483,7 +483,7 @@ optima i18n merchant delete <lang> [-y]
 optima i18n languages
 
 # 为商品添加中文翻译
-optima i18n product create prod_123 \
+optima i18n product create --product-id prod_123 \
   --lang zh-CN \
   --name "手工陶瓷杯" \
   --description "精美的手工制作陶瓷杯" \
