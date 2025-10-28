@@ -1,7 +1,8 @@
 import { Command } from 'commander';
 import inquirer from 'inquirer';
-import ora from 'ora';
+
 import chalk from 'chalk';
+import { output } from '../../../utils/output.js';
 import { commerceApi } from '../../../api/rest/commerce.js';
 import { handleError, ValidationError } from '../../../utils/error.js';
 import { validateLanguageCode, SUPPORTED_LANGUAGES } from '../../../utils/validation.js';
@@ -36,9 +37,16 @@ export const deleteMerchantTranslationCommand = new Command('delete')
         }
       }
 
-      const spinner = ora('正在删除翻译...').start();
+      const spinner = output.spinner('正在删除翻译...');
       await commerceApi.i18n.merchantTranslations.delete(languageCode);
       spinner.succeed(`翻译 ${languageCode} 已删除`);
+
+      if (output.isJson()) {
+        output.success({
+          language_code: languageCode,
+          deleted: true
+        });
+      }
     } catch (error) {
       handleError(error);
     }
