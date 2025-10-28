@@ -1,9 +1,9 @@
 import { Command } from 'commander';
 import inquirer from 'inquirer';
-import ora from 'ora';
 import chalk from 'chalk';
 import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
+import { output } from '../../utils/output.js';
 
 interface CreateOptions {
   customerId?: string;
@@ -79,7 +79,7 @@ async function createConversation(options: CreateOptions) {
     message = answers.message || undefined;
   }
 
-  const spinner = ora('正在创建对话...').start();
+  const spinner = output.spinner('正在创建对话...');
 
   try {
     const data: any = {
@@ -101,13 +101,24 @@ async function createConversation(options: CreateOptions) {
     const conversation = await commerceApi.conversations.create(data);
     spinner.succeed('对话创建成功！');
 
-    console.log();
-    console.log(chalk.gray('对话 ID: ') + chalk.cyan(conversation.id));
-    console.log(chalk.gray('客户 ID: ') + chalk.cyan(customerId));
-    if (email) console.log(chalk.gray('客户邮箱: ') + email);
-    if (phone) console.log(chalk.gray('客户电话: ') + phone);
-    if (name) console.log(chalk.gray('客户姓名: ') + name);
-    console.log();
+    if (output.isJson()) {
+      output.success({
+        conversation_id: conversation.id,
+        customer_id: customerId,
+        ...(email && { customer_email: email }),
+        ...(phone && { customer_phone: phone }),
+        ...(name && { customer_name: name }),
+        ...(message && { initial_message: message })
+      });
+    } else {
+      console.log();
+      console.log(chalk.gray('对话 ID: ') + chalk.cyan(conversation.id));
+      console.log(chalk.gray('客户 ID: ') + chalk.cyan(customerId));
+      if (email) console.log(chalk.gray('客户邮箱: ') + email);
+      if (phone) console.log(chalk.gray('客户电话: ') + phone);
+      if (name) console.log(chalk.gray('客户姓名: ') + name);
+      console.log();
+    }
   } catch (error: any) {
     spinner.fail('对话创建失败');
     throw createApiError(error);

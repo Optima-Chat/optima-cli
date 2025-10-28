@@ -1,9 +1,9 @@
 import { Command } from 'commander';
 import inquirer from 'inquirer';
-import ora from 'ora';
 import chalk from 'chalk';
 import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
+import { output } from '../../utils/output.js';
 
 interface SendOptions {
   id?: string;
@@ -48,7 +48,7 @@ async function sendMessage(options: SendOptions) {
     throw new ValidationError('消息内容不能为空', 'content');
   }
 
-  const spinner = ora('正在发送消息...').start();
+  const spinner = output.spinner('正在发送消息...');
 
   try {
     const message = await commerceApi.conversations.sendMessage(conversationId, {
@@ -57,10 +57,18 @@ async function sendMessage(options: SendOptions) {
     });
     spinner.succeed('消息发送成功！');
 
-    console.log();
-    console.log(chalk.gray('消息 ID: ') + chalk.cyan(message.id));
-    console.log(chalk.gray('内容: ') + content);
-    console.log();
+    if (output.isJson()) {
+      output.success({
+        conversation_id: conversationId,
+        message_id: message.id,
+        content: content
+      });
+    } else {
+      console.log();
+      console.log(chalk.gray('消息 ID: ') + chalk.cyan(message.id));
+      console.log(chalk.gray('内容: ') + content);
+      console.log();
+    }
   } catch (error: any) {
     spinner.fail('消息发送失败');
     throw createApiError(error);

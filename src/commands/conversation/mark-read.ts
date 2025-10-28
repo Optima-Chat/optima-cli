@@ -1,8 +1,8 @@
 import { Command } from 'commander';
-import ora from 'ora';
 import chalk from 'chalk';
 import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
+import { output } from '../../utils/output.js';
 
 export const markReadCommand = new Command('mark-read')
   .description('标记消息已读')
@@ -22,15 +22,22 @@ async function markRead(options: { id?: string }) {
 
   const conversationId = options.id;
 
-  const spinner = ora('正在标记已读...').start();
+  const spinner = output.spinner('正在标记已读...');
 
   try {
     await commerceApi.conversations.markRead(conversationId);
     spinner.succeed('消息已标记为已读！');
 
-    console.log();
-    console.log(chalk.gray('对话 ID: ') + chalk.cyan(conversationId));
-    console.log();
+    if (output.isJson()) {
+      output.success({
+        conversation_id: conversationId,
+        marked_read: true
+      });
+    } else {
+      console.log();
+      console.log(chalk.gray('对话 ID: ') + chalk.cyan(conversationId));
+      console.log();
+    }
   } catch (error: any) {
     spinner.fail('标记已读失败');
     throw createApiError(error);
