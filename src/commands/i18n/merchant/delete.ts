@@ -1,3 +1,4 @@
+import { addEnhancedHelp } from '../../../utils/helpText.js';
 import { Command } from 'commander';
 import inquirer from 'inquirer';
 
@@ -7,7 +8,7 @@ import { commerceApi } from '../../../api/rest/commerce.js';
 import { handleError, ValidationError } from '../../../utils/error.js';
 import { validateLanguageCode, SUPPORTED_LANGUAGES } from '../../../utils/validation.js';
 
-export const deleteMerchantTranslationCommand = new Command('delete')
+const cmd = new Command('delete')
   .description('删除商户翻译')
   .option('--lang <code>', `语言代码（支持: ${SUPPORTED_LANGUAGES.join(', ')}）`)
   .option('-y, --yes', '跳过确认')
@@ -51,3 +52,13 @@ export const deleteMerchantTranslationCommand = new Command('delete')
       handleError(error);
     }
   });
+addEnhancedHelp(cmd, {
+  examples: ['$ optima i18n merchant delete --lang zh-CN --yes'],
+  relatedCommands: [
+    { command: 'i18n merchant list', description: 'View all translations' },
+    { command: 'i18n merchant create', description: 'Create translation again' },
+  ],
+  notes: ['Language code is required', 'Requires confirmation unless --yes flag is used']
+});
+
+export const deleteMerchantTranslationCommand = cmd;

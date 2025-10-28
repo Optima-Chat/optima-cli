@@ -1,3 +1,4 @@
+import { addEnhancedHelp } from '../../../utils/helpText.js';
 import { Command } from 'commander';
 
 import chalk from 'chalk';
@@ -13,7 +14,7 @@ interface UpdateOptions {
   description?: string;
 }
 
-export const updateCategoryTranslationCommand = new Command('update')
+const cmd = new Command('update')
   .description('更新分类翻译')
   .option('--category-id <id>', '分类 ID')
   .option('--lang <code>', `语言代码（支持: ${SUPPORTED_LANGUAGES.join(', ')}）`)
@@ -67,3 +68,13 @@ export const updateCategoryTranslationCommand = new Command('update')
       handleError(error);
     }
   });
+addEnhancedHelp(cmd, {
+  examples: ['$ optima i18n category update --category-id id-123 --lang zh-CN --name "新名称"'],
+  relatedCommands: [
+    { command: 'i18n category get', description: 'View current translation' },
+    { command: 'i18n category list', description: 'View all translations' },
+  ],
+  notes: ['Language code and at least one field to update are required']
+});
+
+export const updateCategoryTranslationCommand = cmd;

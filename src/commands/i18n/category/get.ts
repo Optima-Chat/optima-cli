@@ -1,3 +1,4 @@
+import { addEnhancedHelp } from '../../../utils/helpText.js';
 import { Command } from 'commander';
 
 import chalk from 'chalk';
@@ -6,7 +7,7 @@ import { commerceApi } from '../../../api/rest/commerce.js';
 import { handleError, ValidationError } from '../../../utils/error.js';
 import { validateLanguageCode, SUPPORTED_LANGUAGES } from '../../../utils/validation.js';
 
-export const getCategoryTranslationCommand = new Command('get')
+const cmd = new Command('get')
   .description('查看分类翻译详情')
   .option('--category-id <id>', '分类 ID')
   .option('--lang <code>', `语言代码（支持: ${SUPPORTED_LANGUAGES.join(', ')}）`)
@@ -47,3 +48,13 @@ export const getCategoryTranslationCommand = new Command('get')
       handleError(error);
     }
   });
+addEnhancedHelp(cmd, {
+  examples: ['$ optima i18n category get --category-id id-123 --lang zh-CN'],
+  relatedCommands: [
+    { command: 'i18n category list', description: 'View all translations' },
+    { command: 'i18n category update', description: 'Update translation' },
+  ],
+  notes: ['Category ID and language code are required']
+});
+
+export const getCategoryTranslationCommand = cmd;

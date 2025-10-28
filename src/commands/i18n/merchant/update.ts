@@ -1,3 +1,4 @@
+import { addEnhancedHelp } from '../../../utils/helpText.js';
 import { Command } from 'commander';
 
 import chalk from 'chalk';
@@ -12,7 +13,7 @@ interface UpdateOptions {
   description?: string;
 }
 
-export const updateMerchantTranslationCommand = new Command('update')
+const cmd = new Command('update')
   .description('更新商户翻译')
   .option('--lang <code>', `语言代码（支持: ${SUPPORTED_LANGUAGES.join(', ')}）`)
   .option('-n, --name <name>', '翻译后的名称')
@@ -60,3 +61,13 @@ export const updateMerchantTranslationCommand = new Command('update')
       handleError(error);
     }
   });
+addEnhancedHelp(cmd, {
+  examples: ['$ optima i18n merchant update --lang zh-CN --name "新名称"'],
+  relatedCommands: [
+    { command: 'i18n merchant get', description: 'View current translation' },
+    { command: 'i18n merchant list', description: 'View all translations' },
+  ],
+  notes: ['Language code and at least one field to update are required']
+});
+
+export const updateMerchantTranslationCommand = cmd;

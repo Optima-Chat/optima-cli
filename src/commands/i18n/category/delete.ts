@@ -1,3 +1,4 @@
+import { addEnhancedHelp } from '../../../utils/helpText.js';
 import { Command } from 'commander';
 import inquirer from 'inquirer';
 
@@ -7,7 +8,7 @@ import { commerceApi } from '../../../api/rest/commerce.js';
 import { handleError, ValidationError } from '../../../utils/error.js';
 import { validateLanguageCode, SUPPORTED_LANGUAGES } from '../../../utils/validation.js';
 
-export const deleteCategoryTranslationCommand = new Command('delete')
+const cmd = new Command('delete')
   .description('删除分类翻译')
   .option('--category-id <id>', '分类 ID')
   .option('--lang <code>', `语言代码（支持: ${SUPPORTED_LANGUAGES.join(', ')}）`)
@@ -57,3 +58,13 @@ export const deleteCategoryTranslationCommand = new Command('delete')
       handleError(error);
     }
   });
+addEnhancedHelp(cmd, {
+  examples: ['$ optima i18n category delete --category-id id-123 --lang zh-CN --yes'],
+  relatedCommands: [
+    { command: 'i18n category list', description: 'View all translations' },
+    { command: 'i18n category create', description: 'Create translation again' },
+  ],
+  notes: ['Language code is required', 'Requires confirmation unless --yes flag is used']
+});
+
+export const deleteCategoryTranslationCommand = cmd;

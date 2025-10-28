@@ -1,3 +1,4 @@
+import { addEnhancedHelp } from '../../../utils/helpText.js';
 import { Command } from 'commander';
 
 import chalk from 'chalk';
@@ -6,7 +7,7 @@ import { output } from '../../../utils/output.js';
 import { commerceApi } from '../../../api/rest/commerce.js';
 import { handleError } from '../../../utils/error.js';
 
-export const listMerchantTranslationsCommand = new Command('list')
+const cmd = new Command('list')
   .description('查看商户翻译列表')
   .action(async () => {
     try {
@@ -56,3 +57,13 @@ export const listMerchantTranslationsCommand = new Command('list')
       handleError(error);
     }
   });
+addEnhancedHelp(cmd, {
+  examples: ['$ optima i18n merchant list'],
+  relatedCommands: [
+    { command: 'i18n merchant create', description: 'Add new translation' },
+    { command: 'i18n merchant get', description: 'View specific translation' },
+  ],
+  notes: ['Lists all merchant translations']
+});
+
+export const listMerchantTranslationsCommand = cmd;

@@ -1,3 +1,4 @@
+import { addEnhancedHelp } from '../../../utils/helpText.js';
 import { Command } from 'commander';
 import inquirer from 'inquirer';
 
@@ -13,7 +14,7 @@ interface CreateOptions {
   description?: string;
 }
 
-export const createMerchantTranslationCommand = new Command('create')
+const cmd = new Command('create')
   .description('创建商户翻译')
   .option('-l, --lang <code>', `语言代码（支持: ${SUPPORTED_LANGUAGES.join(', ')}）`)
   .option('-n, --name <name>', '翻译后的名称')
@@ -25,6 +26,16 @@ export const createMerchantTranslationCommand = new Command('create')
       handleError(error);
     }
   });
+addEnhancedHelp(cmd, {
+  examples: ['$ optima i18n merchant create --lang zh-CN --name "名称"'],
+  relatedCommands: [
+    { command: 'i18n languages', description: 'View supported language codes' },
+    { command: 'i18n merchant list', description: 'View all translations' },
+  ],
+  notes: ['Merchant ID, language code, and name are required', 'Supported: en-US, es-ES, ja-JP, vi-VN, zh-CN']
+});
+
+export const createMerchantTranslationCommand = cmd;
 
 async function createMerchantTranslation(options: CreateOptions) {
   let { lang, name, description } = options;
