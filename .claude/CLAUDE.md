@@ -4,7 +4,7 @@
 
 电商店铺管理命令行工具 - 用自然语言管理商品、订单、库存和物流。
 
-**版本**: v0.13.6 | **安装**: `npm install -g @optima-chat/optima-cli@latest`
+**版本**: v0.15.0 | **安装**: `npm install -g @optima-chat/optima-cli@latest`
 
 ### Available Modules (14)
 **auth** - OAuth 认证管理（login, logout, whoami）
@@ -140,7 +140,8 @@ optima i18n merchant create --lang ja-JP --name "私のストア"
 ```
 
 ### Tips
-- 使用 `optima <命令> --help` 查看详细用法
+- **新增 v0.15.0**: 所有 72 个命令都有增强的帮助文本，包含示例、JSON 输出格式、相关命令和注意事项
+- 使用 `optima <命令> --help` 查看详细用法和 LLM 友好的结构化文档
 - 所有 ID 参数使用 `--id`、`--product-id` 等选项格式
 - 删除/取消操作需要 `-y` 或 `--yes` 跳过确认
 - 支持的语言代码：en-US, es-ES, ja-JP, vi-VN, zh-CN
