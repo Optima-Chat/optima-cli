@@ -8,18 +8,31 @@
 
 ### Available Modules (14)
 **auth** - OAuth 认证管理（login, logout, whoami）
+
 **merchant** - 商户资料管理（信息、URL、初始化设置）
+
 **product** - 商品目录管理（CRUD、图片、URL）
+
 **category** - 商品分类管理
+
 **variant** - 商品变体/SKU 管理（规格、库存、图片）
+
 **order** - 订单履行（发货、取消、完成、标记送达）
+
 **refund** - 退款管理
+
 **inventory** - 库存管理（低库存预警、更新、历史、预留）
+
 **shipping** - 物流管理（运费计算、物流追踪）
+
 **shipping-zone** - 运费区域配置（按地区设置运费费率）
+
 **upload** - 媒体文件上传（图片、视频、文件）
+
 **conversation** - 客服对话管理
+
 **transfer** - 财务转账和汇总
+
 **i18n** - 多语言翻译管理（商品/分类/商户的国际化）
 
 ### Best Practices
