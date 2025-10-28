@@ -1,8 +1,8 @@
 import { Command } from 'commander';
-import ora from 'ora';
 import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 import { formatVariantList } from '../../utils/format.js';
+import { output } from '../../utils/output.js';
 
 export const listVariantsCommand = new Command('list')
   .description('商品变体列表')
@@ -23,15 +23,24 @@ async function listVariants(options: { productId?: string }) {
 
   const productId = options.productId;
 
-  const spinner = ora('正在获取变体列表...').start();
+  const spinner = output.spinner('正在获取变体列表...');
 
   try {
     const variants = await commerceApi.variants.list(productId);
-    spinner.stop();
+    spinner.succeed('变体列表获取成功');
 
-    // 显示变体列表
-    console.log();
-    console.log(formatVariantList(variants));
+    if (output.isJson()) {
+      // JSON 模式：输出结构化数据
+      output.success({
+        variants,
+        product_id: productId,
+        total: variants.length
+      });
+    } else {
+      // Pretty 模式：保持原有格式化输出
+      console.log();
+      console.log(formatVariantList(variants));
+    }
   } catch (error: any) {
     spinner.fail('获取变体列表失败');
     throw createApiError(error);
