@@ -1,9 +1,9 @@
 import { Command } from 'commander';
 import inquirer from 'inquirer';
-import ora from 'ora';
 import chalk from 'chalk';
 import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError } from '../../utils/error.js';
+import { output } from '../../utils/output.js';
 
 interface CreateZoneOptions {
   name?: string;
@@ -87,7 +87,7 @@ async function createZone(options: CreateZoneOptions) {
     currency = currency || answers.currency;
   }
 
-  const spinner = ora('正在创建运费区域...').start();
+  const spinner = output.spinner('正在创建运费区域...');
 
   try {
     // 构建 countries 数组（对象格式）
@@ -115,17 +115,26 @@ async function createZone(options: CreateZoneOptions) {
 
     spinner.succeed('运费区域创建成功！');
 
-    console.log();
-    console.log(chalk.gray('区域 ID: ') + chalk.cyan(zone.id));
-    console.log(chalk.gray('名称: ') + chalk.white(name));
-    console.log(chalk.gray('国家: ') + chalk.white(countriesArray.map((c) => c.country_code).join(', ')));
-    console.log(chalk.gray('运费: ') + chalk.white(`${price} ${currency || 'CNY'}`));
-    if (rates[0].max_weight) {
-      console.log(chalk.gray('重量范围: ') + chalk.white(`${rates[0].min_weight} - ${rates[0].max_weight} kg`));
+    if (output.isJson()) {
+      output.success({
+        zone_id: zone.id,
+        name: name,
+        countries: countriesArray.map((c) => c.country_code),
+        rate: rates[0]
+      });
     } else {
-      console.log(chalk.gray('最小重量: ') + chalk.white(`${rates[0].min_weight} kg`));
+      console.log();
+      console.log(chalk.gray('区域 ID: ') + chalk.cyan(zone.id));
+      console.log(chalk.gray('名称: ') + chalk.white(name));
+      console.log(chalk.gray('国家: ') + chalk.white(countriesArray.map((c) => c.country_code).join(', ')));
+      console.log(chalk.gray('运费: ') + chalk.white(`${price} ${currency || 'CNY'}`));
+      if (rates[0].max_weight) {
+        console.log(chalk.gray('重量范围: ') + chalk.white(`${rates[0].min_weight} - ${rates[0].max_weight} kg`));
+      } else {
+        console.log(chalk.gray('最小重量: ') + chalk.white(`${rates[0].min_weight} kg`));
+      }
+      console.log();
     }
-    console.log();
   } catch (error: any) {
     spinner.fail('运费区域创建失败');
     throw createApiError(error);
