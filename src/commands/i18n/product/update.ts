@@ -14,14 +14,16 @@ interface UpdateOptions {
   metaDescription?: string;
 }
 
-export const updateProductTranslationCommand = new Command('update')
-  .description('更新商品翻译')
-  .option('--product-id <id>', '商品 ID')
-  .option('--lang <code>', `语言代码（支持: ${SUPPORTED_LANGUAGES.join(', ')}）`)
-  .option('-n, --name <name>', '翻译后的名称')
-  .option('-d, --description <description>', '翻译后的描述')
-  .option('--meta-title <title>', 'SEO 标题')
-  .option('--meta-description <description>', 'SEO 描述')
+import { addEnhancedHelp } from '../../../utils/helpText.js';
+
+const cmd = new Command('update')
+  .description('Update existing product translation')
+  .option('--product-id <id>', 'Product ID (required)')
+  .option('--lang <code>', `Language code (required, supported: ${SUPPORTED_LANGUAGES.join(', ')})`)
+  .option('-n, --name <name>', 'Updated translated name')
+  .option('-d, --description <description>', 'Updated translated description')
+  .option('--meta-title <title>', 'Updated SEO title')
+  .option('--meta-description <description>', 'Updated SEO description')
   .action(async (options: UpdateOptions) => {
     try {
       if (!options.productId || options.productId.trim().length === 0) {
@@ -73,3 +75,14 @@ export const updateProductTranslationCommand = new Command('update')
       handleError(error);
     }
   });
+
+addEnhancedHelp(cmd, {
+  examples: ['$ optima i18n product update --product-id prod-123 --lang zh-CN --name "新名称"'],
+  relatedCommands: [
+    { command: 'i18n product get', description: 'View current translation' },
+    { command: 'i18n product list', description: 'View all translations' },
+  ],
+  notes: ['Product ID, language code, and at least one field to update are required']
+});
+
+export const updateProductTranslationCommand = cmd;

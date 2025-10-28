@@ -5,10 +5,12 @@ import { handleError, ValidationError } from '../../../utils/error.js';
 import { validateLanguageCode, SUPPORTED_LANGUAGES } from '../../../utils/validation.js';
 import { output } from '../../../utils/output.js';
 
-export const getProductTranslationCommand = new Command('get')
-  .description('查看商品翻译详情')
-  .option('--product-id <id>', '商品 ID')
-  .option('--lang <code>', `语言代码（支持: ${SUPPORTED_LANGUAGES.join(', ')}）`)
+import { addEnhancedHelp } from '../../../utils/helpText.js';
+
+const cmd = new Command('get')
+  .description('Get specific translation details for a product')
+  .option('--product-id <id>', 'Product ID (required)')
+  .option('--lang <code>', `Language code (required, supported: ${SUPPORTED_LANGUAGES.join(', ')})`)
   .action(async (options: { productId?: string; lang?: string }) => {
     try {
       if (!options.productId || options.productId.trim().length === 0) {
@@ -59,3 +61,14 @@ export const getProductTranslationCommand = new Command('get')
       handleError(error);
     }
   });
+
+addEnhancedHelp(cmd, {
+  examples: ['$ optima i18n product get --product-id prod-123 --lang zh-CN'],
+  relatedCommands: [
+    { command: 'i18n product list', description: 'View all translations' },
+    { command: 'i18n product update', description: 'Update translation' },
+  ],
+  notes: ['Product ID and language code are required']
+});
+
+export const getProductTranslationCommand = cmd;

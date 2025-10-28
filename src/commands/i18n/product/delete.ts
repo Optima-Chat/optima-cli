@@ -6,11 +6,13 @@ import { handleError, ValidationError } from '../../../utils/error.js';
 import { validateLanguageCode, SUPPORTED_LANGUAGES } from '../../../utils/validation.js';
 import { output } from '../../../utils/output.js';
 
-export const deleteProductTranslationCommand = new Command('delete')
-  .description('删除商品翻译')
-  .option('--product-id <id>', '商品 ID')
-  .option('--lang <code>', `语言代码（支持: ${SUPPORTED_LANGUAGES.join(', ')}）`)
-  .option('-y, --yes', '跳过确认')
+import { addEnhancedHelp } from '../../../utils/helpText.js';
+
+const cmd = new Command('delete')
+  .description('Delete product translation permanently')
+  .option('--product-id <id>', 'Product ID (required)')
+  .option('--lang <code>', `Language code (required, supported: ${SUPPORTED_LANGUAGES.join(', ')})`)
+  .option('-y, --yes', 'Skip confirmation prompt (non-interactive)')
   .action(async (options: { productId?: string; lang?: string; yes?: boolean }) => {
     try {
       if (!options.productId || options.productId.trim().length === 0) {
@@ -57,3 +59,17 @@ export const deleteProductTranslationCommand = new Command('delete')
       handleError(error);
     }
   });
+
+addEnhancedHelp(cmd, {
+  examples: [
+    '$ optima i18n product delete --product-id prod-123 --lang zh-CN',
+    '$ optima i18n product delete --product-id prod-123 --lang zh-CN --yes',
+  ],
+  relatedCommands: [
+    { command: 'i18n product list', description: 'View all translations' },
+    { command: 'i18n product create', description: 'Create translation again' },
+  ],
+  notes: ['Product ID and language code are required', 'Requires confirmation unless --yes flag is used']
+});
+
+export const deleteProductTranslationCommand = cmd;
