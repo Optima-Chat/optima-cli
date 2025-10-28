@@ -1,9 +1,9 @@
 import { Command } from 'commander';
 import inquirer from 'inquirer';
-import ora from 'ora';
 import chalk from 'chalk';
 import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
+import { output } from '../../utils/output.js';
 
 interface DeleteProductOptions {
   id?: string;
@@ -50,12 +50,20 @@ async function deleteProduct(productId: string, options: DeleteProductOptions) {
     }
   }
 
-  const spinner = ora('正在删除商品...').start();
+  const spinner = output.spinner('正在删除商品...');
 
   try {
     await commerceApi.products.delete(productId);
     spinner.succeed('商品删除成功！');
-    console.log();
+
+    if (output.isJson()) {
+      output.success({
+        product_id: productId,
+        deleted: true
+      });
+    } else {
+      console.log();
+    }
   } catch (error: any) {
     spinner.fail('商品删除失败');
     throw createApiError(error);
