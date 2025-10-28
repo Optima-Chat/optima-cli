@@ -24,10 +24,10 @@ export const listZonesCommand = new Command('list')
       });
 
       zones.forEach((zone: any) => {
-        const countries = Array.isArray(zone.countries)
-          ? zone.countries.join(', ')
+        const countries = zone.country_count > 0
+          ? `${zone.country_count} 个国家`
           : '-';
-        const rateCount = zone.rates?.length || 0;
+        const rateCount = zone.rate_count || 0;
 
         table.push([zone.id, zone.name, countries, rateCount.toString()]);
       });

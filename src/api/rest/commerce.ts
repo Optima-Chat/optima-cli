@@ -102,6 +102,17 @@ interface ShippingZone {
   updated_at?: string;
 }
 
+interface ShippingZoneListItem {
+  id: string;
+  name: string;
+  priority: number;
+  is_default: boolean;
+  is_active: boolean;
+  country_count: number;
+  rate_count: number;
+  created_at: string;
+}
+
 interface ShippingRate {
   id?: string;
   rate_id?: string;
@@ -534,8 +545,8 @@ class CommerceApiClient {
     /**
      * 获取运费区域列表
      */
-    listZones: async (): Promise<ShippingZone[]> => {
-      const response = await this.client.get<{ zones: ShippingZone[]; total: number }>('/api/shipping/fixed/zones');
+    listZones: async (): Promise<ShippingZoneListItem[]> => {
+      const response = await this.client.get<{ zones: ShippingZoneListItem[]; total: number }>('/api/shipping/fixed/zones');
       return response.data.zones;
     },
 
