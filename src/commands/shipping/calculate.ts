@@ -5,6 +5,7 @@ import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 import { formatPrice } from '../../utils/format.js';
 import { output } from '../../utils/output.js';
+import { addEnhancedHelp } from '../../utils/helpText.js';
 
 interface CalculateShippingOptions {
   country?: string;
@@ -15,14 +16,14 @@ interface CalculateShippingOptions {
   price?: string;
 }
 
-export const calculateCommand = new Command('calculate')
-  .description('计算运费')
-  .option('-c, --country <code>', '国家代码（如 US, CN）')
-  .option('-p, --postal-code <code>', '邮政编码')
-  .option('-w, --weight <kg>', '重量（千克）')
-  .option('--product-id <id>', '商品 ID（可选，用于精确计算）')
-  .option('--quantity <number>', '商品数量（默认 1）', '1')
-  .option('--price <price>', '商品价格（默认 0）', '0')
+const cmd = new Command('calculate')
+  .description('Calculate shipping cost for destination and weight')
+  .option('-c, --country <code>', 'Country code (e.g., US, CN) (required)')
+  .option('-p, --postal-code <code>', 'Postal/ZIP code (required)')
+  .option('-w, --weight <kg>', 'Package weight in kg (required)')
+  .option('--product-id <uuid>', 'Product ID (optional, for accurate calculation)')
+  .option('--quantity <number>', 'Product quantity (default: 1)', '1')
+  .option('--price <number>', 'Product price (default: 0)', '0')
   .action(async (options: CalculateShippingOptions) => {
     try {
       await calculateShipping(options);
@@ -30,6 +31,48 @@ export const calculateCommand = new Command('calculate')
       handleError(error);
     }
   });
+
+addEnhancedHelp(cmd, {
+  examples: [
+    '# Calculate shipping to US',
+    '$ optima shipping calculate \\',
+    '  --country US \\',
+    '  --postal-code 10001 \\',
+    '  --weight 0.5',
+    '',
+    '# Calculate for specific product',
+    '$ optima shipping calculate \\',
+    '  --country JP \\',
+    '  --postal-code 100-0001 \\',
+    '  --product-id prod-123 \\',
+    '  --quantity 2',
+  ],
+  output: {
+    example: JSON.stringify({
+      success: true,
+      data: {
+        country: 'US',
+        postal_code: '10001',
+        weight: 0.5,
+        shipping_cost: '15.00',
+        currency: 'USD',
+        zone_name: 'North America'
+      }
+    }, null, 2)
+  },
+  relatedCommands: [
+    { command: 'shipping-zone list', description: 'View shipping zones and rates' },
+    { command: 'order create', description: 'Create order with calculated shipping' },
+  ],
+  notes: [
+    'Country, postal-code, and weight are required',
+    'Country code uses ISO 3166-1 alpha-2 format (US, CN, JP, etc.)',
+    'Weight in kilograms (kg)',
+    'Returns shipping cost based on configured zones',
+  ]
+});
+
+export const calculateCommand = cmd;
 
 async function calculateShipping(options: CalculateShippingOptions) {
   // 先获取商户信息以获取 merchant_id

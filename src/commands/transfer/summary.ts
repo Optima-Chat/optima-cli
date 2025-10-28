@@ -3,9 +3,10 @@ import chalk from 'chalk';
 import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError } from '../../utils/error.js';
 import { output } from '../../utils/output.js';
+import { addEnhancedHelp } from '../../utils/helpText.js';
 
-export const summaryCommand = new Command('summary')
-  .description('财务汇总')
+const cmd = new Command('summary')
+  .description('View financial summary (balance, pending, revenue)')
   .action(async () => {
     try {
       const spinner = output.spinner('正在获取财务汇总...');
@@ -34,3 +35,35 @@ export const summaryCommand = new Command('summary')
       handleError(error);
     }
   });
+
+addEnhancedHelp(cmd, {
+  examples: [
+    '# View financial summary',
+    '$ optima transfer summary',
+    '',
+    '# Get summary in JSON format',
+    '$ optima transfer summary --json',
+  ],
+  output: {
+    example: JSON.stringify({
+      success: true,
+      data: {
+        currency: 'USD',
+        available_balance: 5000.00,
+        pending_balance: 1500.00,
+        total_revenue: 10000.00
+      }
+    }, null, 2)
+  },
+  relatedCommands: [
+    { command: 'transfer list', description: 'View individual transfers' },
+    { command: 'order list', description: 'View revenue-generating orders' },
+  ],
+  notes: [
+    'available_balance: Funds ready for withdrawal',
+    'pending_balance: Funds being processed',
+    'total_revenue: All-time revenue from orders',
+  ]
+});
+
+export const summaryCommand = cmd;

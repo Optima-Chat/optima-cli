@@ -5,9 +5,10 @@ import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError } from '../../utils/error.js';
 import { formatDate } from '../../utils/format.js';
 import { output } from '../../utils/output.js';
+import { addEnhancedHelp } from '../../utils/helpText.js';
 
-export const listTransfersCommand = new Command('list')
-  .description('转账列表')
+const cmd = new Command('list')
+  .description('List all payment transfers and payouts')
   .action(async () => {
     try {
       const spinner = output.spinner('正在获取转账记录...');
@@ -53,3 +54,41 @@ export const listTransfersCommand = new Command('list')
       handleError(error);
     }
   });
+
+addEnhancedHelp(cmd, {
+  examples: [
+    '# List all transfers',
+    '$ optima transfer list',
+    '',
+    '# Get transfers in JSON format',
+    '$ optima transfer list --json',
+  ],
+  output: {
+    example: JSON.stringify({
+      success: true,
+      data: {
+        transfers: [
+          {
+            id: 'uuid',
+            amount: '1000.00',
+            currency: 'USD',
+            status: 'paid',
+            created_at: 'timestamp'
+          }
+        ],
+        total: 1
+      }
+    }, null, 2)
+  },
+  relatedCommands: [
+    { command: 'transfer summary', description: 'View financial summary' },
+    { command: 'order list', description: 'View orders generating revenue' },
+  ],
+  notes: [
+    'Shows all payment transfers to merchant account',
+    'Transfers are created when orders are paid',
+    'Status shows payment state (paid, pending, etc.)',
+  ]
+});
+
+export const listTransfersCommand = cmd;
