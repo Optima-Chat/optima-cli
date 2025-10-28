@@ -1,10 +1,10 @@
 import { Command } from 'commander';
 import inquirer from 'inquirer';
-import ora from 'ora';
 import chalk from 'chalk';
 import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 import { formatOrder } from '../../utils/format.js';
+import { output } from '../../utils/output.js';
 
 interface ShipOrderOptions {
   id?: string;
@@ -59,7 +59,7 @@ async function shipOrder(options: ShipOrderOptions) {
     carrier = answers.carrier || undefined;
   }
 
-  const spinner = ora('正在标记订单已发货...').start();
+  const spinner = output.spinner('正在标记订单已发货...');
 
   try {
     const shipData: any = {};
@@ -75,19 +75,28 @@ async function shipOrder(options: ShipOrderOptions) {
     const order = await commerceApi.orders.ship(orderId, shipData);
     spinner.succeed('订单已标记为发货！');
 
-    // 显示更新后的订单信息
-    console.log();
-    console.log(formatOrder(order));
+    if (output.isJson()) {
+      output.success({
+        order_id: order.id || order.order_id,
+        status: order.status,
+        tracking_number: trackingNumber,
+        carrier: carrier
+      });
+    } else {
+      // 显示更新后的订单信息
+      console.log();
+      console.log(formatOrder(order));
 
-    if (trackingNumber) {
-      console.log(chalk.gray('物流单号: ') + chalk.cyan(trackingNumber));
+      if (trackingNumber) {
+        console.log(chalk.gray('物流单号: ') + chalk.cyan(trackingNumber));
+      }
+
+      if (carrier) {
+        console.log(chalk.gray('快递公司: ') + chalk.cyan(carrier));
+      }
+
+      console.log();
     }
-
-    if (carrier) {
-      console.log(chalk.gray('快递公司: ') + chalk.cyan(carrier));
-    }
-
-    console.log();
   } catch (error: any) {
     spinner.fail('订单发货失败');
     throw createApiError(error);

@@ -1,9 +1,9 @@
 import { Command } from 'commander';
 import inquirer from 'inquirer';
-import ora from 'ora';
 import chalk from 'chalk';
 import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
+import { output } from '../../utils/output.js';
 
 interface CompleteOrderOptions {
   id?: string;
@@ -49,12 +49,20 @@ async function completeOrder(options: CompleteOrderOptions) {
     }
   }
 
-  const spinner = ora('正在完成订单...').start();
+  const spinner = output.spinner('正在完成订单...');
 
   try {
     await commerceApi.orders.complete(orderId);
     spinner.succeed('订单已完成！');
-    console.log();
+
+    if (output.isJson()) {
+      output.success({
+        order_id: orderId,
+        status: 'completed'
+      });
+    } else {
+      console.log();
+    }
   } catch (error: any) {
     spinner.fail('订单完成失败');
     throw createApiError(error);
