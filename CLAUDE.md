@@ -120,6 +120,55 @@ async function create(id: string, options: any) {
 - Validate inputs in `validate` callback
 - Example: If `--title` not provided, prompt user interactively
 
+**6. Enhanced Help System (v0.15.0)** (`src/utils/helpText.ts`)
+- All 72 user-facing commands have LLM-friendly enhanced help text
+- Use `optima <command> --help` to see structured documentation
+- Help includes: Examples, JSON Output Format, Related Commands, Notes
+
+**Adding Enhanced Help to New Commands**:
+```typescript
+import { addEnhancedHelp } from '../../utils/helpText.js';
+import { Command } from 'commander';
+
+const cmd = new Command('create')
+  .description('Create a new resource')
+  .option('--title <title>', 'Resource title')
+  .action(async (options) => {
+    // Command logic
+  });
+
+addEnhancedHelp(cmd, {
+  examples: [
+    '# Create resource',
+    '$ optima resource create --title "Example"',
+  ],
+  output: {
+    description: 'Returns created resource with ID',
+    example: JSON.stringify({
+      success: true,
+      data: { id: 'uuid', title: 'Example' }
+    }, null, 2)
+  },
+  relatedCommands: [
+    { command: 'resource list', description: 'View all resources' },
+    { command: 'resource update', description: 'Modify resource' },
+  ],
+  notes: [
+    'Title is required',
+    'Returns permanent resource ID',
+    'Use --json for machine-readable output',
+  ]
+});
+
+export const createCommand = cmd;
+```
+
+**Help Text Structure** (see `src/utils/helpText.ts:HelpTextOptions`):
+- `examples`: Array of command usage examples with comments
+- `output`: Optional JSON output format specification
+- `relatedCommands`: Links to related commands for discovery
+- `notes`: Important details, requirements, caveats
+
 ## Important Files
 
 **`src/api/rest/commerce.ts`** (987 lines)
@@ -133,6 +182,12 @@ async function create(id: string, options: any) {
 - `saveTokens()`: Encrypts and stores access/refresh tokens
 - `isTokenExpired()`: Checks if current token needs refresh
 - Uses `Conf` library for encrypted storage
+
+**`src/utils/helpText.ts`**
+- `addEnhancedHelp()`: Adds LLM-friendly help text to commands
+- `HelpTextOptions` interface: TypeScript type for help structure
+- Used by all 72 user-facing commands
+- Provides Examples, Output, Related Commands, Notes sections
 
 **`src/index.ts`**
 - Registers all 15 command modules with Commander
@@ -161,11 +216,13 @@ This is required because `tsconfig.json` uses `"module": "ES2022"` and Node.js n
 
 1. Create command file in `src/commands/<module>/<action>.ts`
 2. Follow the standard command pattern (see "Command Structure" above)
-3. Add method to `src/api/rest/commerce.ts` if needed
-4. Export from module's `index.ts`
-5. Register in `src/index.ts` with `program.addCommand()`
-6. Update `.claude/CLAUDE.md` with new command reference
-7. Run `npm run build` to compile
+3. **Add enhanced help text** using `addEnhancedHelp()` (see "Enhanced Help System" pattern)
+4. Add method to `src/api/rest/commerce.ts` if needed
+5. Export from module's `index.ts`
+6. Register in `src/index.ts` with `program.addCommand()`
+7. Update `.claude/CLAUDE.md` with new command reference
+8. Test help output: `optima <command> --help`
+9. Run `npm run build` to compile
 
 ## Testing Locally
 
