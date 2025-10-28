@@ -4,10 +4,11 @@ import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 import { formatDate } from '../../utils/format.js';
 import { output } from '../../utils/output.js';
+import { addEnhancedHelp } from '../../utils/helpText.js';
 
-export const getConversationCommand = new Command('get')
-  .description('对话详情')
-  .option('--id <id>', '对话 ID')
+const cmd = new Command('get')
+  .description('Get conversation details with recent messages')
+  .option('--id <uuid>', 'Conversation ID (required)')
   .action(async (options: { id?: string }) => {
     try {
       await getConversation(options);
@@ -15,6 +16,49 @@ export const getConversationCommand = new Command('get')
       handleError(error);
     }
   });
+
+addEnhancedHelp(cmd, {
+  examples: [
+    '# Get conversation details',
+    '$ optima conversation get --id conv-123',
+    '',
+    '# Get in JSON format',
+    '$ optima conversation get --id conv-123 --json',
+  ],
+  output: {
+    example: JSON.stringify({
+      success: true,
+      data: {
+        id: 'uuid',
+        customer_name: 'John Doe',
+        customer_email: 'john@example.com',
+        status: 'open',
+        unread_count: 2,
+        created_at: 'timestamp',
+        last_message_at: 'timestamp',
+        recent_messages: [
+          {
+            sender_type: 'customer',
+            content: 'Hello, I have a question',
+            created_at: 'timestamp'
+          }
+        ]
+      }
+    }, null, 2)
+  },
+  relatedCommands: [
+    { command: 'conversation list', description: 'Find conversation IDs' },
+    { command: 'conversation messages', description: 'View all messages' },
+    { command: 'conversation send', description: 'Send reply' },
+  ],
+  notes: [
+    'Conversation ID is required',
+    'Shows conversation details and 5 recent messages',
+    'Use \'conversation messages\' to view full message history',
+  ]
+});
+
+export const getConversationCommand = cmd;
 
 async function getConversation(options: { id?: string }) {
   if (!options.id || options.id.trim().length === 0) {

@@ -4,6 +4,7 @@ import chalk from 'chalk';
 import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 import { output } from '../../utils/output.js';
+import { addEnhancedHelp } from '../../utils/helpText.js';
 
 interface DeleteVariantOptions {
   productId?: string;
@@ -11,11 +12,11 @@ interface DeleteVariantOptions {
   yes?: boolean;
 }
 
-export const deleteVariantCommand = new Command('delete')
-  .description('删除变体')
-  .option('--product-id <id>', '商品 ID')
-  .option('--variant-id <id>', '变体 ID')
-  .option('-y, --yes', '跳过确认提示')
+const cmd = new Command('delete')
+  .description('Delete a product variant (SKU)')
+  .option('--product-id <uuid>', 'Product ID (required)')
+  .option('--variant-id <uuid>', 'Variant ID (required)')
+  .option('-y, --yes', 'Skip confirmation prompt')
   .action(async (options: DeleteVariantOptions) => {
     try {
       await deleteVariant(options);
@@ -23,6 +24,43 @@ export const deleteVariantCommand = new Command('delete')
       handleError(error);
     }
   });
+
+addEnhancedHelp(cmd, {
+  examples: [
+    '# Delete variant with confirmation',
+    '$ optima variant delete \\',
+    '  --product-id abc-123 \\',
+    '  --variant-id var-456',
+    '',
+    '# Delete without confirmation (non-interactive)',
+    '$ optima variant delete \\',
+    '  --product-id abc-123 \\',
+    '  --variant-id var-456 \\',
+    '  --yes',
+  ],
+  output: {
+    example: JSON.stringify({
+      success: true,
+      data: {
+        product_id: 'uuid',
+        variant_id: 'uuid',
+        deleted: true
+      }
+    }, null, 2)
+  },
+  relatedCommands: [
+    { command: 'variant list', description: 'Find variant IDs before deleting' },
+    { command: 'variant create', description: 'Create new variant' },
+  ],
+  notes: [
+    'product-id and variant-id are required',
+    'Requires confirmation unless --yes flag is used',
+    'Use --yes for non-interactive/automated operations',
+    'This action cannot be undone',
+  ]
+});
+
+export const deleteVariantCommand = cmd;
 
 async function deleteVariant(options: DeleteVariantOptions) {
   // 验证参数

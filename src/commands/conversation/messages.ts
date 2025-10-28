@@ -4,16 +4,17 @@ import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 import { formatDate } from '../../utils/format.js';
 import { output } from '../../utils/output.js';
+import { addEnhancedHelp } from '../../utils/helpText.js';
 
 interface MessagesOptions {
   id?: string;
   limit?: number;
 }
 
-export const messagesCommand = new Command('messages')
-  .description('查看对话消息')
-  .option('--id <id>', '对话 ID')
-  .option('-l, --limit <number>', '消息数量', '50')
+const cmd = new Command('messages')
+  .description('View all messages in a conversation')
+  .option('--id <uuid>', 'Conversation ID (required)')
+  .option('-l, --limit <number>', 'Number of messages (default: 50)', '50')
   .action(async (options: MessagesOptions) => {
     try {
       await getMessages(options);
@@ -21,6 +22,55 @@ export const messagesCommand = new Command('messages')
       handleError(error);
     }
   });
+
+addEnhancedHelp(cmd, {
+  examples: [
+    '# View conversation messages',
+    '$ optima conversation messages --id conv-123',
+    '',
+    '# View more messages',
+    '$ optima conversation messages --id conv-123 --limit 100',
+  ],
+  output: {
+    example: JSON.stringify({
+      success: true,
+      data: {
+        conversation_id: 'uuid',
+        messages: [
+          {
+            id: 'uuid',
+            sender_type: 'customer',
+            content: 'Hello, I need help',
+            is_read: true,
+            created_at: 'timestamp'
+          },
+          {
+            id: 'uuid',
+            sender_type: 'merchant',
+            content: 'How can I help you?',
+            is_read: true,
+            created_at: 'timestamp'
+          }
+        ],
+        total: 2,
+        has_more: false
+      }
+    }, null, 2)
+  },
+  relatedCommands: [
+    { command: 'conversation get', description: 'View conversation details' },
+    { command: 'conversation send', description: 'Send reply message' },
+    { command: 'conversation mark-read', description: 'Mark as read' },
+  ],
+  notes: [
+    'Conversation ID is required',
+    'Shows full message history with sender type',
+    'Default limit is 50 messages',
+    'Use has_more field to check for additional messages',
+  ]
+});
+
+export const messagesCommand = cmd;
 
 async function getMessages(options: MessagesOptions) {
   if (!options.id || options.id.trim().length === 0) {

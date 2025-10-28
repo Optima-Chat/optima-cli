@@ -3,6 +3,7 @@ import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 import { formatVariant } from '../../utils/format.js';
 import { output } from '../../utils/output.js';
+import { addEnhancedHelp } from '../../utils/helpText.js';
 
 interface UpdateVariantOptions {
   productId?: string;
@@ -13,14 +14,14 @@ interface UpdateVariantOptions {
   attributes?: string;
 }
 
-export const updateVariantCommand = new Command('update')
-  .description('更新变体')
-  .option('--product-id <id>', '商品 ID')
-  .option('--variant-id <id>', '变体 ID')
-  .option('-s, --sku <sku>', 'SKU 编码')
-  .option('-p, --price <price>', '价格')
-  .option('--stock <quantity>', '库存数量')
-  .option('-a, --attributes <json>', '属性（JSON 格式）')
+const cmd = new Command('update')
+  .description('Update variant details (SKU, price, stock, or attributes)')
+  .option('--product-id <uuid>', 'Product ID (required)')
+  .option('--variant-id <uuid>', 'Variant ID (required)')
+  .option('-s, --sku <string>', 'New SKU code')
+  .option('-p, --price <number>', 'New price')
+  .option('--stock <number>', 'New stock quantity')
+  .option('-a, --attributes <json>', 'New attributes (JSON format)')
   .action(async (options: UpdateVariantOptions) => {
     try {
       await updateVariant(options);
@@ -28,6 +29,62 @@ export const updateVariantCommand = new Command('update')
       handleError(error);
     }
   });
+
+addEnhancedHelp(cmd, {
+  examples: [
+    '# Update variant price',
+    '$ optima variant update \\',
+    '  --product-id abc-123 \\',
+    '  --variant-id var-456 \\',
+    '  --price 99',
+    '',
+    '# Update variant stock',
+    '$ optima variant update \\',
+    '  --product-id abc-123 \\',
+    '  --variant-id var-456 \\',
+    '  --stock 50',
+    '',
+    '# Update multiple fields',
+    '$ optima variant update \\',
+    '  --product-id abc-123 \\',
+    '  --variant-id var-456 \\',
+    '  --sku "MUG-L-RED" \\',
+    '  --price 109 \\',
+    '  --attributes \'{"size":"L","color":"Red"}\'',
+  ],
+  output: {
+    example: JSON.stringify({
+      success: true,
+      data: {
+        product_id: 'uuid',
+        variant_id: 'uuid',
+        updated_fields: ['price', 'stock'],
+        variant: {
+          variant_id: 'uuid',
+          sku: 'MUG-S-WHITE',
+          price: '99.00',
+          stock: 50,
+          attributes: {
+            size: 'S',
+            color: 'White'
+          },
+          updated_at: 'timestamp'
+        }
+      }
+    }, null, 2)
+  },
+  relatedCommands: [
+    { command: 'variant list', description: 'Find variant IDs' },
+    { command: 'inventory update', description: 'Alternative for stock updates' },
+  ],
+  notes: [
+    'product-id and variant-id are required',
+    'At least one update field must be provided',
+    'Use \'optima variant list\' to find variant IDs',
+  ]
+});
+
+export const updateVariantCommand = cmd;
 
 async function updateVariant(options: UpdateVariantOptions) {
   // 验证参数

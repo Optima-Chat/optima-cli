@@ -4,6 +4,7 @@ import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 import { formatVariant } from '../../utils/format.js';
 import { output } from '../../utils/output.js';
+import { addEnhancedHelp } from '../../utils/helpText.js';
 
 interface CreateVariantOptions {
   productId?: string;
@@ -13,13 +14,13 @@ interface CreateVariantOptions {
   attributes?: string; // JSON string: {"size":"S","color":"White"}
 }
 
-export const createVariantCommand = new Command('create')
-  .description('创建商品变体')
-  .option('--product-id <id>', '商品 ID')
-  .option('-s, --sku <sku>', 'SKU 编码')
-  .option('-p, --price <price>', '价格')
-  .option('--stock <quantity>', '库存数量')
-  .option('-a, --attributes <json>', '属性（JSON 格式，如 \'{"size":"S","color":"White"}\'）')
+const cmd = new Command('create')
+  .description('Create product variant (SKU) with attributes like size/color')
+  .option('--product-id <uuid>', 'Product ID (required)')
+  .option('-s, --sku <string>', 'SKU code (required)')
+  .option('-p, --price <number>', 'Variant price (optional, uses product price if not set)')
+  .option('--stock <number>', 'Stock quantity (optional)')
+  .option('-a, --attributes <json>', 'Variant attributes as JSON (required, e.g., \'{"size":"S","color":"White"}\')')
   .action(async (options: CreateVariantOptions) => {
     try {
       await createVariant(options);
@@ -27,6 +28,56 @@ export const createVariantCommand = new Command('create')
       handleError(error);
     }
   });
+
+addEnhancedHelp(cmd, {
+  examples: [
+    '# Create variant with size and color',
+    '$ optima variant create \\',
+    '  --product-id abc-123 \\',
+    '  --sku "MUG-S-WHITE" \\',
+    '  --price 89 \\',
+    '  --stock 10 \\',
+    '  --attributes \'{"size":"S","color":"White"}\'',
+    '',
+    '# Create variant using product price',
+    '$ optima variant create \\',
+    '  --product-id abc-123 \\',
+    '  --sku "MUG-M-BLUE" \\',
+    '  --attributes \'{"size":"M","color":"Blue"}\'',
+  ],
+  output: {
+    example: JSON.stringify({
+      success: true,
+      data: {
+        product_id: 'uuid',
+        variant: {
+          variant_id: 'uuid',
+          sku: 'MUG-S-WHITE',
+          price: '89.00',
+          stock: 10,
+          attributes: {
+            size: 'S',
+            color: 'White'
+          },
+          created_at: 'timestamp'
+        }
+      }
+    }, null, 2)
+  },
+  relatedCommands: [
+    { command: 'variant list', description: 'View all variants for a product' },
+    { command: 'variant add-images', description: 'Add images to variant' },
+    { command: 'product create', description: 'Create product first' },
+  ],
+  notes: [
+    'product-id, sku, and attributes are required',
+    'attributes must be valid JSON object (e.g., {"size":"S","color":"White"})',
+    'price is optional - if not provided, variant uses product price',
+    'Each variant represents a unique SKU with specific attributes',
+  ]
+});
+
+export const createVariantCommand = cmd;
 
 async function createVariant(options: CreateVariantOptions) {
   // 验证商品 ID

@@ -5,16 +5,17 @@ import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError } from '../../utils/error.js';
 import { formatDate } from '../../utils/format.js';
 import { output } from '../../utils/output.js';
+import { addEnhancedHelp } from '../../utils/helpText.js';
 
 interface ListOptions {
   status?: string;
   limit?: number;
 }
 
-export const listConversationsCommand = new Command('list')
-  .description('对话列表')
-  .option('-s, --status <status>', '对话状态 (open/closed)')
-  .option('-l, --limit <number>', '每页数量', '20')
+const cmd = new Command('list')
+  .description('List customer support conversations')
+  .option('-s, --status <string>', 'Filter by status (open/closed)')
+  .option('-l, --limit <number>', 'Number of conversations per page (default: 20)', '20')
   .action(async (options: ListOptions) => {
     try {
       await listConversations(options);
@@ -22,6 +23,50 @@ export const listConversationsCommand = new Command('list')
       handleError(error);
     }
   });
+
+addEnhancedHelp(cmd, {
+  examples: [
+    '# List all conversations',
+    '$ optima conversation list',
+    '',
+    '# List only open conversations',
+    '$ optima conversation list --status open',
+    '',
+    '# List with custom limit',
+    '$ optima conversation list --limit 50',
+  ],
+  output: {
+    example: JSON.stringify({
+      success: true,
+      data: {
+        conversations: [
+          {
+            id: 'uuid',
+            customer_name: 'John Doe',
+            customer_email: 'john@example.com',
+            status: 'open',
+            unread_count: 2,
+            last_message_at: 'timestamp'
+          }
+        ],
+        total: 1,
+        per_page: 20
+      }
+    }, null, 2)
+  },
+  relatedCommands: [
+    { command: 'conversation get', description: 'View conversation details' },
+    { command: 'conversation messages', description: 'View all messages' },
+    { command: 'conversation send', description: 'Send reply message' },
+  ],
+  notes: [
+    'Shows all conversations with status and unread count',
+    'Use --status to filter by open/closed',
+    'Default limit is 20 conversations',
+  ]
+});
+
+export const listConversationsCommand = cmd;
 
 async function listConversations(options: ListOptions) {
   const spinner = output.spinner('正在获取对话列表...');
