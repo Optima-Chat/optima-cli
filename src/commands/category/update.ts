@@ -3,6 +3,7 @@ import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 import { formatCategory } from '../../utils/format.js';
 import { output } from '../../utils/output.js';
+import { addEnhancedHelp } from '../../utils/helpText.js';
 
 interface UpdateCategoryOptions {
   id?: string;
@@ -11,12 +12,12 @@ interface UpdateCategoryOptions {
   parent?: string;
 }
 
-export const updateCategoryCommand = new Command('update')
-  .description('更新分类')
-  .option('--id <id>', '分类 ID')
-  .option('-n, --name <name>', '分类名称')
-  .option('-d, --description <description>', '分类描述')
-  .option('-p, --parent <parent-id>', '父分类 ID')
+const cmd = new Command('update')
+  .description('Update category details')
+  .option('--id <id>', 'Category ID (required)')
+  .option('-n, --name <name>', 'Category name')
+  .option('-d, --description <description>', 'Category description')
+  .option('-p, --parent <parent-id>', 'Parent category ID (for subcategory)')
   .action(async (options: UpdateCategoryOptions) => {
     try {
       await updateCategory(options);
@@ -24,6 +25,48 @@ export const updateCategoryCommand = new Command('update')
       handleError(error);
     }
   });
+
+addEnhancedHelp(cmd, {
+  examples: [
+    '# Update category name',
+    '$ optima category update --id cat-123 --name "Digital Electronics"',
+    '',
+    '# Update multiple fields',
+    '$ optima category update \\',
+    '  --id cat-456 \\',
+    '  --name "Home Appliances" \\',
+    '  --description "Kitchen and household appliances"',
+    '',
+    '# Make a subcategory',
+    '$ optima category update --id cat-789 --parent cat-123',
+  ],
+  output: {
+    example: JSON.stringify({
+      success: true,
+      data: {
+        category_id: 'uuid',
+        updated_fields: ['name', 'description'],
+        category: {
+          id: 'uuid',
+          name: 'Digital Electronics',
+          description: 'Updated description'
+        }
+      }
+    }, null, 2)
+  },
+  relatedCommands: [
+    { command: 'category get', description: 'View current details' },
+    { command: 'category list', description: 'Find category IDs' },
+    { command: 'i18n category create', description: 'Add translations' },
+  ],
+  notes: [
+    'Category ID is required',
+    'At least one field to update is required',
+    'Set parent to create category hierarchy',
+  ]
+});
+
+export const updateCategoryCommand = cmd;
 
 async function updateCategory(options: UpdateCategoryOptions) {
   // 验证参数

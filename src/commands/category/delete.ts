@@ -4,16 +4,17 @@ import chalk from 'chalk';
 import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 import { output } from '../../utils/output.js';
+import { addEnhancedHelp } from '../../utils/helpText.js';
 
 interface DeleteCategoryOptions {
   id?: string;
   yes?: boolean;
 }
 
-export const deleteCategoryCommand = new Command('delete')
-  .description('删除分类')
-  .option('--id <id>', '分类 ID')
-  .option('-y, --yes', '跳过确认提示')
+const cmd = new Command('delete')
+  .description('Delete product category permanently')
+  .option('--id <id>', 'Category ID (required)')
+  .option('-y, --yes', 'Skip confirmation prompt (non-interactive)')
   .action(async (options: DeleteCategoryOptions) => {
     try {
       await deleteCategory(options);
@@ -21,6 +22,37 @@ export const deleteCategoryCommand = new Command('delete')
       handleError(error);
     }
   });
+
+addEnhancedHelp(cmd, {
+  examples: [
+    '# Delete category with confirmation',
+    '$ optima category delete --id cat-123',
+    '',
+    '# Delete without confirmation (non-interactive)',
+    '$ optima category delete --id cat-123 --yes',
+  ],
+  output: {
+    example: JSON.stringify({
+      success: true,
+      data: {
+        category_id: 'uuid',
+        deleted: true
+      }
+    }, null, 2)
+  },
+  relatedCommands: [
+    { command: 'category list', description: 'Find category IDs' },
+    { command: 'category get', description: 'View details before deleting' },
+  ],
+  notes: [
+    'Category ID is required',
+    'This action cannot be undone',
+    'Requires confirmation unless --yes flag is used',
+    'Use --yes for non-interactive/automated operations',
+  ]
+});
+
+export const deleteCategoryCommand = cmd;
 
 async function deleteCategory(options: DeleteCategoryOptions) {
   // 验证参数

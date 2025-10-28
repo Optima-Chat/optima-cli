@@ -4,6 +4,7 @@ import chalk from 'chalk';
 import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError } from '../../utils/error.js';
 import { output } from '../../utils/output.js';
+import { addEnhancedHelp } from '../../utils/helpText.js';
 
 interface SetupMerchantOptions {
   name?: string;
@@ -24,8 +25,8 @@ interface SetupMerchantOptions {
   bannerUrl?: string;
 }
 
-export const setupCommand = new Command('setup')
-  .description('初始化商户资料（OAuth 用户首次使用）')
+const cmd = new Command('setup')
+  .description('Initialize merchant profile (first-time setup for OAuth users)')
   .option('-n, --name <name>', '商户名称')
   .option('-d, --description <description>', '商户描述')
   .option('--slug <slug>', '店铺唯一标识（URL slug）')
@@ -49,6 +50,49 @@ export const setupCommand = new Command('setup')
       handleError(error);
     }
   });
+
+addEnhancedHelp(cmd, {
+  examples: [
+    '# Initialize merchant profile',
+    '$ optima merchant setup \\',
+    '  --name "My Store" \\',
+    '  --slug "my-store" \\',
+    '  --origin-country-alpha2 CN \\',
+    '  --origin-city "Shanghai"',
+    '',
+    '# Setup with contact info',
+    '$ optima merchant setup \\',
+    '  --name "Tech Store" \\',
+    '  --contact-email "support@example.com" \\',
+    '  --contact-phone "+1-555-0100"',
+  ],
+  output: {
+    example: JSON.stringify({
+      success: true,
+      data: {
+        merchant_id: 'uuid',
+        name: 'My Store',
+        slug: 'my-store',
+        default_currency: 'USD',
+        origin_country: 'CN',
+        origin_city: 'Shanghai'
+      }
+    }, null, 2)
+  },
+  relatedCommands: [
+    { command: 'merchant info', description: 'View current profile' },
+    { command: 'merchant update', description: 'Update profile later' },
+    { command: 'merchant url', description: 'Get store URL' },
+  ],
+  notes: [
+    'First-time setup for OAuth authenticated users',
+    'Name, slug, and origin address are required',
+    'Slug becomes your store URL: {slug}.optima.shop',
+    'Can update profile later with merchant update',
+  ]
+});
+
+export const setupCommand = cmd;
 
 async function setupMerchant(options: SetupMerchantOptions) {
   let merchantData: any = {};

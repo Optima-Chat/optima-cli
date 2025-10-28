@@ -4,10 +4,11 @@ import open from 'open';
 import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError } from '../../utils/error.js';
 import { output } from '../../utils/output.js';
+import { addEnhancedHelp } from '../../utils/helpText.js';
 
-export const urlCommand = new Command('url')
-  .description('获取店铺链接')
-  .option('--open', '在浏览器中打开店铺')
+const cmd = new Command('url')
+  .description('Get public store URL and optionally open in browser')
+  .option('--open', 'Open store homepage in browser')
   .action(async (options) => {
     try {
       await getStoreUrl(options.open);
@@ -15,6 +16,39 @@ export const urlCommand = new Command('url')
       handleError(error);
     }
   });
+
+addEnhancedHelp(cmd, {
+  examples: [
+    '# Get store URL',
+    '$ optima merchant url',
+    '',
+    '# Open store in browser',
+    '$ optima merchant url --open',
+  ],
+  output: {
+    description: 'Returns public storefront URL',
+    example: JSON.stringify({
+      success: true,
+      data: {
+        url: 'https://my-store.optima.shop',
+        slug: 'my-store',
+        opened: false
+      }
+    }, null, 2)
+  },
+  relatedCommands: [
+    { command: 'merchant info', description: 'View merchant details' },
+    { command: 'merchant setup', description: 'Initialize store slug' },
+    { command: 'product url', description: 'Get product URLs' },
+  ],
+  notes: [
+    'Merchant must have a slug configured',
+    'URL format: https://{slug}.optima.shop',
+    'Use --open to automatically open in browser',
+  ]
+});
+
+export const urlCommand = cmd;
 
 async function getStoreUrl(shouldOpen: boolean) {
   const spinner = output.spinner('正在获取店铺信息...');
