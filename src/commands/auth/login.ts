@@ -1,9 +1,9 @@
 import { Command } from 'commander';
-import ora from 'ora';
 import chalk from 'chalk';
 import open from 'open';
 import { authApi } from '../../api/rest/auth.js';
 import { saveTokens, saveUser, isAuthenticated, getUser } from '../../utils/config.js';
+import { output } from '../../utils/output.js';
 
 export const loginCommand = new Command('login')
   .description('Device Flow 登录（在浏览器中完成授权）')
@@ -19,7 +19,7 @@ export const loginCommand = new Command('login')
       }
 
       // 步骤 1: 请求 Device Code
-      const spinner = ora('正在请求授权...').start();
+      const spinner = output.spinner('正在请求授权...');
 
       let deviceAuth;
       try {
@@ -52,7 +52,7 @@ export const loginCommand = new Command('login')
       }
 
       // 步骤 4: 轮询获取 Token
-      const pollSpinner = ora('等待授权中...').start();
+      const pollSpinner = output.spinner('等待授权中...');
 
       let result;
       try {
@@ -110,16 +110,28 @@ export const loginCommand = new Command('login')
       }
 
       // 步骤 7: 显示成功信息
-      console.log(chalk.green('\n✓ 登录成功！\n'));
-      console.log(chalk.white('👤 用户信息:'));
-      console.log(chalk.gray(`   邮箱: ${user.email}`));
-      console.log(chalk.gray(`   姓名: ${user.name}`));
-      console.log(chalk.gray(`   角色: ${user.role}`));
+      if (output.isJson()) {
+        output.success({
+          logged_in: true,
+          user: {
+            email: user.email,
+            name: user.name,
+            role: user.role
+          },
+          expires_in: result.expires_in
+        });
+      } else {
+        console.log(chalk.green('\n✓ 登录成功！\n'));
+        console.log(chalk.white('👤 用户信息:'));
+        console.log(chalk.gray(`   邮箱: ${user.email}`));
+        console.log(chalk.gray(`   姓名: ${user.name}`));
+        console.log(chalk.gray(`   角色: ${user.role}`));
 
-      const tokenExpiresMinutes = Math.floor(result.expires_in / 60);
-      console.log(chalk.gray(`   Token 有效期: ${tokenExpiresMinutes} 分钟`));
+        const tokenExpiresMinutes = Math.floor(result.expires_in / 60);
+        console.log(chalk.gray(`   Token 有效期: ${tokenExpiresMinutes} 分钟`));
 
-      console.log(chalk.gray('\n   运行 ') + chalk.cyan('optima --help') + chalk.gray(' 查看可用命令\n'));
+        console.log(chalk.gray('\n   运行 ') + chalk.cyan('optima --help') + chalk.gray(' 查看可用命令\n'));
+      }
 
     } catch (error: any) {
       console.log(chalk.red(`\n❌ 登录失败: ${error.message}\n`));

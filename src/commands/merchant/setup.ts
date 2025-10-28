@@ -1,9 +1,9 @@
 import { Command } from 'commander';
 import inquirer from 'inquirer';
-import ora from 'ora';
 import chalk from 'chalk';
 import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError } from '../../utils/error.js';
+import { output } from '../../utils/output.js';
 
 interface SetupMerchantOptions {
   name?: string;
@@ -180,23 +180,31 @@ async function setupMerchant(options: SetupMerchantOptions) {
     };
   }
 
-  const spinner = ora('正在初始化商户资料...').start();
+  const spinner = output.spinner('正在初始化商户资料...');
 
   try {
     const merchant = await commerceApi.merchant.setupProfile(merchantData);
     spinner.succeed('商户资料初始化成功！');
 
-    console.log();
-    console.log(chalk.gray('商户 ID: ') + chalk.cyan(merchant.id || merchant.merchant_id || '-'));
-    console.log(chalk.gray('商户名称: ') + chalk.cyan(merchant.name));
+    if (output.isJson()) {
+      output.success({
+        merchant_id: merchant.id || merchant.merchant_id,
+        name: merchant.name,
+        ...(merchant.description && { description: merchant.description })
+      });
+    } else {
+      console.log();
+      console.log(chalk.gray('商户 ID: ') + chalk.cyan(merchant.id || merchant.merchant_id || '-'));
+      console.log(chalk.gray('商户名称: ') + chalk.cyan(merchant.name));
 
-    if (merchant.description) {
-      console.log(chalk.gray('商户描述: ') + merchant.description);
+      if (merchant.description) {
+        console.log(chalk.gray('商户描述: ') + merchant.description);
+      }
+
+      console.log();
+      console.log(chalk.green('✓ 您现在可以开始使用 Optima CLI 管理您的店铺了！'));
+      console.log();
     }
-
-    console.log();
-    console.log(chalk.green('✓ 您现在可以开始使用 Optima CLI 管理您的店铺了！'));
-    console.log();
   } catch (error: any) {
     spinner.fail('商户资料初始化失败');
     throw createApiError(error);
