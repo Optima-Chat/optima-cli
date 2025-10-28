@@ -1,9 +1,9 @@
 import { Command } from 'commander';
 import inquirer from 'inquirer';
-import ora from 'ora';
 import chalk from 'chalk';
 import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
+import { output } from '../../utils/output.js';
 
 interface CreateRefundOptions {
   id?: string;
@@ -42,7 +42,7 @@ async function createRefund(options: CreateRefundOptions) {
   let { amount, reason } = options;
 
   // 获取订单信息以获得 payment_intent_id
-  const orderSpinner = ora('正在获取订单信息...').start();
+  const orderSpinner = output.spinner('正在获取订单信息...');
   let order;
   try {
     order = await commerceApi.orders.get(orderId);
@@ -106,7 +106,7 @@ async function createRefund(options: CreateRefundOptions) {
     throw new ValidationError('退款金额必须是有效的正数', 'amount');
   }
 
-  const spinner = ora('正在创建退款...').start();
+  const spinner = output.spinner('正在创建退款...');
 
   try {
     const refund = await commerceApi.refunds.create({
@@ -116,15 +116,27 @@ async function createRefund(options: CreateRefundOptions) {
     });
     spinner.succeed('退款创建成功！');
 
-    console.log();
-    console.log(chalk.gray('退款 ID: ') + chalk.cyan(refund.id || refund.refund_id));
-    console.log(chalk.gray('订单 ID: ') + chalk.cyan(orderId));
-    console.log(chalk.gray('退款金额: ') + chalk.green(amountNum.toString()));
-    if (reason) {
-      const reasonText = REFUND_REASONS[reason as RefundReasonKey] || reason;
-      console.log(chalk.gray('退款原因: ') + reasonText);
+    if (output.isJson()) {
+      // JSON 模式：输出结构化数据
+      output.success({
+        refund_id: refund.id || refund.refund_id,
+        order_id: orderId,
+        amount: amountNum,
+        reason: reason,
+        reason_text: reason ? REFUND_REASONS[reason as RefundReasonKey] : undefined
+      });
+    } else {
+      // Pretty 模式：保持原有格式化输出
+      console.log();
+      console.log(chalk.gray('退款 ID: ') + chalk.cyan(refund.id || refund.refund_id));
+      console.log(chalk.gray('订单 ID: ') + chalk.cyan(orderId));
+      console.log(chalk.gray('退款金额: ') + chalk.green(amountNum.toString()));
+      if (reason) {
+        const reasonText = REFUND_REASONS[reason as RefundReasonKey] || reason;
+        console.log(chalk.gray('退款原因: ') + reasonText);
+      }
+      console.log();
     }
-    console.log();
   } catch (error: any) {
     spinner.fail('退款创建失败');
     throw createApiError(error);
