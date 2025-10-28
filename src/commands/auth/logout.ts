@@ -3,9 +3,10 @@ import chalk from 'chalk';
 import { clearConfig, isAuthenticated, getUser, getAccessToken } from '../../utils/config.js';
 import { authApi } from '../../api/rest/auth.js';
 import { output } from '../../utils/output.js';
+import { addEnhancedHelp } from '../../utils/helpText.js';
 
-export const logoutCommand = new Command('logout')
-  .description('登出并清除本地凭证')
+const cmd = new Command('logout')
+  .description('Logout and clear local credentials')
   .action(async () => {
     try {
       if (!isAuthenticated()) {
@@ -47,3 +48,32 @@ export const logoutCommand = new Command('logout')
       console.log(chalk.red(`\n❌ 登出失败: ${error.message}\n`));
     }
   });
+
+addEnhancedHelp(cmd, {
+  examples: [
+    '# Logout from current session',
+    '$ optima auth logout',
+  ],
+  output: {
+    description: 'Revokes access token and clears local credentials',
+    example: JSON.stringify({
+      success: true,
+      data: {
+        logged_out: true,
+        token_revoked: true,
+        email: 'user@example.com'
+      }
+    }, null, 2)
+  },
+  relatedCommands: [
+    { command: 'auth login', description: 'Login again' },
+    { command: 'auth whoami', description: 'Check login status' },
+  ],
+  notes: [
+    'Revokes access token on server',
+    'Clears local credentials from ~/.config/optima-cli/',
+    'Use "optima auth login" to login again',
+  ]
+});
+
+export const logoutCommand = cmd;
