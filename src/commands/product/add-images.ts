@@ -1,10 +1,10 @@
 import { Command } from 'commander';
-import ora from 'ora';
 import chalk from 'chalk';
 import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 import { formatFileSize } from '../../utils/format.js';
 import { existsSync, statSync } from 'fs';
+import { output } from '../../utils/output.js';
 
 export const addImagesCommand = new Command('add-images')
   .description('添加商品图片（支持本地文件、URL 或 Media ID）')
@@ -41,21 +41,29 @@ async function addImages(options: { id?: string; path?: string[]; url?: string[]
     console.log(chalk.green(`✓ Media IDs: ${mediaIds.length} 个`));
     console.log();
 
-    const spinner = ora(`正在关联 ${mediaIds.length} 张图片...`).start();
+    const spinner = output.spinner(`正在关联 ${mediaIds.length} 张图片...`);
 
     try {
       const result = await commerceApi.products.addImagesByMediaIds(productId, mediaIds);
       spinner.succeed(`图片关联成功！(${mediaIds.length} 张)`);
 
-      console.log();
-      if (result.images && result.images.length > 0) {
-        console.log(chalk.gray('已关联的图片 URL:'));
-        result.images.forEach((item: any, index: number) => {
-          const url = typeof item === 'string' ? item : (item.url || item.image_url || item);
-          console.log(chalk.gray(`  ${index + 1}. `) + chalk.cyan(url));
+      if (output.isJson()) {
+        output.success({
+          product_id: productId,
+          images: result.images || [],
+          count: (result.images || []).length
         });
+      } else {
+        console.log();
+        if (result.images && result.images.length > 0) {
+          console.log(chalk.gray('已关联的图片 URL:'));
+          result.images.forEach((item: any, index: number) => {
+            const url = typeof item === 'string' ? item : (item.url || item.image_url || item);
+            console.log(chalk.gray(`  ${index + 1}. `) + chalk.cyan(url));
+          });
+        }
+        console.log();
       }
-      console.log();
       return;
     } catch (error: any) {
       spinner.fail('图片关联失败');
@@ -104,22 +112,30 @@ async function addImages(options: { id?: string; path?: string[]; url?: string[]
 
   // 如果有 URL，直接用 image_urls API
   if (imageUrls.length > 0 && localFiles.length === 0) {
-    const spinner = ora(`正在关联 ${imageUrls.length} 张图片...`).start();
+    const spinner = output.spinner(`正在关联 ${imageUrls.length} 张图片...`);
 
     try {
       const result = await commerceApi.products.addImageUrls(productId, imageUrls);
       spinner.succeed(`图片关联成功！(${imageUrls.length} 张)`);
 
-      console.log();
-      if (result.images && result.images.length > 0) {
-        console.log(chalk.gray('已关联的图片 URL:'));
-        result.images.forEach((item: any, index: number) => {
-          // 支持字符串或对象格式
-          const url = typeof item === 'string' ? item : (item.url || item.image_url || item);
-          console.log(chalk.gray(`  ${index + 1}. `) + chalk.cyan(url));
+      if (output.isJson()) {
+        output.success({
+          product_id: productId,
+          images: result.images || [],
+          count: (result.images || []).length
         });
+      } else {
+        console.log();
+        if (result.images && result.images.length > 0) {
+          console.log(chalk.gray('已关联的图片 URL:'));
+          result.images.forEach((item: any, index: number) => {
+            // 支持字符串或对象格式
+            const url = typeof item === 'string' ? item : (item.url || item.image_url || item);
+            console.log(chalk.gray(`  ${index + 1}. `) + chalk.cyan(url));
+          });
+        }
+        console.log();
       }
-      console.log();
     } catch (error: any) {
       spinner.fail('图片关联失败');
       throw createApiError(error);
@@ -129,22 +145,30 @@ async function addImages(options: { id?: string; path?: string[]; url?: string[]
 
   // 如果有本地文件，上传
   if (localFiles.length > 0) {
-    const spinner = ora(`正在上传 ${localFiles.length} 张图片...`).start();
+    const spinner = output.spinner(`正在上传 ${localFiles.length} 张图片...`);
 
     try {
       const result = await commerceApi.products.addImages(productId, localFiles);
       spinner.succeed(`图片上传成功！(${localFiles.length} 张)`);
 
-      console.log();
-      if (result.images && result.images.length > 0) {
-        console.log(chalk.gray('已上传的图片 URL:'));
-        result.images.forEach((item: any, index: number) => {
-          // 支持字符串或对象格式
-          const url = typeof item === 'string' ? item : (item.url || item.image_url || item);
-          console.log(chalk.gray(`  ${index + 1}. `) + chalk.cyan(url));
+      if (output.isJson()) {
+        output.success({
+          product_id: productId,
+          images: result.images || [],
+          count: (result.images || []).length
         });
+      } else {
+        console.log();
+        if (result.images && result.images.length > 0) {
+          console.log(chalk.gray('已上传的图片 URL:'));
+          result.images.forEach((item: any, index: number) => {
+            // 支持字符串或对象格式
+            const url = typeof item === 'string' ? item : (item.url || item.image_url || item);
+            console.log(chalk.gray(`  ${index + 1}. `) + chalk.cyan(url));
+          });
+        }
+        console.log();
       }
-      console.log();
     } catch (error: any) {
       spinner.fail('图片上传失败');
       throw createApiError(error);

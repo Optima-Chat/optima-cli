@@ -1,9 +1,9 @@
 import { Command } from 'commander';
 import inquirer from 'inquirer';
-import ora from 'ora';
 import chalk from 'chalk';
 import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
+import { output } from '../../utils/output.js';
 
 interface UpdateStatusOptions {
   id?: string;
@@ -72,21 +72,29 @@ async function updateShippingStatus(options: UpdateStatusOptions) {
     };
   }
 
-  const spinner = ora('正在更新物流状态...').start();
+  const spinner = output.spinner('正在更新物流状态...');
 
   try {
     await commerceApi.shipping.updateShippingStatus(orderId, statusData);
     spinner.succeed('物流状态更新成功！');
 
-    console.log();
-    console.log(chalk.gray('订单 ID: ') + chalk.cyan(orderId));
-    console.log(chalk.gray('新状态: ') + chalk.green(statusData.status));
+    if (output.isJson()) {
+      output.success({
+        order_id: orderId,
+        status: statusData.status,
+        ...(statusData.note && { note: statusData.note })
+      });
+    } else {
+      console.log();
+      console.log(chalk.gray('订单 ID: ') + chalk.cyan(orderId));
+      console.log(chalk.gray('新状态: ') + chalk.green(statusData.status));
 
-    if (statusData.note) {
-      console.log(chalk.gray('备注: ') + statusData.note);
+      if (statusData.note) {
+        console.log(chalk.gray('备注: ') + statusData.note);
+      }
+
+      console.log();
     }
-
-    console.log();
   } catch (error: any) {
     spinner.fail('物流状态更新失败');
     throw createApiError(error);
