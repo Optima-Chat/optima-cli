@@ -1,10 +1,10 @@
 import { Command } from 'commander';
 import inquirer from 'inquirer';
-import ora from 'ora';
 import chalk from 'chalk';
 import { commerceApi } from '../../../api/rest/commerce.js';
 import { handleError, ValidationError } from '../../../utils/error.js';
 import { validateLanguageCode, SUPPORTED_LANGUAGES } from '../../../utils/validation.js';
+import { output } from '../../../utils/output.js';
 
 export const deleteProductTranslationCommand = new Command('delete')
   .description('删除商品翻译')
@@ -42,9 +42,17 @@ export const deleteProductTranslationCommand = new Command('delete')
         }
       }
 
-      const spinner = ora('正在删除翻译...').start();
+      const spinner = output.spinner('正在删除翻译...');
       await commerceApi.i18n.productTranslations.delete(productId, languageCode);
       spinner.succeed(`翻译 ${languageCode} 已删除`);
+
+      if (output.isJson()) {
+        output.success({
+          product_id: productId,
+          language_code: languageCode,
+          deleted: true
+        });
+      }
     } catch (error) {
       handleError(error);
     }
