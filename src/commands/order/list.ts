@@ -4,6 +4,7 @@ import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError } from '../../utils/error.js';
 import { formatOrderList } from '../../utils/format.js';
 import { output } from '../../utils/output.js';
+import { addEnhancedHelp } from '../../utils/helpText.js';
 
 interface ListOrdersOptions {
   limit?: string;
@@ -13,13 +14,13 @@ interface ListOrdersOptions {
   endDate?: string;
 }
 
-export const listOrdersCommand = new Command('list')
-  .description('订单列表')
-  .option('-l, --limit <limit>', '每页数量', '20')
-  .option('-o, --offset <offset>', '偏移量', '0')
-  .option('-s, --status <status>', '订单状态 (pending/paid/processing/shipped/delivered/completed/cancelled/refunded)')
-  .option('--start-date <date>', '起始日期 (YYYY-MM-DD)')
-  .option('--end-date <date>', '结束日期 (YYYY-MM-DD)')
+const cmd = new Command('list')
+  .description('List orders with pagination and filtering options')
+  .option('-l, --limit <number>', 'Orders per page (default: 20)', '20')
+  .option('-o, --offset <number>', 'Offset for pagination (default: 0)', '0')
+  .option('-s, --status <string>', 'Filter by status: pending|paid|processing|shipped|delivered|completed|cancelled|refunded')
+  .option('--start-date <date>', 'Start date (YYYY-MM-DD)')
+  .option('--end-date <date>', 'End date (YYYY-MM-DD)')
   .action(async (options: ListOrdersOptions) => {
     try {
       await listOrders(options);
@@ -27,6 +28,60 @@ export const listOrdersCommand = new Command('list')
       handleError(error);
     }
   });
+
+addEnhancedHelp(cmd, {
+  examples: [
+    '# List all orders (first 20)',
+    '$ optima order list',
+    '',
+    '# Filter by status to find orders to ship',
+    '$ optima order list --status paid',
+    '',
+    '# List recent orders with date range',
+    '$ optima order list --start-date 2024-01-01 --end-date 2024-01-31',
+    '',
+    '# Combine filters',
+    '$ optima order list --status shipped --limit 50 --json',
+  ],
+  output: {
+    example: JSON.stringify(
+      {
+        success: true,
+        data: {
+          orders: [
+            {
+              order_id: 'uuid',
+              order_number: 'ORD-001',
+              status: 'paid',
+              total: '99.99',
+              currency: 'USD',
+              customer_email: 'customer@example.com',
+              created_at: 'timestamp',
+            },
+          ],
+          total: 42,
+          page: 1,
+          per_page: 20,
+          has_next: true,
+        },
+      },
+      null,
+      2
+    ),
+  },
+  relatedCommands: [
+    { command: 'order get', description: 'View full order details' },
+    { command: 'order ship', description: 'Ship paid orders' },
+    { command: 'order complete', description: 'Mark orders as completed' },
+  ],
+  notes: [
+    'Status workflow: pending → paid → processing → shipped → delivered → completed',
+    'Use --status paid to find orders ready to ship',
+    'Date range is inclusive (includes both start and end dates)',
+  ],
+});
+
+export const listOrdersCommand = cmd;
 
 async function listOrders(options: ListOrdersOptions) {
   const spinner = output.spinner('正在获取订单列表...');

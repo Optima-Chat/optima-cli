@@ -4,10 +4,11 @@ import { existsSync } from 'fs';
 import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 import { output } from '../../utils/output.js';
+import { addEnhancedHelp } from '../../utils/helpText.js';
 
-export const uploadFileCommand = new Command('file')
-  .description('上传文件')
-  .option('--path <path>', '文件路径')
+const cmd = new Command('file')
+  .description('Upload document or file (PDFs, catalogs, manuals, etc.)')
+  .option('--path <path>', 'Local file path (required)')
   .action(async (options: { path?: string }) => {
     try {
       await uploadFile(options);
@@ -15,6 +16,39 @@ export const uploadFileCommand = new Command('file')
       handleError(error);
     }
   });
+
+addEnhancedHelp(cmd, {
+  examples: [
+    '# Upload product manual',
+    '$ optima upload file --path ./manual.pdf',
+    '',
+    '# Upload catalog or spec sheet',
+    '$ optima upload file --path ./catalog.xlsx',
+  ],
+  output: {
+    description: 'Returns publicly accessible file URL',
+    example: JSON.stringify({
+      success: true,
+      data: {
+        url: 'https://v1.optima.shop/file/manual-123.pdf',
+        file_path: './manual.pdf'
+      }
+    }, null, 2)
+  },
+  relatedCommands: [
+    { command: 'upload image', description: 'Upload product images' },
+    { command: 'upload video', description: 'Upload video content' },
+    { command: 'product create', description: 'Create product with attachments' },
+  ],
+  notes: [
+    'File path is required',
+    'Supported formats: PDF, DOCX, XLSX, TXT, ZIP',
+    'Maximum file size: 50MB',
+    'Returns permanent CDN URL for downloads',
+  ]
+});
+
+export const uploadFileCommand = cmd;
 
 async function uploadFile(options: { path?: string }) {
   if (!options.path || options.path.trim().length === 0) {

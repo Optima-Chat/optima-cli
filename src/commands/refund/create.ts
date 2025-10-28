@@ -4,6 +4,7 @@ import chalk from 'chalk';
 import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 import { output } from '../../utils/output.js';
+import { addEnhancedHelp } from '../../utils/helpText.js';
 
 interface CreateRefundOptions {
   id?: string;
@@ -19,11 +20,11 @@ const REFUND_REASONS = {
 
 type RefundReasonKey = keyof typeof REFUND_REASONS;
 
-export const createRefundCommand = new Command('create')
-  .description('创建退款')
-  .option('--id <id>', '订单 ID')
-  .option('-a, --amount <amount>', '退款金额')
-  .option('-r, --reason <reason>', '退款原因 (requested_by_customer/duplicate/fraudulent)')
+const cmd = new Command('create')
+  .description('Create refund for an order (full or partial)')
+  .option('--id <uuid>', 'Order ID (required)')
+  .option('-a, --amount <number>', 'Refund amount (required)')
+  .option('-r, --reason <string>', 'Refund reason: requested_by_customer/duplicate/fraudulent (required)')
   .action(async (options: CreateRefundOptions) => {
     try {
       await createRefund(options);
@@ -31,6 +32,47 @@ export const createRefundCommand = new Command('create')
       handleError(error);
     }
   });
+
+addEnhancedHelp(cmd, {
+  examples: [
+    '# Create full refund',
+    '$ optima order get --id order-123  # Check order total',
+    '$ optima refund create \\',
+    '  --id order-123 \\',
+    '  --amount 99.99 \\',
+    '  --reason requested_by_customer',
+    '',
+    '# Create partial refund',
+    '$ optima refund create \\',
+    '  --id order-456 \\',
+    '  --amount 25.00 \\',
+    '  --reason duplicate',
+  ],
+  output: {
+    example: JSON.stringify({
+      success: true,
+      data: {
+        refund_id: 'uuid',
+        order_id: 'uuid',
+        amount: 99.99,
+        reason: 'requested_by_customer',
+        reason_text: '客户要求退款'
+      }
+    }, null, 2)
+  },
+  relatedCommands: [
+    { command: 'order get', description: 'Check order amount before refunding' },
+    { command: 'refund get', description: 'View refund details' },
+  ],
+  notes: [
+    'Order ID, amount, and reason are required',
+    'Valid reasons: requested_by_customer, duplicate, fraudulent',
+    'Order must have a payment intent (paid order)',
+    'Amount can be less than order total for partial refunds',
+  ]
+});
+
+export const createRefundCommand = cmd;
 
 async function createRefund(options: CreateRefundOptions) {
   if (!options.id || options.id.trim().length === 0) {

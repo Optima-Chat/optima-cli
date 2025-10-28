@@ -15,14 +15,16 @@ interface CreateOptions {
   metaDescription?: string;
 }
 
-export const createProductTranslationCommand = new Command('create')
-  .description('创建商品翻译')
-  .option('--product-id <id>', '商品 ID')
-  .option('-l, --lang <code>', `语言代码（支持: ${SUPPORTED_LANGUAGES.join(', ')}）`)
-  .option('-n, --name <name>', '翻译后的名称')
-  .option('-d, --description <description>', '翻译后的描述')
-  .option('--meta-title <title>', 'SEO 标题')
-  .option('--meta-description <description>', 'SEO 描述')
+import { addEnhancedHelp } from '../../../utils/helpText.js';
+
+const cmd = new Command('create')
+  .description('Create product translation for a specific language')
+  .option('--product-id <id>', 'Product ID (required)')
+  .option('-l, --lang <code>', `Language code (required, supported: ${SUPPORTED_LANGUAGES.join(', ')})`)
+  .option('-n, --name <name>', 'Translated product name (required)')
+  .option('-d, --description <description>', 'Translated description (optional)')
+  .option('--meta-title <title>', 'SEO title (optional)')
+  .option('--meta-description <description>', 'SEO description (optional)')
   .action(async (options: CreateOptions) => {
     try {
       await createProductTranslation(options);
@@ -30,6 +32,39 @@ export const createProductTranslationCommand = new Command('create')
       handleError(error);
     }
   });
+
+addEnhancedHelp(cmd, {
+  examples: [
+    '# Create Chinese translation for product',
+    '$ optima i18n product create \\',
+    '  --product-id prod-123 \\',
+    '  --lang zh-CN \\',
+    '  --name "陶瓷杯" \\',
+    '  --description "精美手工陶瓷杯"',
+  ],
+  output: {
+    example: JSON.stringify({
+      success: true,
+      data: {
+        product_id: 'uuid',
+        language_code: 'zh-CN',
+        translation: { language_code: 'zh-CN', name: '陶瓷杯', description: '精美手工陶瓷杯' }
+      }
+    }, null, 2)
+  },
+  relatedCommands: [
+    { command: 'i18n languages', description: 'View supported language codes' },
+    { command: 'i18n product list', description: 'View all translations for product' },
+    { command: 'product get', description: 'View original product details' },
+  ],
+  notes: [
+    'Product ID, language code, and name are required',
+    'Supported languages: en-US, es-ES, ja-JP, vi-VN, zh-CN',
+    'Use BCP 47 format (e.g., zh-CN not zh)',
+  ]
+});
+
+export const createProductTranslationCommand = cmd;
 
 async function createProductTranslation(options: CreateOptions) {
   if (!options.productId || options.productId.trim().length === 0) {

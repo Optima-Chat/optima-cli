@@ -4,6 +4,7 @@ import chalk from 'chalk';
 import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 import { output } from '../../utils/output.js';
+import { addEnhancedHelp } from '../../utils/helpText.js';
 
 interface UpdateStatusOptions {
   id?: string;
@@ -11,11 +12,11 @@ interface UpdateStatusOptions {
   note?: string;
 }
 
-export const updateStatusCommand = new Command('update-status')
-  .description('更新物流状态')
-  .option('--id <id>', '订单 ID')
-  .option('-s, --status <status>', '物流状态')
-  .option('-n, --note <note>', '备注')
+const cmd = new Command('update-status')
+  .description('Update shipping tracking status for an order')
+  .option('--id <uuid>', 'Order ID (required)')
+  .option('-s, --status <string>', 'Shipping status (in_transit, out_for_delivery, delivered, etc.)')
+  .option('-n, --note <string>', 'Status note/description (optional)')
   .action(async (options: UpdateStatusOptions) => {
     try {
       await updateShippingStatus(options);
@@ -23,6 +24,44 @@ export const updateStatusCommand = new Command('update-status')
       handleError(error);
     }
   });
+
+addEnhancedHelp(cmd, {
+  examples: [
+    '# Update shipping status to in transit',
+    '$ optima shipping update-status \\',
+    '  --id order-123 \\',
+    '  --status in_transit \\',
+    '  --note "Package picked up from warehouse"',
+    '',
+    '# Mark as delivered',
+    '$ optima shipping update-status \\',
+    '  --id order-123 \\',
+    '  --status delivered',
+  ],
+  output: {
+    example: JSON.stringify({
+      success: true,
+      data: {
+        order_id: 'uuid',
+        status: 'in_transit',
+        note: 'Package picked up from warehouse',
+        updated_at: 'timestamp'
+      }
+    }, null, 2)
+  },
+  relatedCommands: [
+    { command: 'shipping history', description: 'View tracking history' },
+    { command: 'order ship', description: 'Mark order as shipped first' },
+  ],
+  notes: [
+    'Order ID is required',
+    'Common statuses: in_transit, out_for_delivery, delivered',
+    'Note is optional but recommended for clarity',
+    'Order must be shipped before updating status',
+  ]
+});
+
+export const updateStatusCommand = cmd;
 
 async function updateShippingStatus(options: UpdateStatusOptions) {
   // 验证参数

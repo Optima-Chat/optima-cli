@@ -2,9 +2,10 @@ import { Command } from 'commander';
 import chalk from 'chalk';
 import { isAuthenticated, getUser, getConfigPath } from '../../utils/config.js';
 import { output } from '../../utils/output.js';
+import { addEnhancedHelp } from '../../utils/helpText.js';
 
-export const whoamiCommand = new Command('whoami')
-  .description('显示当前登录用户信息')
+const cmd = new Command('whoami')
+  .description('Show current logged-in user information and authentication status')
   .action(async () => {
     try {
       if (!isAuthenticated()) {
@@ -60,3 +61,38 @@ export const whoamiCommand = new Command('whoami')
       }
     }
   });
+
+addEnhancedHelp(cmd, {
+  examples: [
+    '# Check who is logged in',
+    '$ optima auth whoami',
+    '',
+    '# Get user info in JSON format',
+    '$ optima auth whoami --json',
+  ],
+  output: {
+    example: JSON.stringify({
+      success: true,
+      data: {
+        user: {
+          id: 'uuid',
+          email: 'user@example.com',
+          name: 'User Name',
+          role: 'merchant'
+        },
+        config_path: '~/.config/optima-cli/config.json'
+      }
+    }, null, 2)
+  },
+  relatedCommands: [
+    { command: 'auth login', description: 'Login if not authenticated' },
+    { command: 'merchant info', description: 'View merchant account details' },
+  ],
+  notes: [
+    'Returns error if not logged in',
+    'Shows user email, name, ID, and role',
+    'Displays config file location',
+  ]
+});
+
+export const whoamiCommand = cmd;

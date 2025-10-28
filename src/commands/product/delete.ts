@@ -4,16 +4,17 @@ import chalk from 'chalk';
 import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 import { output } from '../../utils/output.js';
+import { addEnhancedHelp } from '../../utils/helpText.js';
 
 interface DeleteProductOptions {
   id?: string;
   yes?: boolean;
 }
 
-export const deleteProductCommand = new Command('delete')
-  .description('删除商品')
-  .option('--id <id>', '商品 ID')
-  .option('-y, --yes', '跳过确认提示')
+const cmd = new Command('delete')
+  .description('Delete a product permanently')
+  .option('--id <uuid>', 'Product ID (required)')
+  .option('-y, --yes', 'Skip confirmation prompt (non-interactive)')
   .action(async (options: DeleteProductOptions) => {
     try {
       if (!options.id) {
@@ -24,6 +25,37 @@ export const deleteProductCommand = new Command('delete')
       handleError(error);
     }
   });
+
+addEnhancedHelp(cmd, {
+  examples: [
+    '# Delete product with confirmation',
+    '$ optima product delete --id prod-123',
+    '',
+    '# Delete without confirmation (non-interactive)',
+    '$ optima product delete --id prod-123 --yes',
+  ],
+  output: {
+    example: JSON.stringify({
+      success: true,
+      data: {
+        product_id: 'uuid',
+        deleted: true
+      }
+    }, null, 2)
+  },
+  relatedCommands: [
+    { command: 'product list', description: 'Find product IDs' },
+    { command: 'product get', description: 'View product before deleting' },
+  ],
+  notes: [
+    'Product ID is required',
+    'Requires confirmation unless --yes flag is used',
+    'This action cannot be undone',
+    'Use --yes for non-interactive/automated operations',
+  ]
+});
+
+export const deleteProductCommand = cmd;
 
 async function deleteProduct(productId: string, options: DeleteProductOptions) {
   // 验证参数

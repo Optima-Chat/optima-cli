@@ -4,16 +4,17 @@ import chalk from 'chalk';
 import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 import { output } from '../../utils/output.js';
+import { addEnhancedHelp } from '../../utils/helpText.js';
 
 interface CompleteOrderOptions {
   id?: string;
   yes?: boolean;
 }
 
-export const completeOrderCommand = new Command('complete')
-  .description('完成订单')
-  .option('--id <id>', '订单 ID')
-  .option('-y, --yes', '跳过确认提示')
+const cmd = new Command('complete')
+  .description('Mark order as complete/fulfilled')
+  .option('--id <uuid>', 'Order ID (required)')
+  .option('-y, --yes', 'Skip confirmation prompt (non-interactive)')
   .action(async (options: CompleteOrderOptions) => {
     try {
       await completeOrder(options);
@@ -21,6 +22,38 @@ export const completeOrderCommand = new Command('complete')
       handleError(error);
     }
   });
+
+addEnhancedHelp(cmd, {
+  examples: [
+    '# Complete order with confirmation',
+    '$ optima order complete --id order-123',
+    '',
+    '# Complete without confirmation (non-interactive)',
+    '$ optima order complete --id order-123 --yes',
+  ],
+  output: {
+    example: JSON.stringify({
+      success: true,
+      data: {
+        order_id: 'uuid',
+        status: 'completed'
+      }
+    }, null, 2)
+  },
+  relatedCommands: [
+    { command: 'order ship', description: 'Ship order first' },
+    { command: 'order mark-delivered', description: 'Mark as delivered' },
+    { command: 'order list', description: 'Find order IDs' },
+  ],
+  notes: [
+    'Order ID is required',
+    'Requires confirmation unless --yes flag is used',
+    'Order should be shipped/delivered before completing',
+    'Use --yes for non-interactive/automated operations',
+  ]
+});
+
+export const completeOrderCommand = cmd;
 
 async function completeOrder(options: CompleteOrderOptions) {
   // 验证参数

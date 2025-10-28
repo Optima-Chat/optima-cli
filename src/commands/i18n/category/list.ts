@@ -1,3 +1,4 @@
+import { addEnhancedHelp } from '../../../utils/helpText.js';
 import { Command } from 'commander';
 
 import chalk from 'chalk';
@@ -6,7 +7,7 @@ import { output } from '../../../utils/output.js';
 import { commerceApi } from '../../../api/rest/commerce.js';
 import { handleError, ValidationError } from '../../../utils/error.js';
 
-export const listCategoryTranslationsCommand = new Command('list')
+const cmd = new Command('list')
   .description('查看分类翻译列表')
   .option('--category-id <id>', '分类 ID')
   .action(async (options: { categoryId?: string }) => {
@@ -65,3 +66,13 @@ export const listCategoryTranslationsCommand = new Command('list')
       handleError(error);
     }
   });
+addEnhancedHelp(cmd, {
+  examples: ['$ optima i18n category list --category-id id-123'],
+  relatedCommands: [
+    { command: 'i18n category create', description: 'Add new translation' },
+    { command: 'i18n category get', description: 'View specific translation' },
+  ],
+  notes: ['Category ID is required']
+});
+
+export const listCategoryTranslationsCommand = cmd;

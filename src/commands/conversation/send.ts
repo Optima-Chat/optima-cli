@@ -4,16 +4,17 @@ import chalk from 'chalk';
 import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 import { output } from '../../utils/output.js';
+import { addEnhancedHelp } from '../../utils/helpText.js';
 
 interface SendOptions {
   id?: string;
   content?: string;
 }
 
-export const sendMessageCommand = new Command('send')
-  .description('发送消息')
-  .option('--id <id>', '对话 ID')
-  .option('-c, --content <content>', '消息内容')
+const cmd = new Command('send')
+  .description('Send message to customer in conversation')
+  .option('--id <uuid>', 'Conversation ID (required)')
+  .option('-c, --content <string>', 'Message content (required)')
   .action(async (options: SendOptions) => {
     try {
       await sendMessage(options);
@@ -21,6 +22,42 @@ export const sendMessageCommand = new Command('send')
       handleError(error);
     }
   });
+
+addEnhancedHelp(cmd, {
+  examples: [
+    '# Send message to customer',
+    '$ optima conversation send \\',
+    '  --id conv-123 \\',
+    '  --content "Thank you for contacting us. How can I help?"',
+    '',
+    '# Send message with quotes',
+    '$ optima conversation send \\',
+    '  --id conv-123 \\',
+    '  --content "Your order #12345 has been shipped!"',
+  ],
+  output: {
+    example: JSON.stringify({
+      success: true,
+      data: {
+        conversation_id: 'uuid',
+        message_id: 'uuid',
+        content: 'Thank you for contacting us'
+      }
+    }, null, 2)
+  },
+  relatedCommands: [
+    { command: 'conversation get', description: 'View conversation details' },
+    { command: 'conversation messages', description: 'View message history' },
+    { command: 'conversation list', description: 'Find conversation IDs' },
+  ],
+  notes: [
+    'Conversation ID and content are required',
+    'Message is sent as merchant (not customer)',
+    'Use quotes around content with spaces',
+  ]
+});
+
+export const sendMessageCommand = cmd;
 
 async function sendMessage(options: SendOptions) {
   if (!options.id || options.id.trim().length === 0) {

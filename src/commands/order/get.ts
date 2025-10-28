@@ -3,10 +3,11 @@ import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 import { formatOrder } from '../../utils/format.js';
 import { output } from '../../utils/output.js';
+import { addEnhancedHelp } from '../../utils/helpText.js';
 
-export const getOrderCommand = new Command('get')
-  .description('订单详情')
-  .option('--id <id>', '订单 ID')
+const cmd = new Command('get')
+  .description('Get detailed information for a specific order by ID')
+  .option('--id <uuid>', 'Order ID (required)')
   .action(async (options: { id?: string }) => {
     try {
       await getOrder(options);
@@ -14,6 +15,45 @@ export const getOrderCommand = new Command('get')
       handleError(error);
     }
   });
+
+addEnhancedHelp(cmd, {
+  examples: [
+    '# Get order details',
+    '$ optima order get --id abc-123-def',
+    '',
+    '# Get from list first',
+    '$ optima order list --status paid',
+    '$ optima order get --id <order_id_from_list>',
+  ],
+  output: {
+    example: JSON.stringify({
+      success: true,
+      data: {
+        order: {
+          order_id: 'uuid',
+          order_number: 'ORD-001',
+          status: 'paid',
+          total: '99.99',
+          currency: 'USD',
+          customer: { email: 'customer@example.com', name: 'John Doe' },
+          items: [{ product_id: 'uuid', quantity: 2, price: '49.99' }],
+          shipping_address: { country: 'US', city: 'New York' },
+          created_at: 'timestamp'
+        }
+      }
+    }, null, 2)
+  },
+  relatedCommands: [
+    { command: 'order list', description: 'Find order IDs' },
+    { command: 'order ship', description: 'Ship this order' },
+  ],
+  notes: [
+    'Use \'optima order list\' to find order IDs',
+    'Returns full order details including items and shipping address',
+  ]
+});
+
+export const getOrderCommand = cmd;
 
 async function getOrder(options: { id?: string }) {
   // 验证参数

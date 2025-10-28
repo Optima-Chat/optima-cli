@@ -3,10 +3,11 @@ import chalk from 'chalk';
 import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 import { output } from '../../utils/output.js';
+import { addEnhancedHelp } from '../../utils/helpText.js';
 
-export const getRefundCommand = new Command('get')
-  .description('退款详情')
-  .option('--id <id>', '退款 ID')
+const cmd = new Command('get')
+  .description('Get refund details by refund ID')
+  .option('--id <uuid>', 'Refund ID (required)')
   .action(async (options: { id?: string }) => {
     try {
       await getRefund(options);
@@ -14,6 +15,40 @@ export const getRefundCommand = new Command('get')
       handleError(error);
     }
   });
+
+addEnhancedHelp(cmd, {
+  examples: [
+    '# Get refund details',
+    '$ optima refund get --id refund-123',
+    '',
+    '# Get refund in JSON format',
+    '$ optima refund get --id refund-123 --json',
+  ],
+  output: {
+    example: JSON.stringify({
+      success: true,
+      data: {
+        refund_id: 'uuid',
+        order_id: 'uuid',
+        amount: 99.99,
+        status: 'succeeded',
+        reason: 'requested_by_customer',
+        created_at: 'timestamp'
+      }
+    }, null, 2)
+  },
+  relatedCommands: [
+    { command: 'refund create', description: 'Create new refund' },
+    { command: 'order get', description: 'View associated order' },
+  ],
+  notes: [
+    'Refund ID is required',
+    'Shows refund status and details',
+    'Use refund ID from create command response',
+  ]
+});
+
+export const getRefundCommand = cmd;
 
 async function getRefund(options: { id?: string }) {
   if (!options.id || options.id.trim().length === 0) {

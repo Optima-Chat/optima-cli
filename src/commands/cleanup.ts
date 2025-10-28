@@ -9,9 +9,11 @@ const CLAUDE_MD_PATH = path.join(os.homedir(), '.claude', 'CLAUDE.md');
 const OPTIMA_START_MARKER = '## Optima CLI';
 const OPTIMA_END_MARKER = '<!-- END_OPTIMA_CLI -->';
 
-export const cleanupCommand = new Command('cleanup')
-  .description('清理 Claude Code 配置文件中的 Optima CLI 区块')
-  .option('--yes', '跳过确认直接清理')
+import { addEnhancedHelp } from '../utils/helpText.js';
+
+const cmd = new Command('cleanup')
+  .description('Remove Optima CLI config from Claude Code global settings')
+  .option('--yes', 'Skip confirmation prompt (non-interactive)')
   .action(async (options) => {
     try {
       // 检查文件是否存在
@@ -71,3 +73,29 @@ export const cleanupCommand = new Command('cleanup')
       console.log(chalk.red(`\n❌ 清理失败: ${error.message}\n`));
     }
   });
+
+addEnhancedHelp(cmd, {
+  examples: [
+    '# Remove Optima config with confirmation',
+    '$ optima cleanup',
+    '',
+    '# Remove without confirmation (non-interactive)',
+    '$ optima cleanup --yes',
+  ],
+  output: {
+    description: 'Removes Optima CLI section from ~/.claude/CLAUDE.md',
+    example: 'Configuration file: /Users/username/.claude/CLAUDE.md'
+  },
+  relatedCommands: [
+    { command: 'init', description: 'Re-enable Optima in project' },
+    { command: 'auth logout', description: 'Logout before cleanup' },
+  ],
+  notes: [
+    'Removes global configuration from ~/.claude/CLAUDE.md',
+    'Requires confirmation unless --yes flag is used',
+    'Does not affect tokens or login status',
+    'Project-level configs (.claude/CLAUDE.md) are not affected',
+  ]
+});
+
+export const cleanupCommand = cmd;

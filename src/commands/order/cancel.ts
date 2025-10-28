@@ -4,6 +4,7 @@ import chalk from 'chalk';
 import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 import { output } from '../../utils/output.js';
+import { addEnhancedHelp } from '../../utils/helpText.js';
 
 interface CancelOrderOptions {
   id?: string;
@@ -11,11 +12,11 @@ interface CancelOrderOptions {
   yes?: boolean;
 }
 
-export const cancelOrderCommand = new Command('cancel')
-  .description('取消订单')
-  .option('--id <id>', '订单 ID')
-  .option('-r, --reason <reason>', '取消原因')
-  .option('-y, --yes', '跳过确认提示')
+const cmd = new Command('cancel')
+  .description('Cancel an order')
+  .option('--id <uuid>', 'Order ID (required)')
+  .option('-r, --reason <string>', 'Cancellation reason (optional)')
+  .option('-y, --yes', 'Skip confirmation prompt (non-interactive)')
   .action(async (options: CancelOrderOptions) => {
     try {
       await cancelOrder(options);
@@ -23,6 +24,44 @@ export const cancelOrderCommand = new Command('cancel')
       handleError(error);
     }
   });
+
+addEnhancedHelp(cmd, {
+  examples: [
+    '# Cancel order with confirmation',
+    '$ optima order cancel --id order-123',
+    '',
+    '# Cancel with reason',
+    '$ optima order cancel \\',
+    '  --id order-123 \\',
+    '  --reason "Customer requested cancellation"',
+    '',
+    '# Cancel without confirmation (non-interactive)',
+    '$ optima order cancel --id order-123 --yes',
+  ],
+  output: {
+    example: JSON.stringify({
+      success: true,
+      data: {
+        order_id: 'uuid',
+        status: 'cancelled',
+        reason: 'Customer requested cancellation'
+      }
+    }, null, 2)
+  },
+  relatedCommands: [
+    { command: 'order list', description: 'Find order IDs' },
+    { command: 'order get', description: 'View order before canceling' },
+    { command: 'refund create', description: 'Refund cancelled orders' },
+  ],
+  notes: [
+    'Order ID is required',
+    'Requires confirmation unless --yes flag is used',
+    'Reason is optional but recommended',
+    'Use --yes for non-interactive/automated operations',
+  ]
+});
+
+export const cancelOrderCommand = cmd;
 
 async function cancelOrder(options: CancelOrderOptions) {
   // 验证参数

@@ -5,10 +5,11 @@ import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 import { formatDate } from '../../utils/format.js';
 import { output } from '../../utils/output.js';
+import { addEnhancedHelp } from '../../utils/helpText.js';
 
-export const historyCommand = new Command('history')
-  .description('查看库存变更历史')
-  .option('--id <id>', '商品 ID')
+const cmd = new Command('history')
+  .description('View inventory change history for a product')
+  .option('--id <id>', 'Product ID (required)')
   .action(async (options: { id?: string }) => {
     try {
       await getHistory(options);
@@ -16,6 +17,51 @@ export const historyCommand = new Command('history')
       handleError(error);
     }
   });
+
+addEnhancedHelp(cmd, {
+  examples: [
+    '# View inventory change history',
+    '$ optima inventory history --id prod-123',
+  ],
+  output: {
+    description: 'Returns list of all stock changes with timestamps',
+    example: JSON.stringify({
+      success: true,
+      data: {
+        product_id: 'uuid',
+        history: [
+          {
+            created_at: '2025-01-15T10:00:00Z',
+            change_type: 'restock',
+            quantity_change: 100,
+            quantity_after: 150,
+            note: 'Manual restock'
+          },
+          {
+            created_at: '2025-01-14T15:30:00Z',
+            change_type: 'sale',
+            quantity_change: -5,
+            quantity_after: 50,
+            note: 'Order #12345'
+          }
+        ],
+        total: 2
+      }
+    }, null, 2)
+  },
+  relatedCommands: [
+    { command: 'inventory update', description: 'Update stock quantity' },
+    { command: 'inventory low-stock', description: 'Find low stock items' },
+    { command: 'product get', description: 'View current stock level' },
+  ],
+  notes: [
+    'Product ID is required',
+    'Shows all changes: restocks, sales, reserves, adjustments',
+    'Includes timestamps, change type, and quantity delta',
+  ]
+});
+
+export const historyCommand = cmd;
 
 async function getHistory(options: { id?: string }) {
   // 验证参数

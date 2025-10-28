@@ -4,10 +4,11 @@ import Table from 'cli-table3';
 import { commerceApi } from '../../../api/rest/commerce.js';
 import { handleError, ValidationError } from '../../../utils/error.js';
 import { output } from '../../../utils/output.js';
+import { addEnhancedHelp } from '../../../utils/helpText.js';
 
-export const listProductTranslationsCommand = new Command('list')
-  .description('查看商品翻译列表')
-  .option('--product-id <id>', '商品 ID')
+const cmd = new Command('list')
+  .description('List all translations for a product')
+  .option('--product-id <id>', 'Product ID (required)')
   .action(async (options: { productId?: string }) => {
     try {
       if (!options.productId || options.productId.trim().length === 0) {
@@ -64,3 +65,30 @@ export const listProductTranslationsCommand = new Command('list')
       handleError(error);
     }
   });
+
+addEnhancedHelp(cmd, {
+  examples: [
+    '# List all translations for product',
+    '$ optima i18n product list --product-id prod-123',
+  ],
+  output: {
+    example: JSON.stringify({
+      success: true,
+      data: {
+        product_id: 'uuid',
+        translations: [
+          { language_code: 'zh-CN', name: '陶瓷杯', description: '精美手工陶瓷杯' },
+          { language_code: 'es-ES', name: 'Taza cerámica', description: 'Taza hecha a mano' }
+        ],
+        total: 2
+      }
+    }, null, 2)
+  },
+  relatedCommands: [
+    { command: 'i18n product create', description: 'Add new translation' },
+    { command: 'i18n product get', description: 'View specific translation' },
+  ],
+  notes: ['Product ID is required', 'Shows all existing translations for the product']
+});
+
+export const listProductTranslationsCommand = cmd;

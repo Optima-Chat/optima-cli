@@ -4,10 +4,11 @@ import { existsSync } from 'fs';
 import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 import { output } from '../../utils/output.js';
+import { addEnhancedHelp } from '../../utils/helpText.js';
 
-export const uploadImageCommand = new Command('image')
-  .description('上传图片')
-  .option('--path <path>', '图片文件路径')
+const cmd = new Command('image')
+  .description('Upload an image file and get media ID for products')
+  .option('--path <filepath>', 'Local image file path (required)')
   .action(async (options: { path?: string }) => {
     try {
       await uploadImage(options);
@@ -15,6 +16,46 @@ export const uploadImageCommand = new Command('image')
       handleError(error);
     }
   });
+
+addEnhancedHelp(cmd, {
+  examples: [
+    '# Upload product image',
+    '$ optima upload image --path ./product.jpg',
+    '',
+    '# Upload and use media ID for product',
+    '$ optima upload image --path ./mug.png',
+    '# Copy media_id from response',
+    '$ optima product create \\',
+    '  --title "Ceramic Mug" \\',
+    '  --price 29.99 \\',
+    '  --media-ids "<media_id>"',
+  ],
+  output: {
+    example: JSON.stringify({
+      success: true,
+      data: {
+        media_id: 'uuid',
+        filename: 'product.jpg',
+        url: 'https://cdn.optima.shop/uploads/...',
+        size: 125432,
+        mime_type: 'image/jpeg',
+        uploaded_at: 'timestamp'
+      }
+    }, null, 2)
+  },
+  relatedCommands: [
+    { command: 'product create', description: 'Create product with uploaded images' },
+    { command: 'product add-images', description: 'Add images to existing product' },
+  ],
+  notes: [
+    'Returns media_id needed for product/variant image association',
+    'Supported formats: JPG, PNG, GIF, WebP',
+    'Maximum file size: 10MB',
+    'Upload first, then use media_id when creating/updating products',
+  ]
+});
+
+export const uploadImageCommand = cmd;
 
 async function uploadImage(options: { path?: string }) {
   if (!options.path || options.path.trim().length === 0) {

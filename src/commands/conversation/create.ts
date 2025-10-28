@@ -4,6 +4,7 @@ import chalk from 'chalk';
 import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 import { output } from '../../utils/output.js';
+import { addEnhancedHelp } from '../../utils/helpText.js';
 
 interface CreateOptions {
   customerId?: string;
@@ -13,13 +14,13 @@ interface CreateOptions {
   message?: string;
 }
 
-export const createConversationCommand = new Command('create')
-  .description('创建对话')
-  .option('--customer-id <id>', '客户 ID（从订单中获取，必填）')
-  .option('-e, --email <email>', '客户邮箱（可选）')
-  .option('-p, --phone <phone>', '客户电话（可选）')
-  .option('-n, --name <name>', '客户姓名（可选）')
-  .option('-m, --message <message>', '初始消息（可选）')
+const cmd = new Command('create')
+  .description('Create customer support conversation')
+  .option('--customer-id <uuid>', 'Customer user ID from order (required)')
+  .option('-e, --email <email>', 'Customer email (optional)')
+  .option('-p, --phone <phone>', 'Customer phone (optional)')
+  .option('-n, --name <name>', 'Customer name (optional)')
+  .option('-m, --message <message>', 'Initial message (optional)')
   .action(async (options: CreateOptions) => {
     try {
       await createConversation(options);
@@ -27,6 +28,46 @@ export const createConversationCommand = new Command('create')
       handleError(error);
     }
   });
+
+addEnhancedHelp(cmd, {
+  examples: [
+    '# Get customer ID from order first',
+    '$ optima order get --id order-123',
+    '# Copy customer_user_id from response',
+    '',
+    '# Create conversation',
+    '$ optima conversation create \\',
+    '  --customer-id cust-456 \\',
+    '  --email "customer@example.com" \\',
+    '  --name "John Doe" \\',
+    '  --message "How can I help you?"',
+  ],
+  output: {
+    example: JSON.stringify({
+      success: true,
+      data: {
+        conversation_id: 'uuid',
+        customer_id: 'uuid',
+        customer_email: 'customer@example.com',
+        customer_name: 'John Doe',
+        initial_message: 'How can I help you?'
+      }
+    }, null, 2)
+  },
+  relatedCommands: [
+    { command: 'order get', description: 'Get customer_user_id from order' },
+    { command: 'conversation send', description: 'Send message to conversation' },
+    { command: 'conversation list', description: 'View all conversations' },
+  ],
+  notes: [
+    'customer-id is required (get from order.customer_user_id)',
+    'Email, phone, and name are optional but recommended',
+    'Initial message is optional',
+    'Use this to start support conversations with customers',
+  ]
+});
+
+export const createConversationCommand = cmd;
 
 async function createConversation(options: CreateOptions) {
   let { customerId, email, phone, name, message } = options;

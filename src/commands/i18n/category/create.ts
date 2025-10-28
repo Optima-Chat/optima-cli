@@ -1,3 +1,4 @@
+import { addEnhancedHelp } from '../../../utils/helpText.js';
 import { Command } from 'commander';
 import inquirer from 'inquirer';
 
@@ -14,7 +15,7 @@ interface CreateOptions {
   description?: string;
 }
 
-export const createCategoryTranslationCommand = new Command('create')
+const cmd = new Command('create')
   .description('创建分类翻译')
   .option('--category-id <id>', '分类 ID')
   .option('-l, --lang <code>', `语言代码（支持: ${SUPPORTED_LANGUAGES.join(', ')}）`)
@@ -27,6 +28,16 @@ export const createCategoryTranslationCommand = new Command('create')
       handleError(error);
     }
   });
+addEnhancedHelp(cmd, {
+  examples: ['$ optima i18n category create --category-id id-123 --lang zh-CN --name "名称"'],
+  relatedCommands: [
+    { command: 'i18n languages', description: 'View supported language codes' },
+    { command: 'i18n category list', description: 'View all translations' },
+  ],
+  notes: ['Category ID, language code, and name are required', 'Supported: en-US, es-ES, ja-JP, vi-VN, zh-CN']
+});
+
+export const createCategoryTranslationCommand = cmd;
 
 async function createCategoryTranslation(options: CreateOptions) {
   if (!options.categoryId || options.categoryId.trim().length === 0) {

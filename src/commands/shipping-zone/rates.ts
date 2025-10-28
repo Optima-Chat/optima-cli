@@ -5,11 +5,12 @@ import Table from 'cli-table3';
 import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 import { output } from '../../utils/output.js';
+import { addEnhancedHelp } from '../../utils/helpText.js';
 
 // 列出费率
-export const listRatesCommand = new Command('list-rates')
-  .description('查看区域运费费率')
-  .option('--zone-id <id>', '区域 ID')
+const listCmd = new Command('list-rates')
+  .description('List all shipping rates in a zone')
+  .option('--zone-id <id>', 'Zone ID (required)')
   .action(async (options: { zoneId?: string }) => {
     try {
       if (!options.zoneId || options.zoneId.trim().length === 0) {
@@ -67,6 +68,43 @@ export const listRatesCommand = new Command('list-rates')
     }
   });
 
+addEnhancedHelp(listCmd, {
+  examples: [
+    '# List all rates in a zone',
+    '$ optima shipping-zone list-rates --zone-id zone-123',
+  ],
+  output: {
+    description: 'Returns all shipping rates configured for the zone',
+    example: JSON.stringify({
+      success: true,
+      data: {
+        zone_id: 'uuid',
+        rates: [
+          {
+            id: 'rate-uuid',
+            name: 'Standard Shipping',
+            rate_type: 'flat_rate',
+            currency: 'USD',
+            base_cost: 15.00,
+            min_order_amount: 100.00
+          }
+        ],
+        total: 1
+      }
+    }, null, 2)
+  },
+  relatedCommands: [
+    { command: 'shipping-zone list', description: 'Find zone IDs' },
+    { command: 'shipping-zone add-rate', description: 'Add new rate to zone' },
+  ],
+  notes: [
+    'Zone ID is required',
+    'Shows flat rates, weight-based rates, and free shipping thresholds',
+  ]
+});
+
+export const listRatesCommand = listCmd;
+
 // 添加费率
 interface CreateRateOptions {
   zoneId?: string;
@@ -78,15 +116,15 @@ interface CreateRateOptions {
   minQuantity?: string;
 }
 
-export const createRateCommand = new Command('add-rate')
-  .description('添加运费费率')
-  .option('--zone-id <id>', '区域 ID')
-  .option('-n, --name <name>', '费率名称（如：标准快递）')
-  .option('-t, --rate-type <type>', '费率类型（flat_rate/free/weight_based）', 'flat_rate')
-  .option('-p, --price <price>', '运费价格')
-  .option('-c, --currency <currency>', '货币代码（如 USD, CNY, HKD，默认使用商户货币）')
-  .option('--min-amount <amount>', '免运费的最低订单金额')
-  .option('--min-quantity <quantity>', '免运费的最低商品数量')
+const createCmd = new Command('add-rate')
+  .description('Add shipping rate to a zone')
+  .option('--zone-id <id>', 'Zone ID (required)')
+  .option('-n, --name <name>', 'Rate name (e.g., "Standard Shipping") (required)')
+  .option('-t, --rate-type <type>', 'Rate type: flat_rate/free/weight_based (default: flat_rate)', 'flat_rate')
+  .option('-p, --price <price>', 'Shipping cost (required)')
+  .option('-c, --currency <currency>', 'Currency code (default: merchant default currency)')
+  .option('--min-amount <amount>', 'Minimum order amount for free shipping (optional)')
+  .option('--min-quantity <quantity>', 'Minimum order quantity for free shipping (optional)')
   .action(async (options: CreateRateOptions) => {
     try {
       await createRate(options);
@@ -94,6 +132,55 @@ export const createRateCommand = new Command('add-rate')
       handleError(error);
     }
   });
+
+addEnhancedHelp(createCmd, {
+  examples: [
+    '# Add flat rate shipping',
+    '$ optima shipping-zone add-rate \\',
+    '  --zone-id zone-123 \\',
+    '  --name "Standard Shipping" \\',
+    '  --price 15 \\',
+    '  --currency USD',
+    '',
+    '# Add free shipping threshold',
+    '$ optima shipping-zone add-rate \\',
+    '  --zone-id zone-123 \\',
+    '  --name "Free Shipping" \\',
+    '  --price 0 \\',
+    '  --min-amount 100',
+    '',
+    '# Interactive mode',
+    '$ optima shipping-zone add-rate --zone-id zone-123',
+  ],
+  output: {
+    example: JSON.stringify({
+      success: true,
+      data: {
+        zone_id: 'uuid',
+        rate_id: 'uuid',
+        rate: {
+          name: 'Standard Shipping',
+          rate_type: 'flat_rate',
+          currency: 'USD',
+          base_cost: 15.00
+        }
+      }
+    }, null, 2)
+  },
+  relatedCommands: [
+    { command: 'shipping-zone list', description: 'Find zone IDs' },
+    { command: 'shipping-zone list-rates', description: 'View existing rates' },
+    { command: 'merchant info', description: 'Check default currency' },
+  ],
+  notes: [
+    'Zone ID, name, and price are required',
+    'Currency must match merchant default currency',
+    'Interactive mode prompts for missing required fields',
+    'Use min-amount for free shipping thresholds',
+  ]
+});
+
+export const createRateCommand = createCmd;
 
 async function createRate(options: CreateRateOptions) {
   if (!options.zoneId || options.zoneId.trim().length === 0) {

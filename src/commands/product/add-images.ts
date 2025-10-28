@@ -5,13 +5,14 @@ import { handleError, createApiError, ValidationError } from '../../utils/error.
 import { formatFileSize } from '../../utils/format.js';
 import { existsSync, statSync } from 'fs';
 import { output } from '../../utils/output.js';
+import { addEnhancedHelp } from '../../utils/helpText.js';
 
-export const addImagesCommand = new Command('add-images')
-  .description('添加商品图片（支持本地文件、URL 或 Media ID）')
-  .option('--id <id>', '商品 ID')
-  .option('--path <paths...>', '本地图片文件路径（支持多个）')
-  .option('--url <urls...>', '图片 URL（支持多个）')
-  .option('--media-id <ids...>', 'Media ID（从 upload 命令获取，支持多个）')
+const cmd = new Command('add-images')
+  .description('Add images to product (local files, URLs, or media IDs)')
+  .option('--id <uuid>', 'Product ID (required)')
+  .option('--path <paths...>', 'Local image file paths (multiple allowed)')
+  .option('--url <urls...>', 'Image URLs (multiple allowed)')
+  .option('--media-id <ids...>', 'Media IDs from upload command (multiple allowed, recommended)')
   .action(async (options: { id?: string; path?: string[]; url?: string[]; mediaId?: string[] }) => {
     try {
       await addImages(options);
@@ -19,6 +20,55 @@ export const addImagesCommand = new Command('add-images')
       handleError(error);
     }
   });
+
+addEnhancedHelp(cmd, {
+  examples: [
+    '# Method 1: Upload and add local files directly',
+    '$ optima product add-images \\',
+    '  --id prod-123 \\',
+    '  --path ./photo1.jpg ./photo2.jpg',
+    '',
+    '# Method 2: Use media IDs (RECOMMENDED)',
+    '$ optima upload image --path ./photo.jpg',
+    '# Copy media_id from response',
+    '$ optima product add-images \\',
+    '  --id prod-123 \\',
+    '  --media-id media_456 media_789',
+    '',
+    '# Method 3: Use image URLs',
+    '$ optima product add-images \\',
+    '  --id prod-123 \\',
+    '  --url https://example.com/image.jpg',
+  ],
+  output: {
+    example: JSON.stringify({
+      success: true,
+      data: {
+        product_id: 'uuid',
+        images: [
+          'https://cdn.optima.shop/uploads/...',
+          'https://cdn.optima.shop/uploads/...'
+        ],
+        count: 2
+      }
+    }, null, 2)
+  },
+  relatedCommands: [
+    { command: 'upload image', description: 'Upload images first to get media IDs' },
+    { command: 'product create', description: 'Create product with images' },
+    { command: 'product get', description: 'View current product images' },
+  ],
+  notes: [
+    'Product ID is required',
+    'Provide one of: --path, --url, or --media-id',
+    'Using --media-id is recommended (upload first, then associate)',
+    'Multiple images can be added in one command',
+    'Supported formats: JPG, PNG, GIF, WebP',
+    'Maximum file size: 10MB per image',
+  ]
+});
+
+export const addImagesCommand = cmd;
 
 async function addImages(options: { id?: string; path?: string[]; url?: string[]; mediaId?: string[] }) {
   // 验证参数

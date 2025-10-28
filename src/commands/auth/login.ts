@@ -4,9 +4,10 @@ import open from 'open';
 import { authApi } from '../../api/rest/auth.js';
 import { saveTokens, saveUser, isAuthenticated, getUser } from '../../utils/config.js';
 import { output } from '../../utils/output.js';
+import { addEnhancedHelp } from '../../utils/helpText.js';
 
-export const loginCommand = new Command('login')
-  .description('Device Flow 登录（在浏览器中完成授权）')
+const cmd = new Command('login')
+  .description('Login via OAuth Device Flow (opens browser for authorization)')
   .action(async () => {
     try {
       // 检查是否已登录
@@ -137,3 +138,37 @@ export const loginCommand = new Command('login')
       console.log(chalk.red(`\n❌ 登录失败: ${error.message}\n`));
     }
   });
+
+addEnhancedHelp(cmd, {
+  examples: [
+    '# Interactive login flow',
+    '$ optima auth login',
+    '# Browser will open automatically for authorization',
+    '# Follow on-screen instructions',
+  ],
+  output: {
+    description: 'Interactive command - displays login progress in terminal',
+    example: JSON.stringify({
+      success: true,
+      data: {
+        user: {
+          email: 'user@example.com',
+          name: 'User Name',
+          role: 'merchant'
+        },
+        expires_in: 900
+      }
+    }, null, 2)
+  },
+  relatedCommands: [
+    { command: 'auth whoami', description: 'Check login status' },
+    { command: 'auth logout', description: 'Logout and clear credentials' },
+  ],
+  notes: [
+    'Opens browser for OAuth authorization',
+    'Credentials are stored securely in ~/.config/optima-cli/',
+    'Alternative: Set OPTIMA_TOKEN environment variable for non-interactive auth',
+  ]
+});
+
+export const loginCommand = cmd;

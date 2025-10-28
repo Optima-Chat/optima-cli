@@ -3,10 +3,11 @@ import chalk from 'chalk';
 import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 import { output } from '../../utils/output.js';
+import { addEnhancedHelp } from '../../utils/helpText.js';
 
-export const closeConversationCommand = new Command('close')
-  .description('关闭对话')
-  .option('--id <id>', '对话 ID')
+const cmd = new Command('close')
+  .description('Close a conversation (mark as resolved)')
+  .option('--id <uuid>', 'Conversation ID (required)')
   .action(async (options: { id?: string }) => {
     try {
       await closeConversation(options);
@@ -14,6 +15,33 @@ export const closeConversationCommand = new Command('close')
       handleError(error);
     }
   });
+
+addEnhancedHelp(cmd, {
+  examples: [
+    '# Close conversation after resolving issue',
+    '$ optima conversation close --id conv-123',
+  ],
+  output: {
+    example: JSON.stringify({
+      success: true,
+      data: {
+        conversation_id: 'uuid',
+        status: 'closed'
+      }
+    }, null, 2)
+  },
+  relatedCommands: [
+    { command: 'conversation list', description: 'View all conversations' },
+    { command: 'conversation get', description: 'Check conversation status' },
+  ],
+  notes: [
+    'Conversation ID is required',
+    'Marks conversation as closed/resolved',
+    'Use after customer issue is resolved',
+  ]
+});
+
+export const closeConversationCommand = cmd;
 
 async function closeConversation(options: { id?: string }) {
   if (!options.id || options.id.trim().length === 0) {

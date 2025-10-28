@@ -4,13 +4,14 @@ import { existsSync } from 'fs';
 import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 import { output } from '../../utils/output.js';
+import { addEnhancedHelp } from '../../utils/helpText.js';
 
-export const addVariantImagesCommand = new Command('add-images')
-  .description('添加变体图片（支持本地文件或 Media ID）')
-  .option('--product-id <id>', '商品 ID')
-  .option('--variant-id <id>', '变体 ID')
-  .option('--path <paths...>', '本地图片文件路径（支持多个）')
-  .option('--media-id <ids...>', 'Media ID（从 upload 命令获取，支持多个）')
+const cmd = new Command('add-images')
+  .description('Add images to variant (supports local files or media IDs)')
+  .option('--product-id <uuid>', 'Product ID (required)')
+  .option('--variant-id <uuid>', 'Variant ID (required)')
+  .option('--path <paths...>', 'Local image file paths (multiple allowed)')
+  .option('--media-id <ids...>', 'Media IDs from upload command (multiple allowed)')
   .action(async (options: { productId?: string; variantId?: string; path?: string[]; mediaId?: string[] }) => {
     try {
       await addVariantImages(options);
@@ -18,6 +19,51 @@ export const addVariantImagesCommand = new Command('add-images')
       handleError(error);
     }
   });
+
+addEnhancedHelp(cmd, {
+  examples: [
+    '# Upload and add images from local files',
+    '$ optima variant add-images \\',
+    '  --product-id abc-123 \\',
+    '  --variant-id var-456 \\',
+    '  --path ./white-front.jpg ./white-back.jpg',
+    '',
+    '# Add images using media IDs (recommended)',
+    '$ optima upload image --path ./photo.jpg',
+    '# Copy media_id from response',
+    '$ optima variant add-images \\',
+    '  --product-id abc-123 \\',
+    '  --variant-id var-456 \\',
+    '  --media-id media_789 media_012',
+  ],
+  output: {
+    example: JSON.stringify({
+      success: true,
+      data: {
+        product_id: 'uuid',
+        variant_id: 'uuid',
+        images: [
+          'https://cdn.optima.shop/uploads/...',
+          'https://cdn.optima.shop/uploads/...'
+        ],
+        count: 2
+      }
+    }, null, 2)
+  },
+  relatedCommands: [
+    { command: 'upload image', description: 'Upload images first to get media IDs' },
+    { command: 'variant create', description: 'Create variant before adding images' },
+    { command: 'variant list', description: 'Find variant IDs' },
+  ],
+  notes: [
+    'product-id and variant-id are required',
+    'Provide either --path or --media-id (not both)',
+    'Using --media-id is recommended (upload first, then associate)',
+    'Multiple images can be added in one command',
+  ]
+});
+
+export const addVariantImagesCommand = cmd;
 
 async function addVariantImages(options: { productId?: string; variantId?: string; path?: string[]; mediaId?: string[] }) {
   // 验证参数

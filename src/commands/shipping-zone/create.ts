@@ -4,6 +4,7 @@ import chalk from 'chalk';
 import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError } from '../../utils/error.js';
 import { output } from '../../utils/output.js';
+import { addEnhancedHelp } from '../../utils/helpText.js';
 
 interface CreateZoneOptions {
   name?: string;
@@ -16,16 +17,16 @@ interface CreateZoneOptions {
   rateType?: string;
 }
 
-export const createZoneCommand = new Command('create')
-  .description('创建运费区域')
-  .option('-n, --name <name>', '区域名称')
-  .option('-c, --countries <countries>', '国家代码列表（逗号分隔，如 CN,US,JP）')
-  .option('-p, --price <price>', '运费价格（必填）')
-  .option('--currency <currency>', '货币代码（默认 CNY）')
-  .option('--min-weight <weight>', '最小重量（kg，默认 0）')
-  .option('--max-weight <weight>', '最大重量（kg，可选）')
-  .option('--rate-name <name>', '费率名称（默认：标准运费）')
-  .option('--rate-type <type>', '费率类型（默认：weight_based）')
+const cmd = new Command('create')
+  .description('Create a shipping zone with countries and rates')
+  .option('-n, --name <string>', 'Zone name (required)')
+  .option('-c, --countries <codes>', 'Country codes comma-separated (e.g., CN,US,JP)')
+  .option('-p, --price <number>', 'Shipping price (required)')
+  .option('--currency <string>', 'Currency code (default: CNY)')
+  .option('--min-weight <number>', 'Minimum weight in kg (default: 0)')
+  .option('--max-weight <number>', 'Maximum weight in kg (optional)')
+  .option('--rate-name <string>', 'Rate name (default: Standard Shipping)')
+  .option('--rate-type <string>', 'Rate type (default: weight_based)')
   .action(async (options: CreateZoneOptions) => {
     try {
       await createZone(options);
@@ -33,6 +34,54 @@ export const createZoneCommand = new Command('create')
       handleError(error);
     }
   });
+
+addEnhancedHelp(cmd, {
+  examples: [
+    '# Create zone for North America',
+    '$ optima shipping-zone create \\',
+    '  --name "North America" \\',
+    '  --countries US,CA,MX \\',
+    '  --price 15 \\',
+    '  --currency USD',
+    '',
+    '# Create zone with weight limits',
+    '$ optima shipping-zone create \\',
+    '  --name "Asia Standard" \\',
+    '  --countries CN,JP,KR \\',
+    '  --price 10 \\',
+    '  --min-weight 0 \\',
+    '  --max-weight 5',
+  ],
+  output: {
+    example: JSON.stringify({
+      success: true,
+      data: {
+        zone_id: 'uuid',
+        name: 'North America',
+        countries: ['US', 'CA', 'MX'],
+        rates: [{
+          rate_id: 'uuid',
+          name: 'Standard Shipping',
+          price: '15.00',
+          currency: 'USD',
+          min_weight: 0,
+          max_weight: null
+        }]
+      }
+    }, null, 2)
+  },
+  relatedCommands: [
+    { command: 'shipping-zone list', description: 'View all shipping zones' },
+    { command: 'shipping-zone add-rate', description: 'Add more rates to zone' },
+  ],
+  notes: [
+    'Name, countries, and price are required',
+    'Country codes use ISO 3166-1 alpha-2 format (e.g., US, CN, JP)',
+    'Weight limits help calculate accurate shipping costs',
+  ]
+});
+
+export const createZoneCommand = cmd;
 
 async function createZone(options: CreateZoneOptions) {
   let { name, countries, price, currency, minWeight, maxWeight, rateName, rateType } = options;

@@ -4,11 +4,12 @@ import open from 'open';
 import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 import { output } from '../../utils/output.js';
+import { addEnhancedHelp } from '../../utils/helpText.js';
 
-export const urlCommand = new Command('url')
-  .description('获取产品链接')
-  .option('--id <id>', '商品 ID')
-  .option('--open', '在浏览器中打开产品页面')
+const cmd = new Command('url')
+  .description('Get public product URL and optionally open in browser')
+  .option('--id <uuid>', 'Product ID (required)')
+  .option('--open', 'Open product page in browser')
   .action(async (options: { id?: string; open?: boolean }) => {
     try {
       await getProductUrl(options);
@@ -16,6 +17,43 @@ export const urlCommand = new Command('url')
       handleError(error);
     }
   });
+
+addEnhancedHelp(cmd, {
+  examples: [
+    '# Get product URL',
+    '$ optima product url --id prod-123',
+    '',
+    '# Open product page in browser',
+    '$ optima product url --id prod-123 --open',
+  ],
+  output: {
+    description: 'Returns public storefront URL for the product',
+    example: JSON.stringify({
+      success: true,
+      data: {
+        url: 'https://your-store.optima.shop/products/ceramic-mug',
+        product_id: 'uuid',
+        handle: 'ceramic-mug',
+        slug: 'your-store',
+        opened: false
+      }
+    }, null, 2)
+  },
+  relatedCommands: [
+    { command: 'product get', description: 'View product details' },
+    { command: 'merchant info', description: 'Check store slug' },
+    { command: 'product update', description: 'Update product handle' },
+  ],
+  notes: [
+    'Product ID is required',
+    'Product must have a handle (URL slug) set',
+    'Merchant must have a slug configured',
+    'URL format: https://{merchant-slug}.optima.shop/products/{product-handle}',
+    'Use --open to automatically open in browser',
+  ]
+});
+
+export const urlCommand = cmd;
 
 async function getProductUrl(options: { id?: string; open?: boolean }) {
   // 验证参数

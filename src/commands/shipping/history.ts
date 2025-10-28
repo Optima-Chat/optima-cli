@@ -5,10 +5,11 @@ import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 import { formatDate } from '../../utils/format.js';
 import { output } from '../../utils/output.js';
+import { addEnhancedHelp } from '../../utils/helpText.js';
 
-export const historyCommand = new Command('history')
-  .description('查看物流历史')
-  .option('--id <id>', '订单 ID')
+const cmd = new Command('history')
+  .description('View shipping tracking history for an order')
+  .option('--id <uuid>', 'Order ID (required)')
   .action(async (options: { id?: string }) => {
     try {
       await getShippingHistory(options);
@@ -16,6 +17,45 @@ export const historyCommand = new Command('history')
       handleError(error);
     }
   });
+
+addEnhancedHelp(cmd, {
+  examples: [
+    '# View shipping history',
+    '$ optima shipping history --id order-123',
+    '',
+    '# Get history in JSON format',
+    '$ optima shipping history --id order-123 --json',
+  ],
+  output: {
+    example: JSON.stringify({
+      success: true,
+      data: {
+        order_id: 'uuid',
+        tracking_number: 'DHL123456',
+        carrier: 'DHL',
+        history: [
+          {
+            status: 'in_transit',
+            location: 'New York, NY',
+            timestamp: 'timestamp',
+            note: 'Package picked up'
+          }
+        ]
+      }
+    }, null, 2)
+  },
+  relatedCommands: [
+    { command: 'order get', description: 'View order details' },
+    { command: 'shipping update-status', description: 'Update shipping status' },
+  ],
+  notes: [
+    'Order ID is required',
+    'Shows tracking history with status updates',
+    'Order must have been shipped first',
+  ]
+});
+
+export const historyCommand = cmd;
 
 async function getShippingHistory(options: { id?: string }) {
   // 验证参数

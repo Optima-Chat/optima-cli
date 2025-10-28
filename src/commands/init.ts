@@ -36,8 +36,10 @@ function getOptimaSection(): string {
 ${OPTIMA_END_MARKER}`;
 }
 
-export const initCommand = new Command('init')
-  .description('在当前项目中启用 Optima CLI（添加完整配置到 .claude/CLAUDE.md）')
+import { addEnhancedHelp } from '../utils/helpText.js';
+
+const cmd = new Command('init')
+  .description('Enable Optima CLI in current project (adds config to .claude/CLAUDE.md)')
   .action(async () => {
     try {
       const claudeDir = path.dirname(PROJECT_CLAUDE_MD);
@@ -85,3 +87,29 @@ export const initCommand = new Command('init')
       console.log(chalk.red(`\n❌ 配置失败: ${error.message}\n`));
     }
   });
+
+addEnhancedHelp(cmd, {
+  examples: [
+    '# Enable Optima CLI in current project',
+    '$ optima init',
+    '',
+    '# This adds comprehensive CLI documentation to .claude/CLAUDE.md',
+    '# Including natural language command mappings for AI assistants',
+  ],
+  output: {
+    description: 'Creates/updates .claude/CLAUDE.md with Optima CLI configuration',
+    example: 'Configuration file: /path/to/project/.claude/CLAUDE.md'
+  },
+  relatedCommands: [
+    { command: 'cleanup', description: 'Remove Optima config from Claude' },
+    { command: 'auth login', description: 'Login after initialization' },
+  ],
+  notes: [
+    'Creates .claude directory if it doesn\'t exist',
+    'Preserves existing content in CLAUDE.md',
+    'Updates config if already present',
+    'Project-level configuration (not global)',
+  ]
+});
+
+export const initCommand = cmd;

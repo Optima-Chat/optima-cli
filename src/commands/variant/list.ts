@@ -3,10 +3,11 @@ import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 import { formatVariantList } from '../../utils/format.js';
 import { output } from '../../utils/output.js';
+import { addEnhancedHelp } from '../../utils/helpText.js';
 
-export const listVariantsCommand = new Command('list')
-  .description('商品变体列表')
-  .option('--product-id <id>', '商品 ID')
+const cmd = new Command('list')
+  .description('List all variants (SKUs) for a product')
+  .option('--product-id <uuid>', 'Product ID (required)')
   .action(async (options: { productId?: string }) => {
     try {
       await listVariants(options);
@@ -14,6 +15,59 @@ export const listVariantsCommand = new Command('list')
       handleError(error);
     }
   });
+
+addEnhancedHelp(cmd, {
+  examples: [
+    '# List all variants for a product',
+    '$ optima variant list --product-id abc-123',
+    '',
+    '# Get variants in JSON format',
+    '$ optima variant list --product-id abc-123 --json',
+  ],
+  output: {
+    example: JSON.stringify({
+      success: true,
+      data: {
+        variants: [
+          {
+            variant_id: 'uuid',
+            sku: 'MUG-S-WHITE',
+            price: '89.00',
+            stock: 10,
+            attributes: {
+              size: 'S',
+              color: 'White'
+            }
+          },
+          {
+            variant_id: 'uuid',
+            sku: 'MUG-M-BLUE',
+            price: '89.00',
+            stock: 15,
+            attributes: {
+              size: 'M',
+              color: 'Blue'
+            }
+          }
+        ],
+        product_id: 'abc-123',
+        total: 2
+      }
+    }, null, 2)
+  },
+  relatedCommands: [
+    { command: 'variant create', description: 'Create new variant' },
+    { command: 'variant update', description: 'Update variant details' },
+    { command: 'product list', description: 'Find product IDs' },
+  ],
+  notes: [
+    'product-id is required',
+    'Shows all SKUs and their attributes for a product',
+    'Use this to find variant IDs for update/delete operations',
+  ]
+});
+
+export const listVariantsCommand = cmd;
 
 async function listVariants(options: { productId?: string }) {
   // 验证参数
