@@ -38,6 +38,10 @@ async function getMerchantInfo() {
       console.log(`${chalk.gray('店铺链接:')}   ${chalk.cyan.underline(storeUrl)}`);
     }
 
+    if (merchant.default_currency) {
+      console.log(`${chalk.gray('默认货币:')}   ${merchant.default_currency}`);
+    }
+
     if (merchant.email) {
       console.log(`${chalk.gray('邮箱:')}       ${merchant.email}`);
     }
@@ -52,6 +56,16 @@ async function getMerchantInfo() {
 
     if (merchant.banner_url) {
       console.log(`${chalk.gray('Banner URL:')} ${chalk.cyan(merchant.banner_url)}`);
+    }
+
+    if (merchant.created_at) {
+      const createdDate = new Date(merchant.created_at).toLocaleString('zh-CN');
+      console.log(`${chalk.gray('创建时间:')}   ${createdDate}`);
+    }
+
+    if (merchant.updated_at) {
+      const updatedDate = new Date(merchant.updated_at).toLocaleString('zh-CN');
+      console.log(`${chalk.gray('更新时间:')}   ${updatedDate}`);
     }
 
     console.log(separator);
