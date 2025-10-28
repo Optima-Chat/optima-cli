@@ -4,6 +4,7 @@ import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 import { formatCategory } from '../../utils/format.js';
 import { output } from '../../utils/output.js';
+import { addEnhancedHelp } from '../../utils/helpText.js';
 
 interface CreateCategoryOptions {
   name?: string;
@@ -11,11 +12,11 @@ interface CreateCategoryOptions {
   parent?: string;
 }
 
-export const createCategoryCommand = new Command('create')
-  .description('创建分类')
-  .option('-n, --name <name>', '分类名称')
-  .option('-d, --description <description>', '分类描述')
-  .option('-p, --parent <parent-id>', '父分类 ID（创建子分类）')
+const cmd = new Command('create')
+  .description('Create a new product category (top-level or nested)')
+  .option('-n, --name <string>', 'Category name (required)')
+  .option('-d, --description <string>', 'Category description')
+  .option('-p, --parent <uuid>', 'Parent category ID (for creating subcategory)')
   .action(async (options: CreateCategoryOptions) => {
     try {
       await createCategory(options);
@@ -23,6 +24,47 @@ export const createCategoryCommand = new Command('create')
       handleError(error);
     }
   });
+
+addEnhancedHelp(cmd, {
+  examples: [
+    '# Create a top-level category',
+    '$ optima category create --name "Electronics"',
+    '',
+    '# Create with description',
+    '$ optima category create \\',
+    '  --name "Home & Garden" \\',
+    '  --description "Everything for your home"',
+    '',
+    '# Create subcategory',
+    '$ optima category list  # Get parent category ID',
+    '$ optima category create \\',
+    '  --name "Smartphones" \\',
+    '  --parent abc-123-def',
+  ],
+  output: {
+    example: JSON.stringify({
+      success: true,
+      data: {
+        category_id: 'uuid',
+        name: 'Electronics',
+        description: 'Category description',
+        parent_id: null,
+        created_at: 'timestamp'
+      }
+    }, null, 2)
+  },
+  relatedCommands: [
+    { command: 'category list', description: 'View all categories' },
+    { command: 'product create', description: 'Create product with category' },
+  ],
+  notes: [
+    'Name is required (interactive prompt if not provided)',
+    'Use --parent to create nested categories (subcategories)',
+    'Categories can be used to organize products',
+  ]
+});
+
+export const createCategoryCommand = cmd;
 
 async function createCategory(options: CreateCategoryOptions) {
   let { name, description, parent } = options;

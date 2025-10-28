@@ -4,9 +4,10 @@ import Table from 'cli-table3';
 import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError } from '../../utils/error.js';
 import { output } from '../../utils/output.js';
+import { addEnhancedHelp } from '../../utils/helpText.js';
 
-export const listZonesCommand = new Command('list')
-  .description('运费区域列表')
+const cmd = new Command('list')
+  .description('List all shipping zones with countries and rates')
   .action(async () => {
     try {
       const spinner = output.spinner('正在获取运费区域...');
@@ -54,3 +55,41 @@ export const listZonesCommand = new Command('list')
       handleError(error);
     }
   });
+
+addEnhancedHelp(cmd, {
+  examples: [
+    '# List all shipping zones',
+    '$ optima shipping-zone list',
+    '',
+    '# Get zones in JSON format',
+    '$ optima shipping-zone list --json',
+  ],
+  output: {
+    example: JSON.stringify({
+      success: true,
+      data: {
+        zones: [
+          {
+            zone_id: 'uuid',
+            name: 'North America',
+            countries: ['US', 'CA', 'MX'],
+            rates: [
+              { rate_id: 'uuid', price: '15.00', currency: 'USD' }
+            ]
+          }
+        ],
+        total: 1
+      }
+    }, null, 2)
+  },
+  relatedCommands: [
+    { command: 'shipping-zone create', description: 'Create new shipping zone' },
+    { command: 'shipping-zone list-rates', description: 'View rates for a zone' },
+  ],
+  notes: [
+    'Shows all configured shipping zones',
+    'Each zone contains countries and associated rates',
+  ]
+});
+
+export const listZonesCommand = cmd;
