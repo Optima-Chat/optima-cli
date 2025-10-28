@@ -1,8 +1,8 @@
 import { Command } from 'commander';
-import ora from 'ora';
 import chalk from 'chalk';
 import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
+import { output } from '../../utils/output.js';
 
 interface UpdateMerchantOptions {
   name?: string;
@@ -148,24 +148,32 @@ async function updateMerchant(options: UpdateMerchantOptions) {
     updateData.company_name = options.companyName;
   }
 
-  const spinner = ora('正在更新商户资料...').start();
+  const spinner = output.spinner('正在更新商户资料...');
 
   try {
     const merchant = await commerceApi.merchant.updateProfile(updateData);
     spinner.succeed('商户资料更新成功！');
 
-    console.log();
-    console.log(chalk.gray('商户名称: ') + chalk.cyan(merchant.name || '-'));
+    if (output.isJson()) {
+      output.success({
+        merchant_id: merchant.id,
+        updated_fields: Object.keys(updateData),
+        merchant: merchant
+      });
+    } else {
+      console.log();
+      console.log(chalk.gray('商户名称: ') + chalk.cyan(merchant.name || '-'));
 
-    if (merchant.slug) {
-      console.log(chalk.gray('店铺链接: ') + chalk.cyan.underline(`https://${merchant.slug}.optima.shop`));
+      if (merchant.slug) {
+        console.log(chalk.gray('店铺链接: ') + chalk.cyan.underline(`https://${merchant.slug}.optima.shop`));
+      }
+
+      if (merchant.description) {
+        console.log(chalk.gray('商户描述: ') + merchant.description);
+      }
+
+      console.log();
     }
-
-    if (merchant.description) {
-      console.log(chalk.gray('商户描述: ') + merchant.description);
-    }
-
-    console.log();
   } catch (error: any) {
     spinner.fail('商户资料更新失败');
     throw createApiError(error);
