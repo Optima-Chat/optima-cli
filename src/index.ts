@@ -21,6 +21,7 @@ import { conversationCommand } from './commands/conversation/index.js';
 import { transferCommand } from './commands/transfer/index.js';
 import { shippingZoneCommand } from './commands/shipping-zone/index.js';
 import { i18nCommand } from './commands/i18n/index.js';
+import { output } from './utils/output.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -32,7 +33,9 @@ const program = new Command();
 program
   .name('optima')
   .description('用自然语言管理电商店铺 - 专为 Claude Code 设计')
-  .version(VERSION);
+  .version(VERSION)
+  .option('--json', '输出 JSON 格式（AI 友好）')
+  .option('--pretty', '输出表格格式（人类可读，默认）');
 
 // 注册命令
 program.addCommand(authCommand);
@@ -76,3 +79,6 @@ program.action(() => {
 });
 
 program.parse();
+
+// 初始化输出管理器（必须在 parse() 后调用）
+output.init(program.opts());
