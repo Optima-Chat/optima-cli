@@ -5,6 +5,7 @@ import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 import { output } from '../../utils/output.js';
 import { addEnhancedHelp } from '../../utils/helpText.js';
+import { isInteractiveEnvironment, requireParam } from '../../utils/interactive.js';
 
 interface UpdateStatusOptions {
   id?: string;
@@ -73,40 +74,50 @@ async function updateShippingStatus(options: UpdateStatusOptions) {
 
   let statusData: any = {};
 
-  // 如果没有提供状态，进入交互式模式
-  if (!options.status) {
-    console.log(chalk.cyan(`\n📦 更新物流状态: ${orderId}\n`));
+  // 检测环境
+  if (isInteractiveEnvironment()) {
+    // 交互模式
+    if (!options.status) {
+      console.log(chalk.cyan(`\n📦 更新物流状态: ${orderId}\n`));
 
-    const answers = await inquirer.prompt([
-      {
-        type: 'list',
-        name: 'status',
-        message: '物流状态:',
-        choices: [
-          { name: '待发货 (pending)', value: 'pending' },
-          { name: '已发货 (shipped)', value: 'shipped' },
-          { name: '运输中 (in_transit)', value: 'in_transit' },
-          { name: '派送中 (out_for_delivery)', value: 'out_for_delivery' },
-          { name: '已送达 (delivered)', value: 'delivered' },
-          { name: '配送失败 (failed)', value: 'failed' },
-        ],
-      },
-      {
-        type: 'input',
-        name: 'note',
-        message: '备注 (可选):',
-        default: options.note || '',
-      },
-    ]);
+      const answers = await inquirer.prompt([
+        {
+          type: 'list',
+          name: 'status',
+          message: '物流状态:',
+          choices: [
+            { name: '待发货 (pending)', value: 'pending' },
+            { name: '已发货 (shipped)', value: 'shipped' },
+            { name: '运输中 (in_transit)', value: 'in_transit' },
+            { name: '派送中 (out_for_delivery)', value: 'out_for_delivery' },
+            { name: '已送达 (delivered)', value: 'delivered' },
+            { name: '配送失败 (failed)', value: 'failed' },
+          ],
+        },
+        {
+          type: 'input',
+          name: 'note',
+          message: '备注 (可选):',
+          default: options.note || '',
+        },
+      ]);
 
-    statusData = {
-      status: answers.status,
-      note: answers.note?.trim() || undefined,
-    };
+      statusData = {
+        status: answers.status,
+        note: answers.note?.trim() || undefined,
+      };
+    } else {
+      // 交互环境但参数完整
+      statusData = {
+        status: options.status,
+        note: options.note,
+      };
+    }
   } else {
-    // 命令行参数模式
+    // 非交互模式：直接验证参数
+    const status = requireParam(options.status, 'status', '物流状态');
     statusData = {
-      status: options.status,
+      status: status,
       note: options.note,
     };
   }

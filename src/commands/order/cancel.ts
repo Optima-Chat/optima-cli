@@ -5,6 +5,7 @@ import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 import { output } from '../../utils/output.js';
 import { addEnhancedHelp } from '../../utils/helpText.js';
+import { isInteractiveEnvironment } from '../../utils/interactive.js';
 
 interface CancelOrderOptions {
   id?: string;
@@ -75,46 +76,64 @@ async function cancelOrder(options: CancelOrderOptions) {
 
   // 如果没有提供原因，询问
   if (!reason && !options.yes) {
-    console.log(chalk.yellow(`\n⚠️  即将取消订单: ${orderId}\n`));
+    if (isInteractiveEnvironment()) {
+      // 交互模式：询问原因并确认
+      console.log(chalk.yellow(`\n⚠️  即将取消订单: ${orderId}\n`));
 
-    const answers = await inquirer.prompt([
-      {
-        type: 'input',
-        name: 'reason',
-        message: '取消原因 (可选):',
-        default: '',
-      },
-      {
-        type: 'confirm',
-        name: 'confirmed',
-        message: '确定要取消此订单吗？',
-        default: false,
-      },
-    ]);
+      const answers = await inquirer.prompt([
+        {
+          type: 'input',
+          name: 'reason',
+          message: '取消原因 (可选):',
+          default: '',
+        },
+        {
+          type: 'confirm',
+          name: 'confirmed',
+          message: '确定要取消此订单吗？',
+          default: false,
+        },
+      ]);
 
-    if (!answers.confirmed) {
-      console.log(chalk.gray('\n已取消操作\n'));
-      return;
+      if (!answers.confirmed) {
+        console.log(chalk.gray('\n已取消操作\n'));
+        return;
+      }
+
+      reason = answers.reason || undefined;
+    } else {
+      // 非交互模式：要求使用 --yes 标志
+      throw new ValidationError(
+        '非交互环境需要使用 --yes 标志确认取消操作',
+        'yes'
+      );
     }
-
-    reason = answers.reason || undefined;
   } else if (!options.yes) {
     // 有原因但需要确认
-    console.log(chalk.yellow(`\n⚠️  即将取消订单: ${orderId}`));
-    console.log(chalk.gray(`原因: ${reason || '无'}\n`));
+    if (isInteractiveEnvironment()) {
+      // 交互模式：显示原因并确认
+      console.log(chalk.yellow(`\n⚠️  即将取消订单: ${orderId}`));
+      console.log(chalk.gray(`原因: ${reason || '无'}\n`));
 
-    const answers = await inquirer.prompt([
-      {
-        type: 'confirm',
-        name: 'confirmed',
-        message: '确定要取消此订单吗？',
-        default: false,
-      },
-    ]);
+      const answers = await inquirer.prompt([
+        {
+          type: 'confirm',
+          name: 'confirmed',
+          message: '确定要取消此订单吗？',
+          default: false,
+        },
+      ]);
 
-    if (!answers.confirmed) {
-      console.log(chalk.gray('\n已取消操作\n'));
-      return;
+      if (!answers.confirmed) {
+        console.log(chalk.gray('\n已取消操作\n'));
+        return;
+      }
+    } else {
+      // 非交互模式：要求使用 --yes 标志
+      throw new ValidationError(
+        '非交互环境需要使用 --yes 标志确认取消操作',
+        'yes'
+      );
     }
   }
 

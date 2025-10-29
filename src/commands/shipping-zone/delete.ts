@@ -5,6 +5,7 @@ import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 import { output } from '../../utils/output.js';
 import { addEnhancedHelp } from '../../utils/helpText.js';
+import { isInteractiveEnvironment } from '../../utils/interactive.js';
 
 interface DeleteOptions {
   id?: string;
@@ -62,18 +63,27 @@ async function deleteZone(options: DeleteOptions) {
   const zoneId = options.id;
 
   if (!options.yes) {
-    const answers = await inquirer.prompt([
-      {
-        type: 'confirm',
-        name: 'confirm',
-        message: `确定要删除运费区域 ${zoneId} 吗？`,
-        default: false,
-      },
-    ]);
+    if (isInteractiveEnvironment()) {
+      // 交互模式：显示确认提示
+      const answers = await inquirer.prompt([
+        {
+          type: 'confirm',
+          name: 'confirm',
+          message: `确定要删除运费区域 ${zoneId} 吗？`,
+          default: false,
+        },
+      ]);
 
-    if (!answers.confirm) {
-      console.log(chalk.yellow('已取消删除'));
-      return;
+      if (!answers.confirm) {
+        console.log(chalk.yellow('已取消删除'));
+        return;
+      }
+    } else {
+      // 非交互模式：要求使用 --yes 标志
+      throw new ValidationError(
+        '非交互环境需要使用 --yes 标志确认删除操作',
+        'yes'
+      );
     }
   }
 

@@ -5,6 +5,7 @@ import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 import { output } from '../../utils/output.js';
 import { addEnhancedHelp } from '../../utils/helpText.js';
+import { isInteractiveEnvironment } from '../../utils/interactive.js';
 
 interface CompleteOrderOptions {
   id?: string;
@@ -65,20 +66,29 @@ async function completeOrder(options: CompleteOrderOptions) {
 
   // 确认完成（除非使用 --yes）
   if (!options.yes) {
-    console.log(chalk.yellow(`\n⚠️  即将完成订单: ${orderId}\n`));
+    if (isInteractiveEnvironment()) {
+      // 交互模式：显示确认提示
+      console.log(chalk.yellow(`\n⚠️  即将完成订单: ${orderId}\n`));
 
-    const answers = await inquirer.prompt([
-      {
-        type: 'confirm',
-        name: 'confirmed',
-        message: '确定要完成此订单吗？',
-        default: false,
-      },
-    ]);
+      const answers = await inquirer.prompt([
+        {
+          type: 'confirm',
+          name: 'confirmed',
+          message: '确定要完成此订单吗？',
+          default: false,
+        },
+      ]);
 
-    if (!answers.confirmed) {
-      console.log(chalk.gray('\n已取消操作\n'));
-      return;
+      if (!answers.confirmed) {
+        console.log(chalk.gray('\n已取消操作\n'));
+        return;
+      }
+    } else {
+      // 非交互模式：要求使用 --yes 标志
+      throw new ValidationError(
+        '非交互环境需要使用 --yes 标志确认完成操作',
+        'yes'
+      );
     }
   }
 
