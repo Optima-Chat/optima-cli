@@ -6,6 +6,7 @@ import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 import { output } from '../../utils/output.js';
 import { addEnhancedHelp } from '../../utils/helpText.js';
+import { isInteractiveEnvironment, requireParam, requireNumberParam } from '../../utils/interactive.js';
 
 // 列出费率
 const listCmd = new Command('list-rates')
@@ -13,11 +14,9 @@ const listCmd = new Command('list-rates')
   .option('--zone-id <id>', 'Zone ID (required)')
   .action(async (options: { zoneId?: string }) => {
     try {
-      if (!options.zoneId || options.zoneId.trim().length === 0) {
-        throw new ValidationError('区域 ID 不能为空', 'zone-id');
-      }
-
-      const zoneId = options.zoneId;
+      const zoneId = isInteractiveEnvironment()
+        ? (options.zoneId?.trim() || (() => { throw new ValidationError('区域 ID 不能为空', 'zone-id'); })())
+        : requireParam(options.zoneId, 'zone-id', '区域 ID');
 
       const spinner = output.spinner('正在获取费率...');
       const rates = await commerceApi.shippingFixed.listRates(zoneId);
@@ -183,13 +182,9 @@ addEnhancedHelp(createCmd, {
 export const createRateCommand = createCmd;
 
 async function createRate(options: CreateRateOptions) {
-  if (!options.zoneId || options.zoneId.trim().length === 0) {
-    throw new ValidationError('区域 ID 不能为空', 'zone-id');
-  }
-
-  const zoneId = options.zoneId;
-
-  let { name, rateType, price, currency, minAmount, minQuantity } = options;
+  const zoneId = isInteractiveEnvironment()
+    ? (options.zoneId?.trim() || (() => { throw new ValidationError('区域 ID 不能为空', 'zone-id'); })())
+    : requireParam(options.zoneId, 'zone-id', '区域 ID');
 
   // 获取商户信息以确定默认货币
   let merchantCurrency = 'USD';
@@ -202,52 +197,73 @@ async function createRate(options: CreateRateOptions) {
     // 如果获取失败，使用默认值 USD
   }
 
-  // 如果用户没有指定货币，使用商户货币
-  if (!currency) {
-    currency = merchantCurrency;
-  }
+  let name: string;
+  let priceNum: number;
+  let currency: string;
+  let minAmount: string | undefined;
+  let minQuantity: string | undefined;
+  let rateType: string;
 
-  // 交互式输入缺失的必填字段
-  if (!name || !price) {
-    const answers = await inquirer.prompt([
-      {
-        type: 'input',
-        name: 'name',
-        message: '费率名称:',
-        when: !name,
-        validate: (input) => input.trim().length > 0 || '名称不能为空',
-      },
-      {
-        type: 'input',
-        name: 'price',
-        message: '运费价格:',
-        when: !price,
-        validate: (input) => {
-          const num = parseFloat(input);
-          return !isNaN(num) && num >= 0 ? true : '价格必须是非负数';
+  // 检测环境
+  if (isInteractiveEnvironment()) {
+    // 交互模式：友好提示
+    if (!options.name || !options.price) {
+      const answers = await inquirer.prompt([
+        {
+          type: 'input',
+          name: 'name',
+          message: '费率名称:',
+          when: !options.name,
+          validate: (input) => input.trim().length > 0 || '名称不能为空',
         },
-      },
-      {
-        type: 'input',
-        name: 'minAmount',
-        message: '免运费的最低订单金额（可选）:',
-        when: !minAmount,
-      },
-    ]);
+        {
+          type: 'input',
+          name: 'price',
+          message: '运费价格:',
+          when: !options.price,
+          validate: (input) => {
+            const num = parseFloat(input);
+            return !isNaN(num) && num >= 0 ? true : '价格必须是非负数';
+          },
+        },
+        {
+          type: 'input',
+          name: 'minAmount',
+          message: '免运费的最低订单金额（可选）:',
+          when: !options.minAmount,
+        },
+      ]);
 
-    name = name || answers.name;
-    price = price || answers.price;
-    minAmount = minAmount || answers.minAmount;
+      name = options.name || answers.name;
+      priceNum = parseFloat(options.price || answers.price);
+      minAmount = options.minAmount || answers.minAmount;
+    } else {
+      // 交互环境但参数完整
+      name = options.name;
+      priceNum = parseFloat(options.price);
+      minAmount = options.minAmount;
+    }
+    currency = options.currency || merchantCurrency;
+    minQuantity = options.minQuantity;
+    rateType = options.rateType || 'flat_rate';
+  } else {
+    // 非交互模式：直接验证参数
+    name = requireParam(options.name, 'name', '费率名称');
+    priceNum = requireNumberParam(options.price, 'price', '运费价格', 0);
+    currency = options.currency || merchantCurrency;
+    minAmount = options.minAmount;
+    minQuantity = options.minQuantity;
+    rateType = options.rateType || 'flat_rate';
   }
 
   const spinner = output.spinner('正在添加费率...');
 
   try {
     const data: any = {
-      name: name!,
-      rate_type: rateType || 'flat_rate',
-      currency: currency!,
-      base_cost: parseFloat(price!),
+      name: name,
+      rate_type: rateType,
+      currency: currency,
+      base_cost: priceNum,
     };
 
     if (minAmount) data.min_order_amount = parseFloat(minAmount);
