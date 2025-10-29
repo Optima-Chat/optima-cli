@@ -5,6 +5,7 @@ import { handleError, createApiError, ValidationError } from '../../utils/error.
 import { formatCategory } from '../../utils/format.js';
 import { output } from '../../utils/output.js';
 import { addEnhancedHelp } from '../../utils/helpText.js';
+import { isInteractiveEnvironment, requireParam } from '../../utils/interactive.js';
 
 interface CreateCategoryOptions {
   name?: string;
@@ -67,39 +68,54 @@ addEnhancedHelp(cmd, {
 export const createCategoryCommand = cmd;
 
 async function createCategory(options: CreateCategoryOptions) {
-  let { name, description, parent } = options;
+  let name: string;
+  let description: string | undefined;
+  let parent: string | undefined;
 
-  // 交互式输入缺失的必填字段
-  if (!name) {
-    const answers = await inquirer.prompt([
-      {
-        type: 'input',
-        name: 'name',
-        message: '分类名称:',
-        validate: (input) => (input.trim().length > 0 ? true : '分类名称不能为空'),
-      },
-      {
-        type: 'input',
-        name: 'description',
-        message: '分类描述（可选）:',
-        default: '',
-      },
-      {
-        type: 'input',
-        name: 'parent',
-        message: '父分类 ID（可选，留空则为顶级分类）:',
-        default: '',
-      },
-    ]);
+  // 检测环境
+  if (isInteractiveEnvironment()) {
+    // 交互模式：友好提示
+    if (!options.name) {
+      const answers = await inquirer.prompt([
+        {
+          type: 'input',
+          name: 'name',
+          message: '分类名称:',
+          validate: (input) => (input.trim().length > 0 ? true : '分类名称不能为空'),
+        },
+        {
+          type: 'input',
+          name: 'description',
+          message: '分类描述（可选）:',
+          default: '',
+        },
+        {
+          type: 'input',
+          name: 'parent',
+          message: '父分类 ID（可选，留空则为顶级分类）:',
+          default: '',
+        },
+      ]);
 
-    name = answers.name;
-    description = answers.description || undefined;
-    parent = answers.parent || undefined;
-  }
+      name = answers.name.trim();
+      description = answers.description || undefined;
+      parent = answers.parent || undefined;
+    } else {
+      // 交互环境但参数完整
+      name = options.name.trim();
+      description = options.description;
+      parent = options.parent;
 
-  // 验证必填字段
-  if (!name || name.trim().length === 0) {
-    throw new ValidationError('分类名称不能为空', 'name');
+      // 验证 name
+      if (name.length === 0) {
+        throw new ValidationError('分类名称不能为空', 'name');
+      }
+    }
+  } else {
+    // 非交互模式：直接验证参数
+    name = requireParam(options.name, 'name', '分类名称').trim();
+    description = options.description;
+    parent = options.parent;
   }
 
   const spinner = output.spinner('正在创建分类...');
