@@ -58,6 +58,11 @@ if (!options.country || !options.weight) {
 ```typescript
 // ✅ 解决方案
 function isInteractiveEnvironment(): boolean {
+    // 0. 检测显式启用标志（最高优先级）
+    if (process.env.OPTIMA_INTERACTIVE === '1') {
+        return true;
+    }
+
     // 1. 检测标准输入是否为 TTY（终端）
     if (!process.stdin.isTTY) {
         return false;
@@ -111,6 +116,12 @@ function isInteractiveEnvironment(): boolean {
  * 3. 显式禁用标志 - 用户手动禁用交互模式
  */
 export function isInteractiveEnvironment(): boolean {
+    // 检测 0：显式启用标志（最高优先级）
+    // 允许用户在 CI 环境中强制启用交互模式（用于调试）
+    if (process.env.OPTIMA_INTERACTIVE === '1') {
+        return true;
+    }
+
     // 检测 1：标准输入是否为 TTY
     // 非 TTY 场景：管道、重定向、AI 环境、后台进程
     if (!process.stdin.isTTY) {
@@ -294,7 +305,7 @@ async function createProduct(options: CreateProductOptions) {
     } else {
         // 非交互模式：直接验证参数
         title = requireParam(options.title, 'title', '商品名称');
-        price = requireNumberParam(options.price, 'price', '商品价格', 0);
+        price = requireNumberParam(options.price, 'price', '商品价格', 0.01);
     }
 
     // 业务逻辑...
@@ -628,10 +639,10 @@ export function isInteractiveEnvironment(): boolean {
 ### A. 环境检测优先级
 
 ```
-1. NON_INTERACTIVE=1 (显式禁用) → false
-2. OPTIMA_INTERACTIVE=1 (显式启用) → true
+1. OPTIMA_INTERACTIVE=1 (显式启用，最高优先级) → true
+2. !process.stdin.isTTY (非 TTY) → false
 3. CI=true (CI 环境) → false
-4. !process.stdin.isTTY (非 TTY) → false
+4. NON_INTERACTIVE=1 (显式禁用) → false
 5. 默认 → true
 ```
 
