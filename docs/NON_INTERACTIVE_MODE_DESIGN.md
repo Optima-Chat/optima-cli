@@ -1,5 +1,33 @@
 # 非交互模式智能检测技术方案
 
+## ✅ 实施状态（v0.16.0）
+
+**状态**：已完成 🎉
+
+**完成日期**：2025-10-29
+
+**实施成果**：
+- ✅ Phase 1: 智能 TTY 检测基础设施（`src/utils/interactive.ts`）
+- ✅ Phase 2: Tier 1 核心命令重构（4/4 commands）
+- ✅ Phase 3: 所有受影响命令重构（16/16 commands）
+  - Tier 2: 常用命令（5/5）
+  - Tier 3: 确认命令（8/8）
+  - Tier 4: i18n 命令（3/3）
+- ✅ Phase 4: 集成测试和文档更新
+  - 测试脚本：`tests/test-non-interactive.sh`
+  - 文档：CLAUDE.md, README.md, .claude/CLAUDE.md
+
+**总计**：20 个命令成功重构，100% 完成
+
+**测试覆盖**：
+- 所有命令在 `NON_INTERACTIVE=1` 环境下正确报错
+- 参数验证错误消息清晰明确
+- 确认命令正确要求 `--yes` 标志
+
+**GitHub 分支**：`feature/non-interactive-mode`（7 个提交）
+
+---
+
 ## 问题背景
 
 ### 当前问题

@@ -4,7 +4,7 @@
 
 电商店铺管理命令行工具 - 用自然语言管理商品、订单、库存和物流。
 
-**版本**: v0.15.0 | **安装**: `npm install -g @optima-chat/optima-cli@latest`
+**版本**: v0.16.0 | **安装**: `npm install -g @optima-chat/optima-cli@latest`
 
 ### Available Modules (14)
 **auth** - OAuth 认证管理（login, logout, whoami）
@@ -24,11 +24,24 @@
 
 ### Best Practices
 
-**非交互模式（关键）**
-- 永远不要使用需要交互输入的命令
-- 始终使用参数提供所有必需信息
-- 删除/取消操作：添加 `-y` 或 `--yes` 跳过确认
-- 不确定时先用 `--help` 检查可用参数
+**非交互模式（v0.16.0 自动支持）**
+✅ **好消息**：Optima CLI 现在自动检测 AI 环境，无需手动配置！
+
+AI 环境下自动行为：
+- 缺少必需参数时立即报错（不会等待输入）
+- 错误消息包含字段名，方便调试：`⚠️ 缺少必需参数: --title (商品名称)`
+- 删除/取消操作需要 `--yes` 标志：`optima product delete --id prod-123 --yes`
+
+20 个命令支持智能检测：
+- **创建命令**：product/category/variant create，i18n create 等
+- **更新命令**：inventory update/reserve，shipping-zone create/add-rate 等
+- **确认命令**：product/category/variant delete，order cancel/complete 等
+
+如果遇到交互提示（罕见），可设置环境变量强制禁用：
+```bash
+export NON_INTERACTIVE=1
+optima product create --title "商品" --price 99
+```
 
 **图片上传最佳实践**
 1. 先上传图片：`optima upload image --path ./photo.jpg`

@@ -220,6 +220,144 @@ $ optima merchant info --pretty
 
 > **提示**：在 Claude Code 中，Claude 会根据需要自动选择合适的输出格式。
 
+## 🤖 非交互模式 / CI/CD
+
+**v0.16.0 新增**：Optima CLI 现在支持智能环境检测，自动适配终端用户和 AI/CI/CD 环境！
+
+### 🎯 自动环境检测
+
+Optima CLI 自动检测运行环境，无需手动配置：
+
+| 环境 | 行为 | 示例 |
+|------|------|------|
+| **终端** | 缺少参数时显示友好交互提示 | `$ optima product create`<br>📦 创建新商品<br>? 商品名称: _ |
+| **AI / CI/CD** | 自动禁用交互，立即报错 | `$ optima product create`<br>⚠️ 缺少必需参数: --title |
+
+### 🔧 环境变量控制
+
+**强制启用交互模式**（终端检测失败时）：
+```bash
+export OPTIMA_INTERACTIVE=1
+```
+
+**强制禁用交互模式**：
+```bash
+export NON_INTERACTIVE=1
+# 或
+export OPTIMA_NON_INTERACTIVE=true
+```
+
+**CI 环境自动检测**：
+- GitHub Actions (`CI=true`)
+- GitLab CI (`GITLAB_CI=true`)
+- Jenkins (`JENKINS_URL` 存在)
+- Travis CI (`TRAVIS=true`)
+- 等其他 CI 平台
+
+### 💻 CI/CD 使用示例
+
+#### GitHub Actions
+
+```yaml
+name: Deploy Products
+on: [push]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Optima CLI
+        run: npm install -g @optima-chat/optima-cli
+
+      - name: Create Products
+        env:
+          OPTIMA_TOKEN: ${{ secrets.OPTIMA_TOKEN }}
+        run: |
+          # CI 环境自动禁用交互提示
+          optima product create \
+            --title "自动化商品" \
+            --price 99 \
+            --stock 100
+
+          # 删除操作需要 --yes 确认
+          optima product delete --id prod-123 --yes
+```
+
+#### GitLab CI
+
+```yaml
+stages:
+  - deploy
+
+deploy_products:
+  stage: deploy
+  image: node:18
+  before_script:
+    - npm install -g @optima-chat/optima-cli
+  script:
+    # CI 环境自动检测，无需额外配置
+    - optima product list --json > products.json
+    - optima product create --title "新商品" --price 49
+  variables:
+    OPTIMA_TOKEN: $OPTIMA_TOKEN
+```
+
+#### Docker
+
+```dockerfile
+FROM node:18-alpine
+
+RUN npm install -g @optima-chat/optima-cli
+
+# 非交互环境，需提供所有参数
+CMD ["optima", "product", "list", "--json"]
+```
+
+```bash
+# 运行容器
+docker run -e OPTIMA_TOKEN=$OPTIMA_TOKEN optima-cli
+```
+
+### ✅ 确认操作（`--yes` 标志）
+
+删除、取消等危险操作在终端和 CI 环境都需要明确确认：
+
+```bash
+# 终端：显示确认提示
+$ optima product delete --id prod-123
+⚠️  即将删除商品: prod-123
+? 确定要删除此商品吗？ (y/N)
+
+# CI/CD：使用 --yes 跳过确认
+$ optima product delete --id prod-123 --yes
+✓ 商品删除成功！
+```
+
+需要 `--yes` 的命令：
+- `product delete`, `category delete`, `variant delete`
+- `order cancel`, `order complete`
+- `shipping-zone delete`
+- `cleanup`
+
+### 📋 受影响的命令（20 个）
+
+以下命令支持自动环境检测：
+
+| 类别 | 命令 | 非交互要求 |
+|------|------|-----------|
+| **核心** | `shipping calculate`, `product create`, `order ship`, `category create` | 提供所有必需参数 |
+| **常用** | `variant create`, `inventory update/reserve`, `shipping-zone create/add-rate` | 提供所有必需参数 |
+| **确认** | `product/category/variant delete`, `order cancel/complete`, `cleanup` | 添加 `--yes` 标志 |
+| **i18n** | `i18n product/category/merchant create` | 提供 `--lang` 和 `--name` |
+
+### 📚 更多信息
+
+完整技术文档请参阅 [`docs/NON_INTERACTIVE_MODE_DESIGN.md`](./docs/NON_INTERACTIVE_MODE_DESIGN.md)
+
+---
+
 ## 📖 命令参考
 
 > **提示**：推荐通过 Claude Code 用自然语言调用，以下为完整命令参考。
