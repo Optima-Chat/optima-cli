@@ -17,7 +17,8 @@
   - 测试脚本：`tests/test-non-interactive.sh`
   - 文档：CLAUDE.md, README.md, .claude/CLAUDE.md
 
-**总计**：20 个命令成功重构，100% 完成
+**总计**：19 个命令成功重构，100% 完成
+**更新**：v0.16.1 确认 order ship 的 tracking/carrier 为可选参数，从必需参数列表中移除
 
 **测试覆盖**：
 - 所有命令在 `NON_INTERACTIVE=1` 环境下正确报错
@@ -417,7 +418,7 @@ describe('isInteractiveEnvironment', () => {
 
 ### Phase 2: 高优先级命令重构 (Week 2)
 
-**任务**：重构 Tier 1 核心命令（4 个）
+**任务**：重构 Tier 1 核心命令（3 个）
 
 1. **shipping calculate**
    - 文件：`src/commands/shipping/calculate.ts`
@@ -429,15 +430,12 @@ describe('isInteractiveEnvironment', () => {
    - 修改点：第 106 行 `if (!options.title || !options.price)`
    - 测试：`optima product create` 无参数应报错
 
-3. **order ship**
-   - 文件：`src/commands/order/ship.ts`
-   - 修改点：检查 tracking/carrier 参数
-   - 测试：`optima order ship --id xxx` 缺少 tracking 应报错
-
-4. **category create**
+3. **category create**
    - 文件：`src/commands/category/create.ts`
    - 修改点：name 参数验证
    - 测试：`optima category create` 无参数应报错
+
+**注**：`order ship` 命令的 tracking/carrier 参数为可选（v0.16.1 更正），不需要非交互模式验证
 
 **测试策略**：
 ```bash

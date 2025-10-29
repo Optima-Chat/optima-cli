@@ -34,11 +34,10 @@ test_command() {
     fi
 }
 
-echo "📦 Tier 1: Core Commands (4)"
+echo "📦 Tier 1: Core Commands (3)"
 echo "----------------------------"
 test_command "optima shipping calculate" "缺少必需参数: --country" "shipping calculate"
 test_command "optima product create" "缺少必需参数: --title" "product create"
-test_command "optima order ship --id test-123" "缺少必需参数: --tracking" "order ship"
 test_command "optima category create" "缺少必需参数: --name" "category create"
 echo ""
 

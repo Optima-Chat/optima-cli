@@ -17,8 +17,8 @@ interface ShipOrderOptions {
 const cmd = new Command('ship')
   .description('Mark an order as shipped and add tracking information')
   .option('--id <uuid>', 'Order ID (required)')
-  .option('-t, --tracking <string>', 'Tracking number (required)')
-  .option('-c, --carrier <string>', 'Carrier name (required)')
+  .option('-t, --tracking <string>', 'Tracking number (optional)')
+  .option('-c, --carrier <string>', 'Carrier name (optional)')
   .action(async (options: ShipOrderOptions) => {
     try {
       await shipOrder(options);
