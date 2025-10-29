@@ -6,6 +6,7 @@ import { handleError, createApiError, ValidationError } from '../../utils/error.
 import { formatOrder } from '../../utils/format.js';
 import { output } from '../../utils/output.js';
 import { addEnhancedHelp } from '../../utils/helpText.js';
+import { isInteractiveEnvironment, requireParam } from '../../utils/interactive.js';
 
 interface ShipOrderOptions {
   id?: string;
@@ -66,18 +67,16 @@ addEnhancedHelp(cmd, {
 export const shipOrderCommand = cmd;
 
 async function shipOrder(options: ShipOrderOptions) {
-  // 验证参数
-  if (!options.id || options.id.trim().length === 0) {
-    throw new ValidationError('订单 ID 不能为空', 'id');
-  }
+  // 验证订单 ID（必需参数）
+  const orderId = isInteractiveEnvironment()
+    ? (options.id?.trim() || (() => { throw new ValidationError('订单 ID 不能为空', 'id'); })())
+    : requireParam(options.id, 'id', '订单 ID');
 
-  const orderId = options.id;
+  let trackingNumber: string | undefined = options.tracking;
+  let carrier: string | undefined = options.carrier;
 
-  let trackingNumber = options.tracking;
-  let carrier = options.carrier;
-
-  // 如果没有提供物流信息，进入交互式模式
-  if (!trackingNumber && !carrier) {
+  // 如果没有提供物流信息且在交互环境，进入交互式模式
+  if (isInteractiveEnvironment() && !trackingNumber && !carrier) {
     console.log(chalk.cyan('\n📦 订单发货\n'));
 
     const answers = await inquirer.prompt([

@@ -131,6 +131,70 @@ git push --follow-tags
 - Bearer token auth, auto-refresh every 15 min
 - Override: `OPTIMA_API_URL` env var
 
+## Non-Interactive Mode (v0.16.0)
+
+Optima CLI automatically detects the execution environment and adapts its behavior:
+
+### Terminal Users
+When running in a terminal, missing required parameters trigger friendly interactive prompts:
+
+```bash
+$ optima product create
+📦 创建新商品
+? 商品名称: _
+? 价格: _
+```
+
+### AI Assistants / CI/CD
+In non-interactive environments (AI, pipelines, background tasks), interactive prompts are automatically disabled:
+
+```bash
+# Automatic detection (no TTY, CI env vars, etc.)
+$ optima product create
+⚠️  验证错误: 缺少必需参数: --title (商品名称)
+   字段: title
+
+# Explicit disable
+$ NON_INTERACTIVE=1 optima product create
+```
+
+### Environment Variables
+
+**Force interactive mode** (when auto-detection fails):
+- `OPTIMA_INTERACTIVE=1` - Highest priority, always enables prompts
+
+**Force non-interactive mode** (when needed):
+- `NON_INTERACTIVE=1` - Disables all interactive prompts
+- `OPTIMA_NON_INTERACTIVE=true` - Alternative syntax
+- `CI=true` - Auto-detected in CI/CD environments (GitHub Actions, GitLab CI, etc.)
+
+### Confirmation Commands
+
+Commands with `--yes` flag (delete, cancel, complete, cleanup) require explicit confirmation:
+
+```bash
+# Terminal: shows confirmation prompt
+$ optima product delete --id prod-123
+⚠️  即将删除商品: prod-123
+? 确定要删除此商品吗？ (y/N)
+
+# Non-interactive: requires --yes flag
+$ optima product delete --id prod-123 --yes
+✓ 商品删除成功！
+```
+
+### Affected Commands (20 total)
+
+**Tier 1 - Core commands**: shipping calculate, product create, order ship, category create
+
+**Tier 2 - Common commands**: variant create, inventory update/reserve, shipping-zone create/add-rate
+
+**Tier 3 - Confirmation commands**: product/category/variant delete, order cancel/complete, shipping-zone delete, cleanup, shipping update-status
+
+**Tier 4 - i18n commands**: i18n product/category/merchant create
+
+See `docs/NON_INTERACTIVE_MODE_DESIGN.md` for full technical specification.
+
 ## Common Issues
 
 **Authentication**:

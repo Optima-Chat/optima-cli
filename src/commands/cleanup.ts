@@ -4,6 +4,8 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import inquirer from 'inquirer';
+import { isInteractiveEnvironment } from '../utils/interactive.js';
+import { ValidationError } from '../utils/error.js';
 
 const CLAUDE_MD_PATH = path.join(os.homedir(), '.claude', 'CLAUDE.md');
 const OPTIMA_START_MARKER = '## Optima CLI';
@@ -33,18 +35,27 @@ const cmd = new Command('cleanup')
 
       // 确认
       if (!options.yes) {
-        const answer = await inquirer.prompt([
-          {
-            type: 'confirm',
-            name: 'confirm',
-            message: '确定要从 Claude Code 配置中移除 Optima CLI 区块吗？',
-            default: false,
-          },
-        ]);
+        if (isInteractiveEnvironment()) {
+          // 交互模式：显示确认提示
+          const answer = await inquirer.prompt([
+            {
+              type: 'confirm',
+              name: 'confirm',
+              message: '确定要从 Claude Code 配置中移除 Optima CLI 区块吗？',
+              default: false,
+            },
+          ]);
 
-        if (!answer.confirm) {
-          console.log(chalk.gray('\n已取消\n'));
-          return;
+          if (!answer.confirm) {
+            console.log(chalk.gray('\n已取消\n'));
+            return;
+          }
+        } else {
+          // 非交互模式：要求使用 --yes 标志
+          throw new ValidationError(
+            '非交互环境需要使用 --yes 标志确认清理操作',
+            'yes'
+          );
         }
       }
 

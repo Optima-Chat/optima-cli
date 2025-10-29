@@ -5,6 +5,7 @@ import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 import { output } from '../../utils/output.js';
 import { addEnhancedHelp } from '../../utils/helpText.js';
+import { isInteractiveEnvironment, requireParam, requireNumberParam } from '../../utils/interactive.js';
 
 interface ReserveOptions {
   id?: string;
@@ -56,36 +57,34 @@ addEnhancedHelp(cmd, {
 export const reserveStockCommand = cmd;
 
 async function reserveStock(options: ReserveOptions) {
-  if (!options.id || options.id.trim().length === 0) {
-    throw new ValidationError('商品 ID 不能为空', 'id');
-  }
+  const productId = isInteractiveEnvironment()
+    ? (options.id?.trim() || (() => { throw new ValidationError('商品 ID 不能为空', 'id'); })())
+    : requireParam(options.id, 'id', '商品 ID');
 
-  const productId = options.id;
+  let quantityNum: number;
 
-  let { quantity } = options;
-
-  if (!quantity) {
-    const answers = await inquirer.prompt([
-      {
-        type: 'input',
-        name: 'quantity',
-        message: '预留数量:',
-        validate: (input) => {
-          const num = parseInt(input);
-          return !isNaN(num) && num > 0 ? true : '数量必须是正整数';
+  if (isInteractiveEnvironment()) {
+    if (!options.quantity) {
+      const answers = await inquirer.prompt([
+        {
+          type: 'input',
+          name: 'quantity',
+          message: '预留数量:',
+          validate: (input) => {
+            const num = parseInt(input);
+            return !isNaN(num) && num > 0 ? true : '数量必须是正整数';
+          },
         },
-      },
-    ]);
-    quantity = answers.quantity;
-  }
-
-  if (!quantity) {
-    throw new ValidationError('预留数量不能为空', 'quantity');
-  }
-
-  const quantityNum = parseInt(quantity);
-  if (isNaN(quantityNum) || quantityNum <= 0) {
-    throw new ValidationError('预留数量必须是正整数', 'quantity');
+      ]);
+      quantityNum = parseInt(answers.quantity);
+    } else {
+      quantityNum = parseInt(options.quantity);
+      if (isNaN(quantityNum) || quantityNum <= 0) {
+        throw new ValidationError('预留数量必须是正整数', 'quantity');
+      }
+    }
+  } else {
+    quantityNum = Math.floor(requireNumberParam(options.quantity, 'quantity', '预留数量', 1));
   }
 
   const spinner = output.spinner('正在预留库存...');

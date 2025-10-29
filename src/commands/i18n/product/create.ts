@@ -5,6 +5,7 @@ import { commerceApi } from '../../../api/rest/commerce.js';
 import { handleError, ValidationError } from '../../../utils/error.js';
 import { validateLanguageCode, SUPPORTED_LANGUAGES } from '../../../utils/validation.js';
 import { output } from '../../../utils/output.js';
+import { isInteractiveEnvironment, requireParam } from '../../../utils/interactive.js';
 
 interface CreateOptions {
   productId?: string;
@@ -75,43 +76,51 @@ async function createProductTranslation(options: CreateOptions) {
 
   let { lang, name, description, metaTitle, metaDescription } = options;
 
-  // 交互式填写必填字段
-  if (!lang || !name) {
-    const questions: any[] = [];
+  // 检测环境
+  if (isInteractiveEnvironment()) {
+    // 交互模式：填写必填字段
+    if (!lang || !name) {
+      const questions: any[] = [];
 
-    if (!lang) {
-      questions.push({
-        type: 'input',
-        name: 'lang',
-        message: `语言代码（支持: ${SUPPORTED_LANGUAGES.join(', ')}）:`,
-        validate: (input: string) => {
-          if (input.trim().length === 0) return '语言代码不能为空';
-          try {
-            validateLanguageCode(input);
-            return true;
-          } catch (error: any) {
-            return error.message;
-          }
-        },
-      });
+      if (!lang) {
+        questions.push({
+          type: 'input',
+          name: 'lang',
+          message: `语言代码（支持: ${SUPPORTED_LANGUAGES.join(', ')}）:`,
+          validate: (input: string) => {
+            if (input.trim().length === 0) return '语言代码不能为空';
+            try {
+              validateLanguageCode(input);
+              return true;
+            } catch (error: any) {
+              return error.message;
+            }
+          },
+        });
+      }
+
+      if (!name) {
+        questions.push({
+          type: 'input',
+          name: 'name',
+          message: '翻译后的名称:',
+          validate: (input: string) => {
+            return input.trim().length > 0 ? true : '名称不能为空';
+          },
+        });
+      }
+
+      const answers = await inquirer.prompt(questions);
+      lang = lang || answers.lang;
+      name = name || answers.name;
     }
-
-    if (!name) {
-      questions.push({
-        type: 'input',
-        name: 'name',
-        message: '翻译后的名称:',
-        validate: (input: string) => {
-          return input.trim().length > 0 ? true : '名称不能为空';
-        },
-      });
-    }
-
-    const answers = await inquirer.prompt(questions);
-    lang = lang || answers.lang;
-    name = name || answers.name;
+  } else {
+    // 非交互模式：直接验证参数
+    lang = requireParam(options.lang, 'lang', '语言代码');
+    name = requireParam(options.name, 'name', '翻译名称');
   }
 
+  // Validate lang and name exist (both modes)
   if (!lang || !name) {
     throw new ValidationError('语言代码和名称不能为空', 'lang/name');
   }

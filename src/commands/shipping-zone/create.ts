@@ -5,6 +5,7 @@ import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError } from '../../utils/error.js';
 import { output } from '../../utils/output.js';
 import { addEnhancedHelp } from '../../utils/helpText.js';
+import { isInteractiveEnvironment, requireParam, requireNumberParam } from '../../utils/interactive.js';
 
 interface CreateZoneOptions {
   name?: string;
@@ -84,63 +85,83 @@ addEnhancedHelp(cmd, {
 export const createZoneCommand = cmd;
 
 async function createZone(options: CreateZoneOptions) {
-  let { name, countries, price, currency, minWeight, maxWeight, rateName, rateType } = options;
+  let name: string;
+  let countries: string;
+  let priceNum: number;
+  let currency: string;
 
-  // 交互式填写必填字段
-  const questions: any[] = [];
+  // 检测环境
+  if (isInteractiveEnvironment()) {
+    // 交互模式：友好提示
+    const questions: any[] = [];
 
-  if (!name) {
-    questions.push({
-      type: 'input',
-      name: 'name',
-      message: '区域名称:',
-      validate: (input: string) => input.trim().length > 0 || '名称不能为空',
-    });
+    if (!options.name) {
+      questions.push({
+        type: 'input',
+        name: 'name',
+        message: '区域名称:',
+        validate: (input: string) => input.trim().length > 0 || '名称不能为空',
+      });
+    }
+
+    if (!options.countries) {
+      questions.push({
+        type: 'input',
+        name: 'countries',
+        message: '国家代码（逗号分隔，如 CN,US,JP）:',
+        validate: (input: string) => input.trim().length > 0 || '国家代码不能为空',
+      });
+    }
+
+    if (!options.price) {
+      questions.push({
+        type: 'input',
+        name: 'price',
+        message: '运费价格:',
+        validate: (input: string) => {
+          const num = parseFloat(input);
+          return !isNaN(num) && num >= 0 ? true : '请输入有效的价格';
+        },
+      });
+    }
+
+    if (!options.currency) {
+      questions.push({
+        type: 'input',
+        name: 'currency',
+        message: '货币代码（如 CNY, USD）:',
+        default: 'CNY',
+      });
+    }
+
+    if (questions.length > 0) {
+      const answers = await inquirer.prompt(questions);
+      name = options.name || answers.name;
+      countries = options.countries || answers.countries;
+      priceNum = parseFloat(options.price || answers.price);
+      currency = options.currency || answers.currency || 'CNY';
+    } else {
+      // 交互环境但参数完整
+      name = options.name!;
+      countries = options.countries!;
+      priceNum = parseFloat(options.price!);
+      currency = options.currency || 'CNY';
+    }
+  } else {
+    // 非交互模式：直接验证参数
+    name = requireParam(options.name, 'name', '区域名称');
+    countries = requireParam(options.countries, 'countries', '国家代码');
+    priceNum = requireNumberParam(options.price, 'price', '运费价格', 0);
+    currency = options.currency || 'CNY';
   }
 
-  if (!countries) {
-    questions.push({
-      type: 'input',
-      name: 'countries',
-      message: '国家代码（逗号分隔，如 CN,US,JP）:',
-      validate: (input: string) => input.trim().length > 0 || '国家代码不能为空',
-    });
-  }
-
-  if (!price) {
-    questions.push({
-      type: 'input',
-      name: 'price',
-      message: '运费价格:',
-      validate: (input: string) => {
-        const num = parseFloat(input);
-        return !isNaN(num) && num >= 0 ? true : '请输入有效的价格';
-      },
-    });
-  }
-
-  if (!currency) {
-    questions.push({
-      type: 'input',
-      name: 'currency',
-      message: '货币代码（如 CNY, USD）:',
-      default: 'CNY',
-    });
-  }
-
-  if (questions.length > 0) {
-    const answers = await inquirer.prompt(questions);
-    name = name || answers.name;
-    countries = countries || answers.countries;
-    price = price || answers.price;
-    currency = currency || answers.currency;
-  }
+  const { minWeight, maxWeight, rateName, rateType } = options;
 
   const spinner = output.spinner('正在创建运费区域...');
 
   try {
     // 构建 countries 数组（对象格式）
-    const countriesArray = countries!.split(',').map((c) => ({
+    const countriesArray = countries.split(',').map((c) => ({
       country_code: c.trim().toUpperCase(),
     }));
 
@@ -151,13 +172,13 @@ async function createZone(options: CreateZoneOptions) {
         rate_type: rateType || 'weight_based',
         min_weight: minWeight ? parseFloat(minWeight) : 0,
         ...(maxWeight && { max_weight: parseFloat(maxWeight) }),
-        price: parseFloat(price!),
-        currency: currency || 'CNY',
+        price: priceNum,
+        currency: currency,
       },
     ];
 
     const zone = await commerceApi.shippingFixed.createZone({
-      name: name!,
+      name: name,
       countries: countriesArray,
       rates,
     } as any);
@@ -176,7 +197,7 @@ async function createZone(options: CreateZoneOptions) {
       console.log(chalk.gray('区域 ID: ') + chalk.cyan(zone.id));
       console.log(chalk.gray('名称: ') + chalk.white(name));
       console.log(chalk.gray('国家: ') + chalk.white(countriesArray.map((c) => c.country_code).join(', ')));
-      console.log(chalk.gray('运费: ') + chalk.white(`${price} ${currency || 'CNY'}`));
+      console.log(chalk.gray('运费: ') + chalk.white(`${priceNum} ${currency}`));
       if (rates[0].max_weight) {
         console.log(chalk.gray('重量范围: ') + chalk.white(`${rates[0].min_weight} - ${rates[0].max_weight} kg`));
       } else {

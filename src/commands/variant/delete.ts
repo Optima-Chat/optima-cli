@@ -5,6 +5,7 @@ import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 import { output } from '../../utils/output.js';
 import { addEnhancedHelp } from '../../utils/helpText.js';
+import { isInteractiveEnvironment } from '../../utils/interactive.js';
 
 interface DeleteVariantOptions {
   productId?: string;
@@ -76,20 +77,29 @@ async function deleteVariant(options: DeleteVariantOptions) {
 
   // 确认删除（除非使用 --yes）
   if (!options.yes) {
-    console.log(chalk.yellow(`\n⚠️  即将删除变体: ${variantId}\n`));
+    if (isInteractiveEnvironment()) {
+      // 交互模式：显示确认提示
+      console.log(chalk.yellow(`\n⚠️  即将删除变体: ${variantId}\n`));
 
-    const answers = await inquirer.prompt([
-      {
-        type: 'confirm',
-        name: 'confirmed',
-        message: '确定要删除此变体吗？',
-        default: false,
-      },
-    ]);
+      const answers = await inquirer.prompt([
+        {
+          type: 'confirm',
+          name: 'confirmed',
+          message: '确定要删除此变体吗？',
+          default: false,
+        },
+      ]);
 
-    if (!answers.confirmed) {
-      console.log(chalk.gray('\n已取消删除\n'));
-      return;
+      if (!answers.confirmed) {
+        console.log(chalk.gray('\n已取消删除\n'));
+        return;
+      }
+    } else {
+      // 非交互模式：要求使用 --yes 标志
+      throw new ValidationError(
+        '非交互环境需要使用 --yes 标志确认删除操作',
+        'yes'
+      );
     }
   }
 

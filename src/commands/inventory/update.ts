@@ -5,6 +5,7 @@ import { commerceApi } from '../../api/rest/commerce.js';
 import { handleError, createApiError, ValidationError } from '../../utils/error.js';
 import { output } from '../../utils/output.js';
 import { addEnhancedHelp } from '../../utils/helpText.js';
+import { isInteractiveEnvironment, requireParam, requireNumberParam } from '../../utils/interactive.js';
 
 interface UpdateStockOptions {
   id?: string;
@@ -59,42 +60,47 @@ addEnhancedHelp(cmd, {
 export const updateStockCommand = cmd;
 
 async function updateStock(options: UpdateStockOptions) {
-  // 验证参数
-  if (!options.id || options.id.trim().length === 0) {
-    throw new ValidationError('商品 ID 不能为空', 'id');
-  }
-
-  const productId = options.id;
+  // 验证商品 ID（必需）
+  const productId = isInteractiveEnvironment()
+    ? (options.id?.trim() || (() => { throw new ValidationError('商品 ID 不能为空', 'id'); })())
+    : requireParam(options.id, 'id', '商品 ID');
 
   let quantity: number;
 
-  if (!options.quantity) {
-    // 交互式模式
-    console.log(chalk.cyan(`\n📦 更新商品库存: ${productId}\n`));
+  // 检测环境
+  if (isInteractiveEnvironment()) {
+    // 交互模式：友好提示
+    if (!options.quantity) {
+      console.log(chalk.cyan(`\n📦 更新商品库存: ${productId}\n`));
 
-    const answers = await inquirer.prompt([
-      {
-        type: 'input',
-        name: 'quantity',
-        message: '新库存数量:',
-        validate: (input) => {
-          const qty = parseInt(input, 10);
-          if (isNaN(qty) || qty < 0) {
-            return '库存数量必须是大于等于 0 的整数';
-          }
-          return true;
+      const answers = await inquirer.prompt([
+        {
+          type: 'input',
+          name: 'quantity',
+          message: '新库存数量:',
+          validate: (input) => {
+            const qty = parseInt(input, 10);
+            if (isNaN(qty) || qty < 0) {
+              return '库存数量必须是大于等于 0 的整数';
+            }
+            return true;
+          },
         },
-      },
-    ]);
+      ]);
 
-    quantity = parseInt(answers.quantity, 10);
-  } else {
-    quantity = parseInt(options.quantity, 10);
+      quantity = parseInt(answers.quantity, 10);
+    } else {
+      // 交互环境但参数完整
+      quantity = parseInt(options.quantity, 10);
 
-    // 验证数量
-    if (isNaN(quantity) || quantity < 0) {
-      throw new ValidationError('库存数量必须是大于等于 0 的整数', 'quantity');
+      // 验证数量
+      if (isNaN(quantity) || quantity < 0) {
+        throw new ValidationError('库存数量必须是大于等于 0 的整数', 'quantity');
+      }
     }
+  } else {
+    // 非交互模式：直接验证参数
+    quantity = Math.floor(requireNumberParam(options.quantity, 'quantity', '库存数量', 0));
   }
 
   const spinner = output.spinner('正在更新库存...');

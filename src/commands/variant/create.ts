@@ -5,6 +5,7 @@ import { handleError, createApiError, ValidationError } from '../../utils/error.
 import { formatVariant } from '../../utils/format.js';
 import { output } from '../../utils/output.js';
 import { addEnhancedHelp } from '../../utils/helpText.js';
+import { isInteractiveEnvironment, requireParam } from '../../utils/interactive.js';
 
 interface CreateVariantOptions {
   productId?: string;
@@ -80,57 +81,73 @@ addEnhancedHelp(cmd, {
 export const createVariantCommand = cmd;
 
 async function createVariant(options: CreateVariantOptions) {
-  // 验证商品 ID
-  if (!options.productId || options.productId.trim().length === 0) {
-    throw new ValidationError('商品 ID 不能为空', 'product-id');
-  }
+  // 验证商品 ID（必需）
+  const productId = isInteractiveEnvironment()
+    ? (options.productId?.trim() || (() => { throw new ValidationError('商品 ID 不能为空', 'product-id'); })())
+    : requireParam(options.productId, 'product-id', '商品 ID');
 
-  const productId = options.productId;
+  let sku: string | undefined;
+  let price: string | undefined;
+  let stock: string | undefined;
+  let attributes: string | undefined;
 
-  let { sku, price, stock, attributes } = options;
-
-  // 交互式输入缺失的字段
-  if (!sku || !attributes) {
-    const answers = await inquirer.prompt([
-      {
-        type: 'input',
-        name: 'sku',
-        message: 'SKU 编码:',
-        default: sku || '',
-      },
-      {
-        type: 'input',
-        name: 'price',
-        message: '价格（可选，留空使用商品价格）:',
-        default: price || '',
-      },
-      {
-        type: 'input',
-        name: 'stock',
-        message: '库存数量（可选）:',
-        default: stock || '',
-      },
-      {
-        type: 'input',
-        name: 'attributes',
-        message: '属性（JSON 格式，如 {"size":"S","color":"White"}）:',
-        default: attributes || '{}',
-        validate: (input) => {
-          if (!input || input.trim().length === 0) return true;
-          try {
-            JSON.parse(input);
-            return true;
-          } catch {
-            return '属性必须是有效的 JSON 格式';
-          }
+  // 检测环境
+  if (isInteractiveEnvironment()) {
+    // 交互模式：友好提示
+    if (!options.sku || !options.attributes) {
+      const answers = await inquirer.prompt([
+        {
+          type: 'input',
+          name: 'sku',
+          message: 'SKU 编码:',
+          default: options.sku || '',
         },
-      },
-    ]);
+        {
+          type: 'input',
+          name: 'price',
+          message: '价格（可选，留空使用商品价格）:',
+          default: options.price || '',
+        },
+        {
+          type: 'input',
+          name: 'stock',
+          message: '库存数量（可选）:',
+          default: options.stock || '',
+        },
+        {
+          type: 'input',
+          name: 'attributes',
+          message: '属性（JSON 格式，如 {"size":"S","color":"White"}）:',
+          default: options.attributes || '{}',
+          validate: (input) => {
+            if (!input || input.trim().length === 0) return true;
+            try {
+              JSON.parse(input);
+              return true;
+            } catch {
+              return '属性必须是有效的 JSON 格式';
+            }
+          },
+        },
+      ]);
 
-    sku = answers.sku || sku;
-    price = answers.price || price;
-    stock = answers.stock || stock;
-    attributes = answers.attributes || attributes;
+      sku = answers.sku || undefined;
+      price = answers.price || undefined;
+      stock = answers.stock || undefined;
+      attributes = answers.attributes || undefined;
+    } else {
+      // 交互环境但参数完整
+      sku = options.sku;
+      price = options.price;
+      stock = options.stock;
+      attributes = options.attributes;
+    }
+  } else {
+    // 非交互模式：直接验证参数
+    sku = requireParam(options.sku, 'sku', 'SKU 编码');
+    attributes = requireParam(options.attributes, 'attributes', '变体属性');
+    price = options.price;
+    stock = options.stock;
   }
 
   const spinner = output.spinner('正在创建变体...');
